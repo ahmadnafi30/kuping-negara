@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ahmadnafi30/kuping-negara/configs/schemas/tweet_record.schema.json",
+  "title": "Kuping Negara Tweet Record",
+  "description": "Kontrak awal satu rekaman hasil pengumpulan, pemrosesan, dan prediksi sentimen.",
+  "type": "object",
+  "required": [
+    "tweet_id",
+    "target_program",
+    "raw_text",
+    "published_at",
+    "collected_at",
+    "ingestion_run_id",
+    "schema_version"
+  ],
+  "properties": {
+    "tweet_id": { "type": "string", "minLength": 1 },
+    "conversation_id": { "type": ["string", "null"] },
+    "tweet_url": { "type": ["string", "null"], "format": "uri" },
+    "target_program": {
+      "type": "string",
+      "enum": ["mbg", "ckg", "kopdes_merah_putih", "sekolah_rakyat"]
+    },
+    "matched_keyword": { "type": ["string", "null"] },
+    "raw_text": { "type": "string" },
+    "cleaned_text": { "type": ["string", "null"] },
+    "language": { "type": ["string", "null"] },
+    "published_at": { "type": "string", "format": "date-time" },
+    "collected_at": { "type": "string", "format": "date-time" },
+    "year_week": { "type": ["string", "null"] },
+    "year_month": { "type": ["string", "null"] },
+    "reply_count": { "type": ["integer", "null"], "minimum": 0 },
+    "retweet_count": { "type": ["integer", "null"], "minimum": 0 },
+    "like_count": { "type": ["integer", "null"], "minimum": 0 },
+    "quote_count": { "type": ["integer", "null"], "minimum": 0 },
+    "sentiment_label": {
+      "type": ["string", "null"],
+      "enum": ["positive", "neutral", "negative", "uncertain", null]
+    },
+    "sentiment_prediction": {
+      "type": ["string", "null"],
+      "enum": ["positive", "neutral", "negative", null]
+    },
+    "probability_positive": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "probability_neutral": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "probability_negative": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "ingestion_run_id": { "type": "string", "minLength": 1 },
+    "data_version": { "type": ["string", "null"] },
+    "model_version": { "type": ["string", "null"] },
+    "schema_version": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": true
+}
+
