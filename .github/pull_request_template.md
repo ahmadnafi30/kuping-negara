@@ -9,6 +9,7 @@ Jelaskan perubahan utama dan alasan perubahan ini diperlukan.
 - [ ] `docs`: dokumentasi
 - [ ] `test`: pengujian
 - [ ] `refactor`: perubahan internal tanpa mengubah perilaku
+- [ ] `style`: format atau whitespace tanpa mengubah perilaku
 - [ ] `chore`: pemeliharaan, konfigurasi, atau dependensi
 
 ## Pemeriksaan
