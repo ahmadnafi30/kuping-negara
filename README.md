@@ -435,6 +435,7 @@ Gunakan template di `.github/pull_request_template.md`.
 | `docs` | Dokumentasi | `docs: explain labeling workflow` |
 | `test` | Menambah/memperbaiki tes | `test: cover text normalization` |
 | `refactor` | Restrukturisasi tanpa perubahan perilaku | `refactor: isolate schema validation` |
+| `style` | Format/whitespace tanpa mengubah perilaku | `style: normalize trailing newlines` |
 | `chore` | Konfigurasi, dependensi, maintenance | `chore: configure dev container` |
 | `ci` | Workflow integrasi/deployment | `ci: run tests on pull requests` |
 
