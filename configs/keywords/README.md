@@ -9,4 +9,3 @@ Setiap perubahan kata kunci harus:
 2. diberi `schema_version` atau versi konfigurasi yang baru;
 3. dicatat pada commit dan pull request;
 4. diuji pada sampel data sebelum dipakai oleh pipeline terjadwal.
-

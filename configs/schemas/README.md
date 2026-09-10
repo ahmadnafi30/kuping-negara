@@ -11,4 +11,3 @@ Aturan perubahan:
 - raw zone tetap append-only dan tidak boleh ditimpa;
 - validasi kontrak dilakukan sebelum data berpindah ke processed zone;
 - field identitas personal harus diminimalkan atau dianonimkan.
-

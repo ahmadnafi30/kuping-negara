@@ -17,4 +17,3 @@ Jelaskan perubahan utama dan alasan perubahan ini diperlukan.
 - [ ] Dokumentasi telah diperbarui bila diperlukan.
 - [ ] Tidak ada kredensial, data mentah, atau artefak model besar yang ikut di-commit.
 - [ ] Nama branch dan commit mengikuti konvensi proyek.
-

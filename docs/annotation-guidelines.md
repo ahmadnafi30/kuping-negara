@@ -49,4 +49,3 @@ penulis unggahan dan bukan kesimpulan mengenai seluruh masyarakat Indonesia.
 - Versi pedoman: `0.1.0`
 - Status: draft awal
 - Tanggal: 2026-09-10
-
