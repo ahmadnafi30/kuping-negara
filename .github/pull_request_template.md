@@ -13,14 +13,14 @@ Explain the problem, requirement, or risk addressed by this Pull Request.
 
 ## Change Type
 
-- [ ] `feat` — new capability
-- [ ] `fix` — bug fix
-- [ ] `docs` — documentation only
-- [ ] `test` — tests only
-- [ ] `refactor` — internal change without behavior change
-- [ ] `style` — formatting/whitespace only
-- [ ] `chore` — maintenance, dependency, or configuration
-- [ ] `ci` — CI/CD workflow
+- [ ] `feat`: new capability
+- [ ] `fix`: bug fix
+- [ ] `docs`: documentation only
+- [ ] `test`: tests only
+- [ ] `refactor`: internal change without behavior change
+- [ ] `style`: formatting/whitespace only
+- [ ] `chore`: maintenance, dependency, or configuration
+- [ ] `ci`: CI/CD workflow
 
 ## Architecture and Data Impact
 
