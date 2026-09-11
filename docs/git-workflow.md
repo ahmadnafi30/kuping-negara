@@ -7,7 +7,7 @@ short-lived topic branches.
 
 | Branch | Lifetime | Base | Purpose |
 | --- | --- | --- | --- |
-| `main` | Long-lived | — | Stable/release-ready state |
+| `main` | Long-lived | N/A | Stable/release-ready state |
 | `develop` | Long-lived | `main` after release synchronization | Integration branch for reviewed work |
 | `feat/<kebab-case>` | Short-lived | `develop` | New capability |
 | `fix/<kebab-case>` | Short-lived | `develop` | Non-production bug fix |
