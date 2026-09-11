@@ -10,7 +10,7 @@ report.
 | --- | ---: | --- | --- | --- | --- |
 | Standardisasi Struktur | 30% | Folder follows best practices; naming convention consistent | `src/kuping_negara/`, data zones, tests, configs, docs, `.gitignore`, [Project Structure](project-structure.md), [Development Guidelines](development-guidelines.md) | Strong technical coverage | Screenshot repository tree and briefly explain `src` layout |
 | Setup Codespaces | 30% | Environment runs without error; dependencies installed | `.devcontainer/devcontainer.json`, `requirements.txt`, `pyproject.toml`, `python -m kuping_negara.healthcheck` | Configured but remote execution evidence pending | Launch Codespace, capture successful `postCreateCommand`, health check, and test output |
-| Branching Strategy | 20% | Informative commit history; appropriate branch usage | `main`, `develop`, topic branch workflow, Conventional Commits, PR template, [Git Workflow](git-workflow.md) | Strong after this documentation change is merged through PR | Capture branch graph, PR page, green checks, review/merge, and branch cleanup |
+| Branching Strategy | 20% | Informative commit history; appropriate branch usage | `main`, `develop`, topic branch workflow, Conventional Commits, PR template, [Git Workflow](git-workflow.md) | Strong technical coverage | Capture branch graph and informative commit/merge history; add PR evidence only if explicitly required by the lecturer |
 | Dokumentasi README | 20% | Clear setup and system usage instructions | Root `README.md`: proposal, architecture, Quick Start, configuration, tests, workflow, roadmap, limits | Strong technical coverage | Capture rendered README and verify internal links in GitHub |
 
 ## Criterion Review
@@ -66,9 +66,11 @@ Implemented evidence:
 - Pull Request template and documented review/cleanup workflow;
 - merged topic branches deleted instead of kept permanently behind `main`.
 
-The `ahead/behind` counter is not itself a grading objective. The meaningful
-evidence is correct base selection, reviewable commits, a Pull Request, CI result,
-merge record, and cleanup after merge.
+The `ahead/behind` counter is not itself a grading objective. The direct rubric
+indicator is demonstrated by correct base selection, reviewable commits,
+meaningful merge history, and cleanup after merge. A Pull Request provides
+stronger collaboration evidence, but it is not explicitly required by the
+four-row indicator supplied for this assessment.
 
 ### 4. Dokumentasi README — 20%
 
@@ -84,8 +86,7 @@ README includes:
 
 ## Screenshot Checklist
 
-Capture these screenshots after the Pull Request and Codespaces checks are
-complete:
+Capture these screenshots after the branch and Codespaces checks are complete:
 
 1. GitHub repository root showing the standardized folder structure.
 2. Rendered README showing proposal and Quick Start sections.
@@ -94,8 +95,10 @@ complete:
 5. Codespaces terminal showing all tests passing.
 6. GitHub branch page showing `main` and `develop`.
 7. Topic-branch commit history with informative Conventional Commits.
-8. Pull Request into `develop`, including filled description and green checks.
-9. Release Pull Request from `develop` into `main` if required by the report.
+8. Optional: Pull Request into `develop`, including filled description and green
+   checks, if collaboration evidence is requested.
+9. Optional: release Pull Request from `develop` into `main` if required by the
+   lecturer or final report format.
 10. Project Board screenshot if LK02 submission instructions require it outside
     the four-row grading table.
 
