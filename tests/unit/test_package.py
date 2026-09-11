@@ -8,4 +8,4 @@ def test_project_summary_matches_package_metadata() -> None:
 
 def test_healthcheck_reports_all_required_dependencies() -> None:
     versions = dependency_versions()
-    assert set(versions) == {"pandas", "scikit-learn", "jupyterlab"}
+    assert set(versions) == {"pandas", "scikit-learn", "jupyterlab", "pytest"}

@@ -2,6 +2,7 @@
 
 | Document | Audience | Purpose |
 | --- | --- | --- |
+| [Codespaces Setup](codespaces-setup.md) | Developers and assessors | Reproducible environment setup, verification, and troubleshooting with uv |
 | [Development Guidelines](development-guidelines.md) | All contributors | Naming, Python style, quality, security, and Definition of Done |
 | [Project Structure](project-structure.md) | Developers and reviewers | Directory ownership, dependency boundaries, and code placement |
 | [Git Workflow](git-workflow.md) | Contributors and maintainers | Branch lifecycle, commits, Pull Requests, reviews, and releases |

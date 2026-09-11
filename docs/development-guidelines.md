@@ -11,8 +11,16 @@ code, tests, configuration, and documentation.
 - Source package: `src/kuping_negara`.
 - Reusable code must be importable from the package; do not rely on notebook
   execution order or ad-hoc `sys.path` mutation.
-- Add dependencies to `pyproject.toml` and the appropriate installation file.
-  Explain new runtime dependencies in the Pull Request.
+- Use `uv` as the primary package and environment manager.
+- Treat `pyproject.toml` and `uv.lock` as the dependency source of truth.
+- Add runtime dependencies with `uv add <package>`.
+- Add development dependencies to the `dev` extra with
+  `uv add --optional dev <package>`.
+- Regenerate the compatibility manifest with
+  `uv export --frozen --extra dev --format requirements.txt --no-hashes
+  --no-emit-project --output-file requirements.txt`.
+- Never edit `uv.lock` or generated dependency pins manually. Explain every new
+  runtime dependency in the Pull Request.
 
 ## Naming Conventions
 
@@ -128,8 +136,10 @@ after at least two real consumers exist.
 Minimum local verification:
 
 ```bash
-python -m kuping_negara.healthcheck
-python -m pytest
+uv sync --frozen --extra dev
+uv pip check
+uv run --frozen --extra dev python -m kuping_negara.healthcheck
+uv run --frozen --extra dev pytest
 ```
 
 ## Notebook Standard

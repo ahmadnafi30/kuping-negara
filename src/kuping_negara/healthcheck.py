@@ -6,7 +6,7 @@ from importlib.metadata import PackageNotFoundError, version
 
 from kuping_negara import PROJECT_NAME, __version__
 
-REQUIRED_DISTRIBUTIONS = ("pandas", "scikit-learn", "jupyterlab")
+REQUIRED_DISTRIBUTIONS = ("pandas", "scikit-learn", "jupyterlab", "pytest")
 
 
 def dependency_versions() -> dict[str, str | None]:
@@ -39,7 +39,7 @@ def main() -> int:
             print(f"[OK] {distribution}=={installed_version}")
 
     if missing:
-        print("Install dependencies with: python -m pip install -r requirements.txt")
+        print("Install dependencies with: uv sync --frozen --extra dev")
         return 1
 
     print("Environment is ready.")

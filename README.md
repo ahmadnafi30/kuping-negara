@@ -34,6 +34,8 @@ confidence melalui API serta dashboard.
 - [Technology Stack](#technology-stack)
 - [Repository Structure](#repository-structure)
 - [Quick Start](#quick-start)
+  - [GitHub Codespaces](#github-codespaces)
+  - [Local Development](#local-development)
 - [Configuration](#configuration)
 - [Testing and Quality Gates](#testing-and-quality-gates)
 - [Development Workflow](#development-workflow)
@@ -330,6 +332,7 @@ calibration, operational cost, privacy, dan failure behavior harus ditinjau.
 | --- | --- | --- |
 | Language/runtime | Python 3.12+ | Configured |
 | Development environment | GitHub Codespaces / Dev Containers | Configured |
+| Package management | uv + committed lockfile | Configured |
 | Data manipulation | pandas | Installed by project requirements |
 | Baseline ML | scikit-learn | Installed by project requirements |
 | NLP candidate | IndoBERT / IndoBERTweet | Planned experiment |
@@ -351,6 +354,7 @@ component.
 kuping-negara/
 ├── .devcontainer/               # Codespaces/Dev Container definition
 ├── .github/                     # CI workflow and pull request template
+├── .python-version              # Python version selected by uv
 ├── configs/
 │   ├── keywords/                # Program keyword configuration
 │   └── schemas/                 # Versioned data contracts
@@ -362,6 +366,8 @@ kuping-negara/
 ├── docs/                        # Engineering, architecture, workflow, assessment
 ├── models/                      # Local model artifacts; Git-ignored
 ├── notebooks/                   # Exploration, EDA, and experiment narratives
+├── pyproject.toml               # Direct dependency and package metadata
+├── requirements.txt             # Generated pip compatibility manifest
 ├── src/kuping_negara/
 │   ├── ingestion/               # Source adapters and raw persistence
 │   ├── preprocessing/           # Text transformation and anonymization
@@ -372,9 +378,10 @@ kuping-negara/
 │   ├── monitoring/              # Data/model/service monitoring
 │   ├── api/                     # API transport layer
 │   └── dashboard/               # Presentation layer
-└── tests/
-    ├── unit/                    # Fast isolated tests
-    └── integration/             # Cross-component tests
+├── tests/
+│   ├── unit/                    # Fast isolated tests
+│   └── integration/             # Cross-component tests
+└── uv.lock                      # Exact reproducible dependency resolution
 ```
 
 Detailed ownership and code-placement rules are documented in
@@ -387,52 +394,44 @@ Detailed ownership and code-placement rules are documented in
 1. Open the repository on GitHub.
 2. Select **Code → Codespaces → Create codespace on main**.
 3. Wait until `postCreateCommand` completes.
-4. Run the environment smoke test:
+4. Verify the locked environment:
 
 ```bash
-python -m kuping_negara
+uv sync --frozen --extra dev
+uv pip check
+uv run --frozen --extra dev python -m kuping_negara.healthcheck
 ```
 
 5. Run the test suite:
 
 ```bash
-python -m pytest
+uv run --frozen --extra dev pytest
 ```
 
 Expected smoke-test output includes the project version and installed versions
-of pandas, scikit-learn, and JupyterLab.
+of pandas, scikit-learn, JupyterLab, and pytest. The complete setup,
+verification, rebuild, and troubleshooting procedure is available in
+[`docs/codespaces-setup.md`](docs/codespaces-setup.md).
 
 ### Local Development
 
-Prerequisites: Git and Python 3.12 or newer.
+Prerequisites: Git and `uv`. The project pins Python 3.12 in
+`.python-version`; `uv` can install that runtime when it is not already
+available.
 
 ```bash
 git clone https://github.com/ahmadnafi30/kuping-negara.git
 cd kuping-negara
-python -m venv .venv
+uv python install 3.12
+uv sync --frozen --extra dev
+uv pip check
+uv run --frozen --extra dev python -m kuping_negara
+uv run --frozen --extra dev pytest
 ```
 
-Activate on Windows PowerShell:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-Activate on Linux/macOS:
-
-```bash
-source .venv/bin/activate
-```
-
-Install and verify:
-
-```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m pip install -e . --no-deps
-python -m kuping_negara
-python -m pytest
-```
+`pyproject.toml` and `uv.lock` are the dependency source of truth.
+`requirements.txt` is a generated compatibility export and is not the primary
+installation path.
 
 ## Configuration
 
@@ -457,8 +456,10 @@ and follow an approved history-remediation process.
 Run locally:
 
 ```bash
-python -m pytest
-python -m kuping_negara.healthcheck
+uv sync --frozen --extra dev
+uv pip check
+uv run --frozen --extra dev python -m kuping_negara.healthcheck
+uv run --frozen --extra dev pytest
 ```
 
 Current CI runs dependency installation, environment health check, and unit
@@ -543,7 +544,7 @@ known limitations.
 ## Project Roadmap
 
 - [x] Standardize repository structure and Python namespace.
-- [x] Configure Codespaces/Dev Container and core dependencies.
+- [x] Configure Codespaces/Dev Container, uv lockfile, and core dependencies.
 - [x] Add `.gitignore`, environment example, license, smoke test, unit test, CI.
 - [x] Add keyword configuration sample and initial data contract.
 - [x] Add initial annotation guideline.

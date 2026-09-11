@@ -9,7 +9,7 @@
         "eamodio.gitlens"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
         "python.testing.pytestEnabled": true,
         "python.testing.pytestArgs": [
           "tests"
@@ -17,6 +17,6 @@
       }
     }
   },
-  "postCreateCommand": "python -m pip install --upgrade pip && python -m pip install -r requirements.txt && python -m pip install -e . --no-deps",
+  "postCreateCommand": "python -m pip install --disable-pip-version-check uv==0.12.12 && uv sync --frozen --extra dev && uv pip check && uv run --frozen --extra dev python -m kuping_negara.healthcheck",
   "remoteUser": "vscode"
 }
