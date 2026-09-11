@@ -1,202 +1,411 @@
 # Kuping Negara
 
-Fondasi proyek **Machine Learning Operations (MLOps)** untuk memantau sentimen
-publik pada platform X terhadap empat program prioritas pemerintah Indonesia:
-Makan Bergizi Gratis (MBG), Cek Kesehatan Gratis (CKG), Koperasi Desa Merah
-Putih, dan Sekolah Rakyat.
+> An MLOps-oriented sentiment intelligence platform proposal for monitoring
+> public discourse on Indonesia's priority government programs.
 
-> **Status proyek:** tahap fondasi/repository setup. Struktur, lingkungan
-> pengembangan, kontrak data awal, pemeriksaan environment, tes dasar, dan CI
-> telah disiapkan. Pipeline pengumpulan data, pelatihan model, API, dashboard,
-> orchestration, serta monitoring masih berada pada roadmap dan belum boleh
-> dianggap sebagai sistem produksi.
+Kuping Negara dirancang untuk membangun end-to-end machine learning lifecycle
+yang reproducible, traceable, observable, dan maintainable. Sistem memproses
+unggahan publik dari platform X, mengklasifikasikan sentimen ke dalam kelas
+`positive`, `neutral`, atau `negative`, lalu menyajikan trend dan model
+confidence melalui API serta dashboard.
 
-## Daftar isi
+> **Project status — Foundation Phase.** Repository structure, Python package,
+> Dev Container, dependency specification, data contract draft, annotation
+> guideline, smoke test, unit test, dan CI workflow sudah tersedia. Data
+> ingestion, model training, model registry, serving API, dashboard, dan
+> production monitoring masih berada dalam implementation roadmap.
 
-- [Latar belakang](#latar-belakang)
-- [Tujuan dan ruang lingkup](#tujuan-dan-ruang-lingkup)
-- [Program yang dipantau](#program-yang-dipantau)
-- [Gambaran alur MLOps](#gambaran-alur-mlops)
-- [Arsitektur yang direncanakan](#arsitektur-yang-direncanakan)
-- [Struktur repository](#struktur-repository)
-- [Mulai cepat](#mulai-cepat)
-- [Konfigurasi](#konfigurasi)
-- [Rencana data](#rencana-data)
-- [Rencana machine learning](#rencana-machine-learning)
-- [API dan dashboard yang direncanakan](#api-dan-dashboard-yang-direncanakan)
-- [Monitoring dan retraining](#monitoring-dan-retraining)
-- [Pengujian dan CI](#pengujian-dan-ci)
-- [Workflow Git](#workflow-git)
-- [Target keberhasilan](#target-keberhasilan)
-- [Etika, privasi, dan batas interpretasi](#etika-privasi-dan-batas-interpretasi)
-- [Roadmap](#roadmap)
-- [Lisensi](#lisensi)
+## Table of Contents
 
-## Latar belakang
+- [Executive Summary](#executive-summary)
+- [Project Proposal](#project-proposal)
+  - [Background](#background)
+  - [Problem Statement](#problem-statement)
+  - [Research Questions](#research-questions)
+  - [Objectives](#objectives)
+  - [Stakeholders and Use Cases](#stakeholders-and-use-cases)
+  - [System Scope](#system-scope)
+  - [Key Deliverables](#key-deliverables)
+- [Functional and Non-Functional Requirements](#functional-and-non-functional-requirements)
+- [Solution Architecture](#solution-architecture)
+- [Data Strategy](#data-strategy)
+- [Machine Learning Strategy](#machine-learning-strategy)
+- [MLOps Lifecycle](#mlops-lifecycle)
+- [Technology Stack](#technology-stack)
+- [Repository Structure](#repository-structure)
+- [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [Testing and Quality Gates](#testing-and-quality-gates)
+- [Development Workflow](#development-workflow)
+- [Monitoring and Retraining](#monitoring-and-retraining)
+- [Risk Register](#risk-register)
+- [Success Metrics](#success-metrics)
+- [Project Roadmap](#project-roadmap)
+- [Assessment Alignment](#assessment-alignment)
+- [Ethics, Privacy, and Limitations](#ethics-privacy-and-limitations)
+- [License](#license)
 
-Percakapan publik di media sosial bergerak cepat, menggunakan ragam bahasa yang
-dinamis, dan dapat mengalami perubahan topik maupun distribusi sentimen. Kuping
-Negara dirancang sebagai studi MLOps agar proses pengumpulan data, validasi,
-pelabelan, pelatihan, deployment, dan monitoring dapat dilakukan secara
-terjadwal, dapat ditelusuri, dan dapat direproduksi.
+## Executive Summary
 
-Proyek ini berfokus pada pembangunan proses teknis yang bertanggung jawab.
-Hasilnya bukan survei opini publik dan tidak dapat digeneralisasikan sebagai
-representasi seluruh warga Indonesia.
+Percakapan mengenai program publik di social media berubah dengan cepat dan
+mengandung variasi bahasa, konteks, sarkasme, spam, serta bias sampling. Analisis
+sentimen yang hanya dilakukan sebagai eksperimen notebook tidak cukup karena
+hasilnya sulit direproduksi, tidak memiliki data lineage, dan akan mengalami
+degradasi ketika distribusi data berubah.
 
-## Tujuan dan ruang lingkup
+Proposal Kuping Negara menggunakan MLOps practices untuk mengelola keseluruhan
+lifecycle: scheduled ingestion, immutable raw storage, schema validation,
+preprocessing, manual annotation, experiment tracking, model registry,
+controlled deployment, observability, dan retraining. Output sistem ditujukan
+sebagai decision-support signal, bukan survei opini publik atau ukuran resmi
+keberhasilan kebijakan.
 
-Tujuan utama:
+## Project Proposal
 
-1. mengumpulkan unggahan publik yang relevan secara berkala;
-2. membersihkan, menganonimkan, dan memvalidasi data secara konsisten;
-3. mengklasifikasikan sentimen menjadi `positive`, `neutral`, atau `negative`;
-4. menyertakan confidence dan probabilitas kelas untuk mendukung interpretasi;
-5. menjaga versioning data, model, skema, konfigurasi, dan run pipeline;
-6. menyajikan tren melalui API dan dashboard yang mudah dipahami;
-7. mendeteksi penurunan kualitas, drift, atau kegagalan pipeline;
-8. menyediakan jalur retraining yang terkontrol dan dapat diaudit.
+### Background
 
-Di luar ruang lingkup tahap awal:
+Empat program yang menjadi initial monitoring scope adalah:
 
-- menarik kesimpulan kausal tentang keberhasilan program;
-- mengidentifikasi atau membuat profil individu;
-- menganalisis pesan privat atau data yang tidak memiliki izin akses;
-- deployment produksi sebelum evaluasi keamanan, kualitas, dan tata kelola.
-
-## Program yang dipantau
-
-| Kode | Program | Jadwal pengumpulan awal |
+| Program ID | Program | Initial Collection Schedule |
 | --- | --- | --- |
-| `mbg` | Makan Bergizi Gratis | Senin |
-| `ckg` | Cek Kesehatan Gratis | Selasa |
-| `kopdes_merah_putih` | Koperasi Desa Merah Putih | Rabu |
-| `sekolah_rakyat` | Sekolah Rakyat | Kamis |
+| `mbg` | Makan Bergizi Gratis | Monday |
+| `ckg` | Cek Kesehatan Gratis | Tuesday |
+| `kopdes_merah_putih` | Koperasi Desa Merah Putih | Wednesday |
+| `sekolah_rakyat` | Sekolah Rakyat | Thursday |
 
-Pelabelan dan pemeriksaan kualitas awal direncanakan setiap Jumat. Semua jadwal
-menggunakan zona waktu `Asia/Jakarta`. Jadwal dapat berubah setelah pengukuran
-volume data dan kapasitas operasional tersedia.
+Initial labeling dan data quality review direncanakan setiap Friday. Seluruh
+scheduling menggunakan timezone `Asia/Jakarta`. Jadwal ini merupakan operating
+proposal dan akan dievaluasi kembali berdasarkan volume data, rate limit,
+latency, serta biaya operasional.
 
-## Gambaran alur MLOps
+### Problem Statement
+
+Project ini menjawab lima technical problems utama:
+
+1. **Data freshness** — data harus dikumpulkan secara periodik tanpa menghasilkan
+   duplicate record atau kehilangan run history.
+2. **Data reliability** — source schema, volume, bahasa, dan kualitas teks dapat
+   berubah tanpa pemberitahuan.
+3. **Model reliability** — vocabulary drift, topic drift, dan sentiment drift
+   dapat menurunkan performa model setelah deployment.
+4. **Traceability** — prediction harus dapat ditelusuri ke source record,
+   preprocessing version, dataset version, model version, dan code revision.
+5. **Interpretability** — stakeholder membutuhkan trend, confidence, coverage,
+   dan limitations yang dapat dipahami, bukan hanya sebuah class label.
+
+### Research Questions
+
+- Bagaimana membangun sentiment classification pipeline yang reproducible untuk
+  Bahasa Indonesia dan percakapan social media yang dinamis?
+- Seberapa baik baseline model dibandingkan Indonesian pretrained language
+  model pada Macro-F1, per-class recall, calibration, dan inference cost?
+- Monitoring signal apa yang paling efektif untuk mendeteksi degradation akibat
+  data drift, concept drift, dan source schema change?
+- Bagaimana menampilkan aggregate sentiment tanpa menghilangkan uncertainty dan
+  tanpa menggeneralisasikan pengguna X sebagai seluruh masyarakat Indonesia?
+
+### Objectives
+
+#### Primary Objectives
+
+- Menghasilkan weekly, versioned, dan quality-checked dataset untuk setiap
+  target program.
+- Mengembangkan three-class sentiment classifier dengan target Macro-F1 minimum
+  `0.75` pada representative holdout set.
+- Menyediakan batch inference dan online inference contract yang menyertakan
+  class probabilities, confidence, dan model version.
+- Menyediakan observability untuk data, model, pipeline, dan serving layer.
+- Menetapkan controlled retraining dan rollback process yang dapat diaudit.
+
+#### Engineering Objectives
+
+- Menjaga source code modular di bawah satu Python namespace.
+- Menjalankan environment yang konsisten melalui GitHub Codespaces/Dev
+  Containers.
+- Menggunakan automated tests dan CI sebagai minimum merge gate.
+- Menjaga secrets, raw datasets, dan model binaries di luar Git history.
+- Mendokumentasikan ownership, naming convention, code placement, dan Git
+  workflow untuk contributor baru.
+
+### Stakeholders and Use Cases
+
+| Stakeholder | Primary Use Case | Expected Output |
+| --- | --- | --- |
+| Researcher/data analyst | Menganalisis perubahan discourse per program dan periode | Versioned dataset, trend, uncertainty |
+| ML engineer | Melatih, membandingkan, dan mendaftarkan model | Metrics, artifacts, lineage, model card |
+| Data engineer | Mengoperasikan ingestion dan validation pipeline | Run status, freshness, data quality report |
+| Policy communication team | Memahami issue dan aggregate public response | Filtered dashboard dan explainable summary |
+| Project maintainer | Menjaga quality, security, dan release process | CI status, PR review, rollback path |
+
+### System Scope
+
+#### In Scope
+
+- Public posts yang diperoleh melalui collection method yang diizinkan.
+- Program-specific keyword configuration dan scheduled collection.
+- Raw, processed, dan labeled data zones.
+- Bahasa Indonesia sebagai primary language; language detection tetap direkam.
+- Manual annotation dengan `positive`, `neutral`, `negative`, dan temporary
+  `uncertain` label untuk adjudication.
+- Baseline model, transformer experiment, batch inference, REST API contract,
+  dashboard, monitoring, serta retraining workflow.
+
+#### Out of Scope
+
+- Private messages, restricted data, atau bypass terhadap access control.
+- Individual profiling, identity resolution, dan automated decision tentang
+  seseorang.
+- Causal inference mengenai keberhasilan program pemerintah.
+- Klaim bahwa pengguna X merepresentasikan seluruh populasi Indonesia.
+- Production deployment sebelum security, privacy, reliability, dan cost review.
+
+### Key Deliverables
+
+1. Reproducible development environment dan repository standard.
+2. Config-driven ingestion pipeline dengan immutable raw zone.
+3. Versioned data contract, validation report, dan preprocessing pipeline.
+4. Annotation guideline, labeled dataset, serta inter-annotator agreement report.
+5. Baseline dan candidate model comparison beserta experiment lineage.
+6. Model registry, promotion gate, inference service, dan rollback procedure.
+7. Monitoring dashboard untuk data quality, model quality, service health, dan
+   pipeline health.
+8. Technical documentation, operational runbook, dan assessment evidence.
+
+## Functional and Non-Functional Requirements
+
+### Functional Requirements
+
+| ID | Requirement |
+| --- | --- |
+| `FR-01` | Sistem menerima keyword configuration per target program. |
+| `FR-02` | Ingestion run menyimpan record secara append-only dan idempotent. |
+| `FR-03` | Invalid record dikarantina dan dilaporkan sebelum processed zone. |
+| `FR-04` | Preprocessing melakukan cleaning, normalization, anonymization, dan deduplication. |
+| `FR-05` | Training pipeline merekam dataset, parameters, metrics, artifact, dan code version. |
+| `FR-06` | Inference menghasilkan sentiment, probabilities, confidence, program, dan model version. |
+| `FR-07` | Dashboard mendukung filter berdasarkan program dan time window. |
+| `FR-08` | Monitoring mendeteksi data quality issue, drift, stale data, dan service failure. |
+
+### Non-Functional Requirements
+
+| Attribute | Initial Target |
+| --- | --- |
+| Reproducibility | Environment dan dependency dapat dibuat ulang dari repository. |
+| Traceability | Prediction memiliki reference ke data/model/schema/run version. |
+| Reliability | Scheduled pipeline success rate minimal `95%`. |
+| Maintainability | Modular package, documented boundaries, automated tests, reviewed PR. |
+| Security | Secrets tidak masuk Git; least-privilege access diterapkan pada runtime. |
+| Privacy | Personal identifier diminimalkan sebelum downstream processing. |
+| Observability | Structured logs, metrics, run status, dan alert context tersedia. |
+| Recoverability | Model promotion memiliki previous-version rollback path. |
+
+## Solution Architecture
 
 ```mermaid
 flowchart LR
-    A[Unggahan publik X] --> B[Ingestion terjadwal]
-    B --> C[Raw zone append-only]
-    C --> D[Validasi kontrak data]
-    D --> E[Cleaning, anonimisasi, deduplikasi]
-    E --> F[Processed zone]
-    F --> G[Pelabelan manual]
-    G --> H[Labeled zone]
-    H --> I[Training dan evaluasi]
-    I --> J[Model registry]
-    J --> K[Batch/online inference]
-    K --> L[API dan dashboard]
-    F --> M[Monitoring data]
-    K --> N[Monitoring model dan layanan]
-    M --> O{Drift atau kualitas turun?}
-    N --> O
-    O -->|Ya| I
-    O -->|Tidak| P[Operasi terjadwal berikutnya]
+    SRC[Public X Posts] --> ING[Scheduled Ingestion]
+    CFG[Keyword Config] --> ING
+    ING --> RAW[(Raw Zone<br/>Append-only)]
+    RAW --> VAL[Schema & Quality Validation]
+    VAL -->|Valid| PRE[Cleaning, Normalization,<br/>Anonymization, Deduplication]
+    VAL -->|Invalid| QUA[(Quarantine)]
+    PRE --> PRO[(Processed Zone)]
+    PRO --> LAB[Manual Annotation]
+    LAB --> LBL[(Labeled Zone)]
+    LBL --> TRN[Training & Evaluation]
+    TRN --> EXP[(Experiment Tracking)]
+    TRN --> REG[(Model Registry)]
+    REG --> INF[Batch / Online Inference]
+    INF --> API[FastAPI Contract]
+    API --> DASH[Streamlit Dashboard]
+    PRO --> MON[Data Monitoring]
+    INF --> MON
+    API --> MON
+    MON --> RET{Retraining Trigger}
+    RET -->|Approved| TRN
 ```
 
-Setiap perpindahan penting direncanakan membawa `ingestion_run_id`,
-`data_version`, `model_version`, dan `schema_version` agar hasil dapat ditelusuri
-kembali ke sumber prosesnya.
+Design principles:
 
-## Arsitektur yang direncanakan
+- Raw data is immutable; corrections produce a new version.
+- Pipeline stage communicates through explicit data contracts.
+- DAG hanya mengatur orchestration dan tidak menyimpan business logic.
+- Notebook hanya digunakan untuk exploration; reusable logic dipindahkan ke
+  `src/kuping_negara/`.
+- API dan dashboard menggunakan inference/service interface, bukan mengakses
+  training internals.
+- Model promotion membutuhkan evaluation evidence dan human approval.
 
-| Area | Kandidat teknologi | Status saat ini |
+## Data Strategy
+
+### Data Zones
+
+| Zone | Purpose | Storage Rule |
 | --- | --- | --- |
-| Pengumpulan | Tweet Harvest dan ekspor CSV | Direncanakan |
-| Orchestration | Apache Airflow | Struktur `dags/` tersedia |
-| Penyimpanan | CSV/Parquet, object storage | Zona data lokal tersedia |
-| Versioning data | DVC | Direncanakan |
-| Baseline model | scikit-learn | Dependensi awal tersedia |
-| Model bahasa | IndoBERT/IndoBERTweet | Kandidat eksperimen |
-| Experiment tracking | MLflow | Direncanakan |
-| Online serving | FastAPI | Package `api` tersedia |
-| Metadata/hasil | PostgreSQL | Direncanakan |
-| Dashboard | Streamlit | Package `dashboard` tersedia |
-| Observability | Prometheus dan Grafana | Direncanakan |
-| Containerization | Docker/Dev Container | Dev Container tersedia |
-| CI | GitHub Actions | Tes dasar tersedia |
+| `raw` | Source-aligned ingestion output | Append-only, immutable, audit metadata required |
+| `processed` | Cleaned, anonymized, normalized, deduplicated records | Must pass schema and quality gates |
+| `labeled` | Annotated training/evaluation samples | Annotation guideline version required |
+| `quarantine` | Invalid or suspicious records | Excluded until reviewed; planned storage |
 
-Pemilihan akhir harus didasarkan pada eksperimen, kebutuhan operasional, biaya,
-dan kepatuhan terhadap kebijakan sumber data. Tabel ini bukan klaim bahwa semua
-komponen telah diimplementasikan.
+Dataset contents are not committed to Git. The directories retain only
+`.gitkeep`; large/versioned artifacts will use object storage and DVC or an
+equivalent dataset registry.
 
-## Struktur repository
+### Data Contract
+
+The initial JSON Schema is stored at
+[`configs/schemas/tweet_record.schema.json`](configs/schemas/tweet_record.schema.json).
+The main field groups are:
+
+- identity: `tweet_id`, `conversation_id`, `tweet_url`;
+- collection context: `target_program`, `matched_keyword`;
+- text: `raw_text`, `cleaned_text`, `language`;
+- temporal: `published_at`, `collected_at`, `year_week`, `year_month`;
+- engagement: reply, repost/retweet, like, dan quote counts;
+- annotation/inference: label, prediction, class probabilities, confidence;
+- lineage: `ingestion_run_id`, `data_version`, `model_version`,
+  `schema_version`.
+
+### Data Quality Gates
+
+- Required fields, data types, enum values, dan timestamp format valid.
+- `tweet_id` uniqueness dan duplicate rate berada dalam accepted threshold.
+- Probability value berada pada interval `[0, 1]`.
+- Empty text, unsupported language, spam, dan anomalous volume dilaporkan.
+- Source schema change menghasilkan explicit failure atau quarantine, bukan
+  silent corruption.
+- Personally identifiable information diminimalkan sebelum downstream use.
+
+## Machine Learning Strategy
+
+### Task Definition
+
+Supervised multi-class text classification:
+
+- `positive` — support, benefit, praise, atau positive experience terhadap
+  target program;
+- `neutral` — factual statement, announcement, question, atau tidak ada
+  evaluative stance yang dominan;
+- `negative` — criticism, rejection, complaint, atau negative experience;
+- `uncertain` — temporary annotation state untuk ambiguity/adjudication dan
+  tidak digunakan langsung sebagai target three-class training.
+
+Full decision rules tersedia pada
+[`docs/annotation-guidelines.md`](docs/annotation-guidelines.md).
+
+### Experiment Plan
+
+1. Build interpretable baseline menggunakan TF-IDF dan linear classifier.
+2. Gunakan time-aware dan conversation-aware split untuk mengurangi leakage.
+3. Ukur Macro-F1, per-class precision/recall/F1, confusion matrix, calibration,
+   inference latency, dan model size.
+4. Bandingkan baseline dengan IndoBERT/IndoBERTweet candidate.
+5. Lakukan slice evaluation per program, period, dan language condition.
+6. Simpan parameter, metric, artifact, dataset version, schema version, serta
+   commit SHA di experiment tracker.
+7. Register hanya candidate yang memenuhi quality gate dan documented review.
+
+### Initial Model Acceptance Criteria
+
+- Macro-F1 minimum `0.75` pada representative holdout set.
+- Tidak ada critical class dengan recall yang berada di bawah threshold yang
+  disepakati pada model review.
+- Evaluation bebas known data leakage.
+- Prediction contract menyertakan calibrated confidence atau limitation note.
+- Model card, dataset reference, dan rollback artifact tersedia.
+
+## MLOps Lifecycle
+
+```text
+Collect → Validate → Process → Label → Train → Evaluate → Register
+       → Deploy → Monitor → Approve Retraining → Compare → Promote/Rollback
+```
+
+Every stage will produce machine-readable metadata. A model is never promoted
+only because a single aggregate metric improves; regression by program,
+calibration, operational cost, privacy, dan failure behavior harus ditinjau.
+
+## Technology Stack
+
+| Layer | Candidate Technology | Repository Status |
+| --- | --- | --- |
+| Language/runtime | Python 3.12+ | Configured |
+| Development environment | GitHub Codespaces / Dev Containers | Configured |
+| Data manipulation | pandas | Installed by project requirements |
+| Baseline ML | scikit-learn | Installed by project requirements |
+| NLP candidate | IndoBERT / IndoBERTweet | Planned experiment |
+| Orchestration | Apache Airflow | Directory prepared |
+| Data versioning | DVC + object storage | Planned |
+| Experiment tracking | MLflow | Planned |
+| API | FastAPI | Package boundary prepared |
+| Metadata store | PostgreSQL | Planned |
+| Dashboard | Streamlit | Package boundary prepared |
+| Monitoring | Prometheus + Grafana | Planned |
+| CI | GitHub Actions | Basic workflow configured |
+
+`Planned` means architectural candidate, not an implemented production
+component.
+
+## Repository Structure
 
 ```text
 kuping-negara/
-├── .devcontainer/               # Environment GitHub Codespaces/Dev Containers
-│   └── devcontainer.json
-├── .github/
-│   ├── workflows/ci.yml         # Pemeriksaan otomatis pada push dan pull request
-│   └── pull_request_template.md
+├── .devcontainer/               # Codespaces/Dev Container definition
+├── .github/                     # CI workflow and pull request template
 ├── configs/
-│   ├── keywords/                # Kata kunci per program dan jadwal koleksi
-│   └── schemas/                 # Kontrak dan versi skema data
-├── dags/                        # Definisi workflow Airflow (roadmap)
+│   ├── keywords/                # Program keyword configuration
+│   └── schemas/                 # Versioned data contracts
+├── dags/                        # Airflow orchestration definitions only
 ├── data/
-│   ├── raw/                     # Data sumber, append-only, tidak masuk Git
-│   ├── processed/               # Data bersih/anonim/deduplikasi
-│   └── labeled/                 # Data berlabel dan metadata anotasi
-├── docs/                        # Dokumentasi desain dan panduan anotasi
-├── models/                      # Artefak model lokal, tidak masuk Git
-├── notebooks/                   # Eksplorasi dan eksperimen terkontrol
+│   ├── raw/                     # Immutable source-aligned data; Git-ignored
+│   ├── processed/               # Validated and transformed data; Git-ignored
+│   └── labeled/                 # Annotated datasets; Git-ignored
+├── docs/                        # Engineering, architecture, workflow, assessment
+├── models/                      # Local model artifacts; Git-ignored
+├── notebooks/                   # Exploration, EDA, and experiment narratives
 ├── src/kuping_negara/
-│   ├── ingestion/               # Pengambilan dan penyimpanan raw data
-│   ├── preprocessing/           # Cleaning, normalisasi, anonimisasi
-│   ├── validation/              # Kontrak, schema, dan quality gate
-│   ├── labeling/                # Persiapan dan QA anotasi
-│   ├── training/                # Training, evaluasi, registrasi model
-│   ├── inference/               # Batch/online prediction
+│   ├── ingestion/               # Source adapters and raw persistence
+│   ├── preprocessing/           # Text transformation and anonymization
+│   ├── validation/              # Schema and data quality gates
+│   ├── labeling/                # Annotation preparation and QA
+│   ├── training/                # Training, evaluation, model registration
+│   ├── inference/               # Batch and online prediction interfaces
 │   ├── monitoring/              # Data/model/service monitoring
-│   ├── api/                     # FastAPI service (roadmap)
-│   ├── dashboard/               # Dashboard analitik (roadmap)
-│   └── healthcheck.py           # Pemeriksaan environment minimal
-├── tests/
-│   ├── unit/                    # Tes unit cepat
-│   └── integration/             # Tes integrasi antar-komponen
-├── .env.example                 # Contoh variabel tanpa kredensial
-├── .gitignore
-├── LICENSE
-├── pyproject.toml
-└── requirements.txt
+│   ├── api/                     # API transport layer
+│   └── dashboard/               # Presentation layer
+└── tests/
+    ├── unit/                    # Fast isolated tests
+    └── integration/             # Cross-component tests
 ```
 
-Kode aplikasi ditempatkan langsung di package `src/kuping_negara`, bukan di
-`src/api` dan folder sejajar lainnya. Pola ini mencegah benturan nama package,
-memudahkan instalasi editable, dan menjaga seluruh domain proyek di satu
-namespace Python.
+Detailed ownership and code-placement rules are documented in
+[`docs/project-structure.md`](docs/project-structure.md).
 
-## Mulai cepat
+## Quick Start
 
-### Opsi A — GitHub Codespaces
+### GitHub Codespaces
 
-1. Buka repository di GitHub.
-2. Pilih **Code → Codespaces → Create codespace on main**.
-3. Tunggu proses pembuatan container dan instalasi dependensi selesai.
-4. Jalankan pemeriksaan environment:
+1. Open the repository on GitHub.
+2. Select **Code → Codespaces → Create codespace on main**.
+3. Wait until `postCreateCommand` completes.
+4. Run the environment smoke test:
 
 ```bash
 python -m kuping_negara
 ```
 
-5. Jalankan tes:
+5. Run the test suite:
 
 ```bash
 python -m pytest
 ```
 
-Dev Container menggunakan Python 3.12 dan memasang extension Python, Jupyter,
-serta GitLens secara otomatis.
+Expected smoke-test output includes the project version and installed versions
+of pandas, scikit-learn, and JupyterLab.
 
-### Opsi B — Lokal
+### Local Development
 
-Prasyarat: Git dan Python 3.12 atau lebih baru.
+Prerequisites: Git and Python 3.12 or newer.
 
 ```bash
 git clone https://github.com/ahmadnafi30/kuping-negara.git
@@ -204,19 +413,19 @@ cd kuping-negara
 python -m venv .venv
 ```
 
-Aktifkan virtual environment di Windows PowerShell:
+Activate on Windows PowerShell:
 
 ```powershell
 .venv\Scripts\Activate.ps1
 ```
 
-Atau di Linux/macOS:
+Activate on Linux/macOS:
 
 ```bash
 source .venv/bin/activate
 ```
 
-Kemudian instal dan verifikasi:
+Install and verify:
 
 ```bash
 python -m pip install --upgrade pip
@@ -226,270 +435,154 @@ python -m kuping_negara
 python -m pytest
 ```
 
-## Konfigurasi
+## Configuration
 
-Salin `.env.example` menjadi `.env`, lalu isi nilainya secara lokal:
+Copy the example environment file:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-| Variabel | Wajib | Keterangan |
+| Variable | Required | Description |
 | --- | --- | --- |
-| `X_AUTH_TOKEN` | Saat ingestion diaktifkan | Kredensial sumber data; jangan pernah di-commit |
-| `TZ` | Direkomendasikan | Zona waktu scheduler, default `Asia/Jakarta` |
+| `X_AUTH_TOKEN` | When ingestion is implemented | Source access token; never commit it |
+| `TZ` | Recommended | Scheduler timezone; default `Asia/Jakarta` |
 
-`.env` sudah diabaikan Git. Jika kredensial pernah ter-commit, menghapus file
-saja tidak cukup: kredensial harus segera dicabut/dirotasi dan riwayat Git perlu
-ditangani secara khusus.
+Non-secret configuration belongs in `configs/`. Secret values belong in local
+`.env`, Codespaces secrets, atau runtime secret manager. If a credential enters
+Git history, deleting the file is insufficient: revoke/rotate the credential
+and follow an approved history-remediation process.
 
-Konfigurasi non-rahasia disimpan di `configs/`. Contoh awal kata kunci ada di
-`configs/keywords/programs.example.yaml`, sedangkan kontrak data awal ada di
-`configs/schemas/tweet_record.schema.json`.
+## Testing and Quality Gates
 
-## Rencana data
-
-### Zona data
-
-| Zona | Isi | Aturan utama |
-| --- | --- | --- |
-| `raw` | Hasil koleksi sedekat mungkin dengan sumber | Append-only, immutable, audit trail wajib |
-| `processed` | Data bersih, anonim, ternormalisasi, dan terdeduplikasi | Harus lolos validasi schema/quality |
-| `labeled` | Sampel processed dengan label dan metadata anotasi | Memuat versi guideline dan adjudikasi |
-
-Isi zona data tidak disimpan di Git. Hanya `.gitkeep` yang dipertahankan agar
-struktur direktori terlihat. Dataset bervolume besar direncanakan memakai object
-storage dan DVC atau mekanisme versioning setara.
-
-### Kelompok field utama
-
-- Identitas teknis: `tweet_id`, `conversation_id`, `tweet_url`.
-- Target pengumpulan: `target_program`, `matched_keyword`.
-- Teks: `raw_text`, `cleaned_text`, `language`.
-- Waktu: `published_at`, `collected_at`, `year_week`, `year_month`.
-- Engagement: `reply_count`, `retweet_count`, `like_count`, `quote_count`.
-- Label/prediksi: label, prediction, probabilitas tiap kelas, confidence.
-- Lineage: `ingestion_run_id`, `data_version`, `model_version`,
-  `schema_version`.
-
-Kontrak JSON awal sengaja mengizinkan field tambahan agar evolusi eksperimen
-tidak langsung mematahkan pipeline. Aturan ini harus dievaluasi kembali sebelum
-produksi.
-
-### Kualitas data minimum yang direncanakan
-
-- field wajib tersedia dan memiliki tipe valid;
-- `tweet_id` tidak kosong dan duplikasi terukur;
-- timestamp dapat diparse serta konsisten dengan zona waktu;
-- `target_program` termasuk dalam empat program yang didukung;
-- probabilitas berada di rentang 0–1;
-- teks kosong, bahasa tidak relevan, spam, dan duplikasi dilaporkan;
-- perubahan schema sumber memicu peringatan, bukan kegagalan diam-diam.
-
-## Rencana machine learning
-
-Task utama adalah klasifikasi sentimen tiga kelas:
-
-- `positive`;
-- `neutral`;
-- `negative`.
-
-Label `uncertain` digunakan pada tahap anotasi untuk kasus ambigu dan tidak
-langsung menjadi kelas target model tiga kelas. Detail keputusan tersedia di
-[`docs/annotation-guidelines.md`](docs/annotation-guidelines.md).
-
-Tahapan eksperimen yang direncanakan:
-
-1. membangun baseline yang mudah dijelaskan dengan fitur teks dan
-   scikit-learn;
-2. menggunakan pemisahan data yang mencegah kebocoran waktu/percakapan;
-3. mengevaluasi Macro-F1, per-class precision/recall/F1, confusion matrix, dan
-   kalibrasi confidence;
-4. membandingkan baseline dengan IndoBERT atau IndoBERTweet;
-5. menyimpan parameter, metrik, artefak, data version, dan commit SHA;
-6. mendaftarkan hanya model yang lolos quality gate;
-7. mempromosikan model melalui review, bukan mengganti produksi otomatis hanya
-   karena satu metrik meningkat.
-
-## API dan dashboard yang direncanakan
-
-Endpoint prediksi awal:
-
-```http
-POST /predict
-Content-Type: application/json
-
-{
-  "text": "Contoh unggahan publik",
-  "program": "mbg"
-}
-```
-
-Respons yang direncanakan:
-
-```json
-{
-  "sentiment": "neutral",
-  "confidence": 0.82,
-  "program": "mbg",
-  "probabilities": {
-    "positive": 0.09,
-    "neutral": 0.82,
-    "negative": 0.09
-  },
-  "model_version": "example-only"
-}
-```
-
-Format tersebut masih berupa kontrak desain dan belum diimplementasikan.
-Dashboard direncanakan menampilkan volume, distribusi dan tren sentimen,
-confidence, filter program/waktu, status data terbaru, serta peringatan kualitas.
-
-## Monitoring dan retraining
-
-Risiko yang dipantau:
-
-- **vocabulary/topic drift:** istilah, singkatan, dan isu baru;
-- **sentiment drift:** perubahan distribusi kelas;
-- **source/schema drift:** perubahan struktur hasil pengumpulan;
-- **data quality:** missing values, duplikasi, spam, bahasa, dan lonjakan volume;
-- **model quality:** Macro-F1 per kelas, confidence, dan error pada sampel audit;
-- **service health:** latency, error rate, throughput, dan freshness data;
-- **pipeline health:** keberhasilan job, durasi, retry, dan keterlambatan jadwal.
-
-Retraining awal direncanakan secara bulanan atau dipicu ketika drift/kualitas
-melewati ambang yang disepakati. Model baru tetap harus dibandingkan dengan
-model aktif, ditinjau, dan memiliki jalur rollback.
-
-## Pengujian dan CI
-
-Tes lokal:
+Run locally:
 
 ```bash
 python -m pytest
-```
-
-Pemeriksaan environment:
-
-```bash
 python -m kuping_negara.healthcheck
 ```
 
-Workflow `.github/workflows/ci.yml` menjalankan instalasi, health check, dan tes
-pada push ke `main`, `develop`, `feat/**`, `fix/**`, serta pull request menuju
-`main` atau `develop`.
+Current CI runs dependency installation, environment health check, and unit
+tests on supported branches and pull requests. Planned quality gates include:
 
-Seiring implementasi berkembang, cakupan tes akan meliputi:
+- code formatting, linting, and static type checking;
+- unit and integration tests;
+- JSON Schema/data-contract validation;
+- model metric and slice-regression tests;
+- API contract tests;
+- DAG parsing and container smoke tests;
+- secret scanning and dependency vulnerability review.
 
-- unit test cleaning, mapping label, dan feature preparation;
-- schema/data-contract test;
-- integration test raw → processed → prediction;
-- model quality gate pada fixture dataset yang terversi;
-- API contract test;
-- smoke test image/container dan DAG.
+## Development Workflow
 
-## Workflow Git
+Contributor rules:
 
-### Peran branch
+- [`docs/development-guidelines.md`](docs/development-guidelines.md) — naming,
+  Python style, type hints, logging, testing, security, and Definition of Done.
+- [`docs/project-structure.md`](docs/project-structure.md) — code ownership,
+  dependency boundaries, and where every file belongs.
+- [`docs/git-workflow.md`](docs/git-workflow.md) — branch lifecycle,
+  Conventional Commits, Pull Request, review, merge, and cleanup.
 
-- `main`: kondisi stabil/release; perubahan masuk setelah verifikasi.
-- `develop`: branch integrasi sebelum rilis ke `main`.
-- `feat/<nama>`: fitur atau fondasi baru dari `develop`.
-- `fix/<nama>`: perbaikan bug dari `develop`.
-- `docs/<nama>`: perubahan dokumentasi yang berdiri sendiri.
-- `chore/<nama>`: konfigurasi atau pemeliharaan non-fitur.
-- `hotfix/<nama>`: perbaikan mendesak dari `main`, kemudian diselaraskan ke
-  `develop`.
-
-Branch dibuat ketika ada pekerjaan nyata; proyek tidak memelihara branch kosong
-hanya untuk menunjukkan setiap kategori.
-
-### Alur kontribusi
-
-```text
-develop → feat/nama-pekerjaan → Pull Request ke develop
-develop → Pull Request rilis ke main
-```
-
-Langkah ringkas:
+Minimum contribution flow:
 
 ```bash
 git switch develop
-git pull --ff-only
-git switch -c feat/nama-fitur
-# lakukan perubahan dan pengujian
-git add <file-yang-relevan>
-git commit -m "feat: jelaskan perubahan secara spesifik"
-git push -u origin feat/nama-fitur
+git pull --ff-only origin develop
+git switch -c feat/short-kebab-case-description
+# implement and test
+git add <intentional-files>
+git commit -m "feat: describe the capability in imperative form"
+git push -u origin feat/short-kebab-case-description
 ```
 
-Pull request harus menjelaskan tujuan, dampak, cara verifikasi, serta risiko.
-Gunakan template di `.github/pull_request_template.md`.
+Create a Pull Request into `develop`, wait for CI and review, merge, then delete
+the topic branch. Release Pull Requests move verified changes from `develop`
+into `main`. Do not create empty branches merely to demonstrate a prefix.
 
-### Prefix commit
+## Monitoring and Retraining
 
-| Prefix | Penggunaan | Contoh |
+| Monitoring Domain | Initial Signals |
+| --- | --- |
+| Data quality | missing rate, duplicate rate, invalid schema, language mix, volume anomaly |
+| Data drift | feature/vocabulary distribution, topic emergence, program distribution |
+| Model quality | sampled Macro-F1, per-class recall, confidence, calibration |
+| Service | latency, throughput, error rate, timeout, model version |
+| Pipeline | success rate, duration, retry, freshness, late/missed schedule |
+
+Retraining is proposed monthly or when approved drift/quality thresholds are
+crossed. Candidate model must be compared with the active model and pass review.
+Rollback must retain the previous production artifact and configuration.
+
+## Risk Register
+
+| Risk | Impact | Planned Mitigation |
 | --- | --- | --- |
-| `feat` | Fitur baru | `feat: add weekly ingestion pipeline` |
-| `fix` | Perbaikan bug | `fix: prevent duplicate tweet records` |
-| `docs` | Dokumentasi | `docs: explain labeling workflow` |
-| `test` | Menambah/memperbaiki tes | `test: cover text normalization` |
-| `refactor` | Restrukturisasi tanpa perubahan perilaku | `refactor: isolate schema validation` |
-| `style` | Format/whitespace tanpa mengubah perilaku | `style: normalize trailing newlines` |
-| `chore` | Konfigurasi, dependensi, maintenance | `chore: configure dev container` |
-| `ci` | Workflow integrasi/deployment | `ci: run tests on pull requests` |
+| Platform policy or source-access change | Ingestion interruption | Approved adapters, explicit failures, documented fallback |
+| Sampling bias | Misleading interpretation | Coverage disclosure, no population-level claim |
+| Vocabulary/topic drift | Model degradation | Drift monitoring, audit sampling, scheduled review |
+| Annotation disagreement | Noisy ground truth | Versioned guideline, double annotation, adjudication |
+| Sensitive information exposure | Privacy/security incident | Data minimization, anonymization, access control, no raw data in Git |
+| Data leakage | Inflated evaluation | Time/conversation-aware split and lineage checks |
+| Low-confidence prediction | Poor decision support | Probability output, threshold policy, abstention/review path |
+| Pipeline silently succeeds with bad data | Corrupted downstream output | Schema gate, quarantine, alerting, run-level metrics |
 
-Prefix yang benar adalah `chore`, bukan `choir`.
+## Success Metrics
 
-## Target keberhasilan
+| Category | Metric | Initial Target |
+| --- | --- | --- |
+| Model | Macro-F1 | `>= 0.75` on representative holdout data |
+| Pipeline | Scheduled run success rate | `>= 95%` |
+| Freshness | Program data and summary update | Weekly |
+| Traceability | Prediction linked to run/data/model/schema version | `100%` |
+| Usability | Test users understand primary dashboard insight | `>= 80%` |
 
-Target awal dari rancangan proyek:
+These values are acceptance targets, not achieved results. Every report must
+include dataset period, sample size, split strategy, label distribution, and
+known limitations.
 
-- Macro-F1 model minimal `0.75` pada test set yang representatif;
-- tingkat keberhasilan pipeline terjadwal minimal `95%`;
-- data dan ringkasan tren diperbarui mingguan;
-- setiap prediksi dapat ditelusuri ke versi model, data, skema, dan run;
-- minimal `80%` pengguna uji memahami informasi utama dashboard.
+## Project Roadmap
 
-Target adalah acceptance criteria, bukan hasil yang sudah dicapai. Angka wajib
-dilaporkan bersama ukuran dataset, metode sampling, periode data, dan confidence
-interval atau variasi antar-run bila relevan.
+- [x] Standardize repository structure and Python namespace.
+- [x] Configure Codespaces/Dev Container and core dependencies.
+- [x] Add `.gitignore`, environment example, license, smoke test, unit test, CI.
+- [x] Add keyword configuration sample and initial data contract.
+- [x] Add initial annotation guideline.
+- [x] Document engineering standards, project structure, Git/PR workflow, and
+  assessment evidence.
+- [ ] Implement idempotent and policy-compliant ingestion.
+- [ ] Implement raw-to-processed validation and preprocessing.
+- [ ] Produce labeled dataset and agreement report.
+- [ ] Train/evaluate scikit-learn baseline.
+- [ ] Compare Indonesian transformer candidates.
+- [ ] Add DVC, MLflow, and Airflow workflow.
+- [ ] Implement FastAPI prediction contract and Streamlit dashboard.
+- [ ] Add production monitoring, alerting, and retraining controls.
+- [ ] Complete security/privacy review and deployment readiness review.
 
-## Etika, privasi, dan batas interpretasi
+## Assessment Alignment
 
-- Gunakan hanya data yang akses dan pemrosesannya diizinkan.
-- Patuhi ketentuan platform serta kebijakan institusi yang berlaku.
-- Minimalkan identitas personal; lakukan anonimisasi/pseudonimisasi sebelum
-  analisis lanjutan.
-- Jangan menyimpan token, cookie, header autentikasi, atau rahasia lain di Git.
-- Jangan memakai sistem ini untuk keputusan individual atau profiling warga.
-- Laporkan bias sampling: pengguna X bukan representasi populasi Indonesia.
-- Laporkan ketidakpastian model dan jangan menyamakan sentimen dengan fakta.
-- Sediakan mekanisme audit, koreksi, rollback, dan penghapusan sesuai kebijakan.
+The repository is organized around the four LK02 assessment components:
+repository structure, Codespaces setup, branching strategy, and README quality.
+The detailed evidence matrix and remaining screenshot checklist are available at
+[`docs/assessment-criteria.md`](docs/assessment-criteria.md).
 
-## Roadmap
+Technical readiness is not the same as submitted evidence. Codespaces must still
+be launched successfully and its terminal output captured for the final report.
 
-- [x] Menyiapkan struktur repository berbasis `src/`.
-- [x] Menambahkan Dev Container/Codespaces dan dependensi awal.
-- [x] Menambahkan `.gitignore`, contoh environment, lisensi, tes, dan CI dasar.
-- [x] Menambahkan contoh konfigurasi kata kunci dan kontrak data awal.
-- [x] Menambahkan draft pedoman anotasi.
-- [ ] Mengimplementasikan ingestion yang legal, terdokumentasi, dan idempotent.
-- [ ] Mengimplementasikan validasi raw dan processed zone.
-- [ ] Mengembangkan preprocessing bahasa Indonesia dan deduplikasi.
-- [ ] Menyusun dataset berlabel beserta pengukuran agreement.
-- [ ] Melatih dan mengevaluasi baseline scikit-learn.
-- [ ] Membandingkan model transformer Indonesia.
-- [ ] Menambahkan DVC dan MLflow.
-- [ ] Mengimplementasikan Airflow DAG mingguan.
-- [ ] Mengimplementasikan FastAPI dan kontrak `/predict`.
-- [ ] Mengimplementasikan dashboard Streamlit.
-- [ ] Menambahkan monitoring data, model, service, dan alerting.
-- [ ] Melakukan security/privacy review sebelum deployment.
+## Ethics, Privacy, and Limitations
 
-## Lisensi
+- Process only data that may legally and contractually be accessed.
+- Follow platform terms, institutional policy, and applicable regulation.
+- Minimize or pseudonymize personal identifiers before downstream processing.
+- Never commit authentication headers, cookies, tokens, or raw personal data.
+- Do not use the system for individual profiling or automated individual action.
+- Disclose that X users are not a representative sample of Indonesia.
+- Present uncertainty and error; sentiment prediction is not verified fact.
+- Maintain audit, correction, rollback, retention, and deletion procedures.
 
-Kode sumber proyek dilisensikan dengan [MIT License](LICENSE). Lisensi repository
-tidak otomatis memberikan hak untuk menyebarkan ulang dataset pihak ketiga;
-penggunaan data tetap mengikuti izin, ketentuan platform, dan kebijakan yang
-berlaku.
+## License
+
+Source code is licensed under the [MIT License](LICENSE). The repository license
+does not grant redistribution rights for third-party datasets. Data use remains
+subject to source permission, platform terms, and applicable policy.
