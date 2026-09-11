@@ -41,7 +41,6 @@ confidence melalui API serta dashboard.
 - [Risk Register](#risk-register)
 - [Success Metrics](#success-metrics)
 - [Project Roadmap](#project-roadmap)
-- [Assessment Alignment](#assessment-alignment)
 - [Ethics, Privacy, and Limitations](#ethics-privacy-and-limitations)
 - [License](#license)
 
@@ -548,8 +547,7 @@ known limitations.
 - [x] Add `.gitignore`, environment example, license, smoke test, unit test, CI.
 - [x] Add keyword configuration sample and initial data contract.
 - [x] Add initial annotation guideline.
-- [x] Document engineering standards, project structure, Git/PR workflow, and
-  assessment evidence.
+- [x] Document engineering standards, project structure, and Git/PR workflow.
 - [ ] Implement idempotent and policy-compliant ingestion.
 - [ ] Implement raw-to-processed validation and preprocessing.
 - [ ] Produce labeled dataset and agreement report.
@@ -559,16 +557,6 @@ known limitations.
 - [ ] Implement FastAPI prediction contract and Streamlit dashboard.
 - [ ] Add production monitoring, alerting, and retraining controls.
 - [ ] Complete security/privacy review and deployment readiness review.
-
-## Assessment Alignment
-
-The repository is organized around the four LK02 assessment components:
-repository structure, Codespaces setup, branching strategy, and README quality.
-The detailed evidence matrix and remaining screenshot checklist are available at
-[`docs/assessment-criteria.md`](docs/assessment-criteria.md).
-
-Technical readiness is not the same as submitted evidence. Codespaces must still
-be launched successfully and its terminal output captured for the final report.
 
 ## Ethics, Privacy, and Limitations
 
