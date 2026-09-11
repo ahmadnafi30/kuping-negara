@@ -15,7 +15,7 @@ report.
 
 ## Criterion Review
 
-### 1. Standardisasi Struktur — 30%
+### 1. Standardisasi Struktur: 30%
 
 Implemented evidence:
 
@@ -32,7 +32,7 @@ Implemented evidence:
 Assessment caution: empty package boundaries indicate planned ownership, not
 implemented business capability. Explain this distinction during submission.
 
-### 2. Setup Codespaces — 30%
+### 2. Setup Codespaces: 30%
 
 Configured evidence:
 
@@ -55,7 +55,7 @@ Full-credit evidence should show Python version, installed core dependencies,
 passing tests, and a clean repository state inside the Codespace. A local-only
 test does not prove Codespaces execution.
 
-### 3. Branching Strategy — 20%
+### 3. Branching Strategy: 20%
 
 Implemented evidence:
 
@@ -72,7 +72,7 @@ meaningful merge history, and cleanup after merge. A Pull Request provides
 stronger collaboration evidence, but it is not explicitly required by the
 four-row indicator supplied for this assessment.
 
-### 4. Dokumentasi README — 20%
+### 4. Dokumentasi README: 20%
 
 README includes:
 

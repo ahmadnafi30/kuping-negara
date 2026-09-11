@@ -9,7 +9,7 @@ unggahan publik dari platform X, mengklasifikasikan sentimen ke dalam kelas
 `positive`, `neutral`, atau `negative`, lalu menyajikan trend dan model
 confidence melalui API serta dashboard.
 
-> **Project status — Foundation Phase.** Repository structure, Python package,
+> **Project status: Foundation Phase.** Repository structure, Python package,
 > Dev Container, dependency specification, data contract draft, annotation
 > guideline, smoke test, unit test, dan CI workflow sudah tersedia. Data
 > ingestion, model training, model registry, serving API, dashboard, dan
@@ -82,15 +82,15 @@ latency, serta biaya operasional.
 
 Project ini menjawab lima technical problems utama:
 
-1. **Data freshness** — data harus dikumpulkan secara periodik tanpa menghasilkan
+1. **Data freshness**: data harus dikumpulkan secara periodik tanpa menghasilkan
    duplicate record atau kehilangan run history.
-2. **Data reliability** — source schema, volume, bahasa, dan kualitas teks dapat
+2. **Data reliability**: source schema, volume, bahasa, dan kualitas teks dapat
    berubah tanpa pemberitahuan.
-3. **Model reliability** — vocabulary drift, topic drift, dan sentiment drift
+3. **Model reliability**: vocabulary drift, topic drift, dan sentiment drift
    dapat menurunkan performa model setelah deployment.
-4. **Traceability** — prediction harus dapat ditelusuri ke source record,
+4. **Traceability**: prediction harus dapat ditelusuri ke source record,
    preprocessing version, dataset version, model version, dan code revision.
-5. **Interpretability** — stakeholder membutuhkan trend, confidence, coverage,
+5. **Interpretability**: stakeholder membutuhkan trend, confidence, coverage,
    dan limitations yang dapat dipahami, bukan hanya sebuah class label.
 
 ### Research Questions
@@ -282,12 +282,12 @@ The main field groups are:
 
 Supervised multi-class text classification:
 
-- `positive` — support, benefit, praise, atau positive experience terhadap
+- `positive`: support, benefit, praise, atau positive experience terhadap
   target program;
-- `neutral` — factual statement, announcement, question, atau tidak ada
+- `neutral`: factual statement, announcement, question, atau tidak ada
   evaluative stance yang dominan;
-- `negative` — criticism, rejection, complaint, atau negative experience;
-- `uncertain` — temporary annotation state untuk ambiguity/adjudication dan
+- `negative`: criticism, rejection, complaint, atau negative experience;
+- `uncertain`: temporary annotation state untuk ambiguity/adjudication dan
   tidak digunakan langsung sebagai target three-class training.
 
 Full decision rules tersedia pada
@@ -477,11 +477,11 @@ tests on supported branches and pull requests. Planned quality gates include:
 
 Contributor rules:
 
-- [`docs/development-guidelines.md`](docs/development-guidelines.md) — naming,
+- [`docs/development-guidelines.md`](docs/development-guidelines.md): naming,
   Python style, type hints, logging, testing, security, and Definition of Done.
-- [`docs/project-structure.md`](docs/project-structure.md) — code ownership,
+- [`docs/project-structure.md`](docs/project-structure.md): code ownership,
   dependency boundaries, and where every file belongs.
-- [`docs/git-workflow.md`](docs/git-workflow.md) — branch lifecycle,
+- [`docs/git-workflow.md`](docs/git-workflow.md): branch lifecycle,
   Conventional Commits, Pull Request, review, merge, and cleanup.
 
 Minimum contribution flow:
