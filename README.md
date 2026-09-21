@@ -433,6 +433,32 @@ uv run --frozen --extra dev pytest
 `requirements.txt` is a generated compatibility export and is not the primary
 installation path.
 
+### Collect X Data
+
+The collector requires Node.js LTS because Tweet Harvest runs through `npx`.
+Validate the four-program plan without opening X:
+
+```powershell
+uv run --frozen collect-x-data --from-date 14-09-2026 --to-date 21-09-2026 --limit 50 --dry-run
+```
+
+Run the complete collection for MBG, CKG, Kopdes Merah Putih, and Sekolah
+Rakyat:
+
+```powershell
+uv run --frozen collect-x-data --from-date 14-09-2026 --to-date 21-09-2026 --limit 50
+```
+
+Tweet Harvest requests the X `auth_token` interactively for every selected
+program. Enter it only in the hidden terminal prompt. Never paste it into chat,
+source code, command arguments, screenshots, or Git. Raw CSV files are moved
+from `tweets-data/` into append-only partitions under `data/raw/x/`. Both
+collection dates are inclusive. Ingestion uses broad program queries;
+language and relevance filtering are deferred to preprocessing.
+
+See [`docs/x-data-collection.md`](docs/x-data-collection.md) for program
+selection, output layout, security controls, and troubleshooting.
+
 ## Configuration
 
 Copy the example environment file:
@@ -443,7 +469,7 @@ Copy-Item .env.example .env
 
 | Variable | Required | Description |
 | --- | --- | --- |
-| `X_AUTH_TOKEN` | When ingestion is implemented | Source access token; never commit it |
+| `X_AUTH_TOKEN` | Reserved for scheduled ingestion | Never commit it; the interactive collector does not load this value |
 | `TZ` | Recommended | Scheduler timezone; default `Asia/Jakarta` |
 
 Non-secret configuration belongs in `configs/`. Secret values belong in local

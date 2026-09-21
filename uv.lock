@@ -866,6 +866,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "pandas" },
+    { name = "pyyaml" },
     { name = "scikit-learn" },
 ]
 
@@ -880,6 +881,7 @@ requires-dist = [
     { name = "jupyterlab", marker = "extra == 'dev'", specifier = ">=4.2,<5" },
     { name = "pandas", specifier = ">=2.2,<4" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8,<10" },
+    { name = "pyyaml", specifier = ">=6,<7" },
     { name = "scikit-learn", specifier = ">=1.5,<2" },
 ]
 provides-extras = ["dev"]

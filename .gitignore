@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+.pytest-tmp/
 .mypy_cache/
 .ruff_cache/
 .ipynb_checkpoints/
@@ -24,6 +25,7 @@ dist/
 htmlcov/
 
 # Local data and model artifacts
+tweets-data/
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*

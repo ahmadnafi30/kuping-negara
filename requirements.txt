@@ -223,7 +223,9 @@ pywinpty==3.0.5 ; os_name == 'nt'
     #   jupyter-server-terminals
     #   terminado
 pyyaml==6.0.3
-    # via jupyter-events
+    # via
+    #   jupyter-events
+    #   kuping-negara
 pyzmq==27.2.0
     # via
     #   ipykernel

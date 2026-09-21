@@ -14,8 +14,12 @@ authors = [
 ]
 dependencies = [
   "pandas>=2.2,<4",
+  "pyyaml>=6,<7",
   "scikit-learn>=1.5,<2"
 ]
+
+[project.scripts]
+collect-x-data = "kuping_negara.ingestion.tweet_harvest:main"
 
 [project.optional-dependencies]
 dev = [
