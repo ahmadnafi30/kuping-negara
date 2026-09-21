@@ -20,6 +20,7 @@ dependencies = [
 
 [project.scripts]
 collect-x-data = "kuping_negara.ingestion.tweet_harvest:main"
+preprocess-x-data = "kuping_negara.preprocessing.x_pipeline:main"
 
 [project.optional-dependencies]
 dev = [
