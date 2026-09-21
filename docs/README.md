@@ -8,6 +8,7 @@
 | [Git Workflow](git-workflow.md) | Contributors and maintainers | Branch lifecycle, commits, Pull Requests, reviews, and releases |
 | [Annotation Guidelines](annotation-guidelines.md) | Annotators and ML team | Operational sentiment-label definitions and quality process |
 | [X Data Collection](x-data-collection.md) | Data engineers and researchers | Four-program Tweet Harvest execution, raw storage, security, and troubleshooting |
+| [X Data Preprocessing](x-data-preprocessing.md) | Data engineers and annotators | Deterministic cleaning, canonical mapping, quality flags, lineage, and pilot results |
 
 Documentation is versioned with the source code. A change that alters system
 behavior, data contract, development rules, or operations must update the

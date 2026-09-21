@@ -459,6 +459,28 @@ language and relevance filtering are deferred to preprocessing.
 See [`docs/x-data-collection.md`](docs/x-data-collection.md) for program
 selection, output layout, security controls, and troubleshooting.
 
+### Preprocess X Data
+
+Run the deterministic preprocessing pipeline against one partitioned raw CSV:
+
+```powershell
+uv run --frozen preprocess-x-data `
+  --input "data/raw/x/collected_date=2026-09-21/program=mbg/run_id=20260921T182524+0700/mbg_2026-09-14_2026-09-21.csv"
+```
+
+The pipeline keeps the raw CSV unchanged, normalizes text, maps Tweet Harvest
+fields to the canonical contract, preserves emoji, removes URLs and direct
+mentions from `cleaned_text`, and writes a non-sensitive quality report.
+Potential language or relevance mismatches remain in the processed dataset
+with review flags instead of being silently deleted. User identifiers are not
+copied into the processed zone.
+
+Processed CSV files and quality reports are stored under
+`data/processed/x/processed_date=<date>/program=<program>/run_id=<run_id>/`.
+Dataset contents remain local because `data/processed/` is ignored by Git.
+See [`docs/x-data-preprocessing.md`](docs/x-data-preprocessing.md) for the data
+contract, quality statuses, pilot results, and troubleshooting.
+
 ## Configuration
 
 Copy the example environment file:

@@ -184,3 +184,10 @@ search returns zero posts. The collector treats that file as a failed run and
 does not move it into `data/raw/`. Check the date window, test the same query in
 the X web interface, verify the login session, and review the browser output.
 Do not create an empty placeholder dataset.
+
+## Next Stage
+
+After a raw CSV passes ingestion checks, run the preprocessing workflow in
+[`x-data-preprocessing.md`](x-data-preprocessing.md). Preprocessing reads the
+partition metadata, preserves the raw file, removes user identifiers from the
+processed contract, and creates a quality report for labeling readiness.
