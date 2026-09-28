@@ -432,53 +432,8 @@ uv run --frozen --extra dev pytest
 `requirements.txt` is a generated compatibility export and is not the primary
 installation path.
 
-### Collect X Data
-
-The collector requires Node.js LTS because Tweet Harvest runs through `npx`.
-Validate the four-program plan without opening X:
-
-```powershell
-uv run --frozen collect-x-data --from-date 14-09-2026 --to-date 21-09-2026 --limit 50 --dry-run
-```
-
-Run the complete collection for MBG, CKG, Kopdes Merah Putih, and Sekolah
-Rakyat:
-
-```powershell
-uv run --frozen collect-x-data --from-date 14-09-2026 --to-date 21-09-2026 --limit 50
-```
-
-Tweet Harvest requests the X `auth_token` interactively for every selected
-program. Enter it only in the hidden terminal prompt. Never paste it into chat,
-source code, command arguments, screenshots, or Git. Raw CSV files are moved
-from `tweets-data/` into append-only partitions under `data/raw/x/`. Both
-collection dates are inclusive. Ingestion uses broad program queries;
-language and relevance filtering are deferred to preprocessing.
-
-See [`docs/x-data-collection.md`](docs/x-data-collection.md) for program
-selection, output layout, security controls, and troubleshooting.
-
-### Preprocess X Data
-
-Run the deterministic preprocessing pipeline against one partitioned raw CSV:
-
-```powershell
-uv run --frozen preprocess-x-data `
-  --input "data/raw/x/collected_date=2026-09-21/program=mbg/run_id=20260921T182524+0700/mbg_2026-09-14_2026-09-21.csv"
-```
-
-The pipeline keeps the raw CSV unchanged, normalizes text, maps Tweet Harvest
-fields to the canonical contract, preserves emoji, removes URLs and direct
-mentions from `cleaned_text`, and writes a non-sensitive quality report.
-Potential language or relevance mismatches remain in the processed dataset
-with review flags instead of being silently deleted. User identifiers are not
-copied into the processed zone.
-
-Processed CSV files and quality reports are stored under
-`data/processed/x/processed_date=<date>/program=<program>/run_id=<run_id>/`.
-Dataset contents remain local because `data/processed/` is ignored by Git.
-See [`docs/x-data-preprocessing.md`](docs/x-data-preprocessing.md) for the data
-contract, quality statuses, pilot results, and troubleshooting.
+Panduan pengambilan data dari X, preprocessing, dan penggunaan sampel ada di
+[panduan pengambilan dan pengolahan data](docs/lk04-implementation.md).
 
 ## Configuration
 

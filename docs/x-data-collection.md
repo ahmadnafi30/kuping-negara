@@ -5,7 +5,7 @@ with Tweet Harvest 2.7.1. The collector reads versioned keywords from
 `configs/keywords/programs.example.yaml` and stores raw CSV files outside Git.
 
 Cara menjalankan pengambilan berkala dan preprocessing ada di
-[panduan implementasi](lk03-implementation.md). CSV lengkap tetap disimpan
+[panduan implementasi](lk04-implementation.md). CSV lengkap tetap disimpan
 secara lokal. Repo menyertakan sampel kecil di `data/raw/samples/` yang
 identitasnya sudah disamarkan, beserta catatan asal datanya.
 

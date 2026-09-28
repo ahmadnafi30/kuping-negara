@@ -2,7 +2,7 @@
 
 | Document | Audience | Purpose |
 | --- | --- | --- |
-| [Pengambilan dan pengolahan data](lk03-implementation.md) | Mahasiswa dan penguji | Cara mengambil data dari X, mencoba sampel, menjalankan preprocessing, dan melihat hasil pengujian |
+| [Pengambilan dan pengolahan data](lk04-implementation.md) | Mahasiswa dan penguji | Cara mengambil data dari X, mencoba sampel, menjalankan preprocessing, dan melihat hasil pengujian |
 | [Codespaces Setup](codespaces-setup.md) | Developers and assessors | Reproducible environment setup, verification, and troubleshooting with uv |
 | [Development Guidelines](development-guidelines.md) | All contributors | Naming, Python style, quality, security, and Definition of Done |
 | [Project Structure](project-structure.md) | Developers and reviewers | Directory ownership, dependency boundaries, and code placement |
