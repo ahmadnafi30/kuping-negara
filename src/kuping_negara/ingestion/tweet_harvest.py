@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import os
 import shutil
+import signal
 import subprocess
 import sys
+import time
 from collections.abc import Mapping, Sequence
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -16,12 +19,69 @@ from zoneinfo import ZoneInfo
 
 import yaml
 
-
 TWEET_HARVEST_VERSION = "2.7.1"
 DEFAULT_CONFIG_PATH = Path("configs/keywords/programs.example.yaml")
 JAKARTA_TIMEZONE = ZoneInfo("Asia/Jakarta")
 BROWSER_EXECUTABLE_ENV = "KUPING_NEGARA_BROWSER_EXECUTABLE"
 BROWSER_HOOK_PATH = Path("scripts/tweet_harvest_browser_hook.cjs")
+
+
+def execute_collection(
+    command: list[str],
+    *,
+    cwd: Path,
+    environment: dict[str, str],
+    timeout: float,
+    non_interactive: bool,
+) -> None:
+    """Run a bounded crawler and stop its browser process tree on timeout.
+
+    Unattended upstream output is discarded because it is not under our
+    control. Only token-free status messages are emitted by the wrapper.
+    """
+    options: dict[str, Any] = {}
+    if sys.platform == "win32":
+        options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        options["start_new_session"] = True
+    process = subprocess.Popen(
+        command,
+        cwd=cwd,
+        env=environment,
+        stdin=subprocess.DEVNULL if non_interactive else None,
+        stdout=subprocess.DEVNULL if non_interactive else None,
+        stderr=subprocess.DEVNULL if non_interactive else None,
+        **options,
+    )
+    try:
+        return_code = process.wait(timeout=timeout)
+    except (subprocess.TimeoutExpired, KeyboardInterrupt) as error:
+        if sys.platform == "win32":
+            try:
+                subprocess.run(
+                    ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                    timeout=5,
+                )
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+        else:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        # Sandboxed Windows environments can reject taskkill. Always stop
+        # the direct child too, so cleanup cannot wait indefinitely.
+        if process.poll() is None:
+            process.kill()
+        process.wait(timeout=5)
+        if isinstance(error, KeyboardInterrupt):
+            raise
+        raise CollectionError("crawler timed out") from error
+    if return_code != 0:
+        raise CollectionError(f"crawler exited with status {return_code}")
 
 
 class CollectionError(RuntimeError):
@@ -133,10 +193,9 @@ def find_repository_root(starting_points: Sequence[Path]) -> Path:
             resolved_path if resolved_path.is_dir() else resolved_path.parent
         )
         for candidate in (current_directory, *current_directory.parents):
-            if (
-                (candidate / "pyproject.toml").is_file()
-                and (candidate / "src" / "kuping_negara").is_dir()
-            ):
+            if (candidate / "pyproject.toml").is_file() and (
+                candidate / "src" / "kuping_negara"
+            ).is_dir():
                 return candidate
 
     raise ValueError("Kuping Negara repository root could not be located")
@@ -195,9 +254,6 @@ def build_tweet_harvest_environment(
 ) -> dict[str, str]:
     """Build an isolated child environment with an optional browser fallback."""
     environment = dict(os.environ if base_environment is None else base_environment)
-    if browser_executable is None:
-        return environment
-
     hook_path = (repository_root / BROWSER_HOOK_PATH).resolve()
     if not hook_path.is_file():
         raise CollectionError(f"Tweet Harvest browser hook not found: {hook_path}")
@@ -207,7 +263,8 @@ def build_tweet_harvest_environment(
     environment["NODE_OPTIONS"] = " ".join(
         option for option in (existing_options, require_option) if option
     )
-    environment[BROWSER_EXECUTABLE_ENV] = str(browser_executable.resolve())
+    if browser_executable is not None:
+        environment[BROWSER_EXECUTABLE_ENV] = str(browser_executable.resolve())
     return environment
 
 
@@ -237,9 +294,10 @@ def finalize_output(
     program_id: str,
     run_id: str,
     collected_date: date,
+    staging_root: Path | None = None,
 ) -> Path:
     """Move a completed staging CSV into the immutable raw data zone."""
-    source = repository_root / "tweets-data" / f"{output_name}.csv"
+    source = (staging_root or repository_root) / "tweets-data" / f"{output_name}.csv"
     if not source.is_file() or source.stat().st_size == 0:
         raise CollectionError(
             f"Tweet Harvest did not produce a non-empty file: {source}"
@@ -247,9 +305,7 @@ def finalize_output(
 
     with source.open(encoding="utf-8-sig", newline="") as source_file:
         populated_rows = (
-            row
-            for row in csv.reader(source_file)
-            if any(cell.strip() for cell in row)
+            row for row in csv.reader(source_file) if any(cell.strip() for cell in row)
         )
         header = next(populated_rows, None)
         first_data_row = next(populated_rows, None)
@@ -278,8 +334,17 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Collect X posts for Kuping Negara with Tweet Harvest."
     )
-    parser.add_argument("--from-date", required=True, help="Start date: DD-MM-YYYY")
-    parser.add_argument("--to-date", required=True, help="End date: DD-MM-YYYY")
+    parser.add_argument("--from-date", help="Start date: DD-MM-YYYY")
+    parser.add_argument("--to-date", help="End date: DD-MM-YYYY")
+    parser.add_argument("--lookback-days", type=int, default=7)
+    parser.add_argument("--attempts", type=int, default=3)
+    parser.add_argument("--retry-delay", type=float, default=5.0)
+    parser.add_argument("--timeout", type=float, default=600.0)
+    parser.add_argument(
+        "--non-interactive",
+        action="store_true",
+        help="Use X_AUTH_TOKEN from the environment, without terminal prompts",
+    )
     parser.add_argument("--limit", type=int, default=50, help="Posts per program")
     parser.add_argument(
         "--program",
@@ -309,15 +374,26 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def run_collection(argv: Sequence[str] | None = None) -> tuple[int, list[Path]]:
     """Run Tweet Harvest sequentially for selected government programs."""
     parser = _build_parser()
     arguments = parser.parse_args(argv)
 
+    if bool(arguments.from_date) != bool(arguments.to_date):
+        parser.error("provide both --from-date and --to-date, or neither")
+    if arguments.lookback_days <= 0 or arguments.attempts <= 0:
+        parser.error("lookback-days and attempts must be greater than zero")
+    if arguments.retry_delay < 0 or arguments.timeout <= 0:
+        parser.error("retry-delay must be non-negative and timeout positive")
+    if not arguments.from_date:
+        today = datetime.now(JAKARTA_TIMEZONE).date()
+        arguments.from_date = (
+            today - timedelta(days=arguments.lookback_days - 1)
+        ).strftime("%d-%m-%Y")
+        arguments.to_date = today.strftime("%d-%m-%Y")
+
     try:
-        repository_root = find_repository_root(
-            [Path.cwd(), Path(__file__).resolve()]
-        )
+        repository_root = find_repository_root([Path.cwd(), Path(__file__).resolve()])
         start, end = parse_collection_window(arguments.from_date, arguments.to_date)
         config_path = (
             arguments.config
@@ -348,8 +424,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     exclusive_until = (end + timedelta(days=1)).strftime("%d-%m-%Y")
     print(f"Programs: {len(plans)} | Limit per program: {arguments.limit}")
     print(
-        f"Requested window: {arguments.from_date} through "
-        f"{arguments.to_date} inclusive"
+        f"Requested window: {arguments.from_date} through {arguments.to_date} inclusive"
     )
     print(f"Tweet Harvest until: {exclusive_until} (exclusive)")
     for program_id, display_name, _, command in plans:
@@ -358,12 +433,16 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if arguments.dry_run:
         print("Dry run complete. No token requested and no data collected.")
-        return 0
+        return 0, []
+
+    if arguments.non_interactive and not os.environ.get("X_AUTH_TOKEN", "").strip():
+        print("Error: --non-interactive requires X_AUTH_TOKEN.", file=sys.stderr)
+        return 1, []
 
     npx_executable = shutil.which("npx")
     if not npx_executable:
         print("Error: npx is not available. Install Node.js LTS.", file=sys.stderr)
-        return 1
+        return 1, []
 
     try:
         browser_executable = detect_browser_executable(
@@ -375,7 +454,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     except (ValueError, CollectionError) as error:
         print(f"Error: {error}", file=sys.stderr)
-        return 1
+        return 1, []
 
     if browser_executable is not None:
         print(f"Browser runtime: {browser_executable}")
@@ -383,45 +462,91 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("Browser runtime: Playwright-managed Chromium")
 
     now = datetime.now(JAKARTA_TIMEZONE)
-    run_id = now.strftime("%Y%m%dT%H%M%S%z")
+    run_id = now.strftime("%Y%m%dT%H%M%S%f%z")
     collected_paths: list[Path] = []
 
-    print("Enter auth_token only in each hidden Tweet Harvest prompt.")
+    if arguments.non_interactive:
+        execution_environment["KUPING_NEGARA_NON_INTERACTIVE"] = "1"
+        print("Unattended collection: token loaded from the environment.")
+    else:
+        execution_environment.pop("X_AUTH_TOKEN", None)
+        execution_environment.pop("KUPING_NEGARA_NON_INTERACTIVE", None)
+        print("Enter auth_token only in each hidden Tweet Harvest prompt.")
     for index, (program_id, display_name, output_name, command) in enumerate(
         plans, start=1
     ):
         print(f"\n[{index}/{len(plans)}] Collecting {display_name}")
         command[0] = npx_executable
-        completed_process = subprocess.run(
-            command,
-            cwd=repository_root,
-            env=execution_environment,
-            check=False,
+        destination = None
+        for attempt in range(1, arguments.attempts + 1):
+            # Each attempt has a fresh cwd, so a failed run cannot reuse a
+            # previous CSV or collide with another running collection.
+            staging_root = (
+                repository_root
+                / "tweets-data"
+                / "runs"
+                / run_id
+                / program_id
+                / f"attempt={attempt}"
+            )
+            staging_root.mkdir(parents=True, exist_ok=False)
+            try:
+                execute_collection(
+                    command,
+                    cwd=staging_root,
+                    environment=execution_environment,
+                    timeout=arguments.timeout,
+                    non_interactive=arguments.non_interactive,
+                )
+                destination = finalize_output(
+                    repository_root=repository_root,
+                    output_name=output_name,
+                    program_id=program_id,
+                    run_id=run_id,
+                    collected_date=now.date(),
+                    staging_root=staging_root,
+                )
+                break
+            except (CollectionError, OSError, UnicodeError, csv.Error):
+                # Do not expose upstream exception text that may contain
+                # credentials or personal source data.
+                print(
+                    f"Collection failed: program={program_id} "
+                    f"attempt={attempt}/{arguments.attempts}",
+                    file=sys.stderr,
+                )
+                if attempt < arguments.attempts:
+                    time.sleep(min(arguments.retry_delay * 2 ** (attempt - 1), 60))
+        if destination is None:
+            return 1, collected_paths
+        with destination.open(encoding="utf-8-sig", newline="") as raw_file:
+            record_count = sum(1 for _ in csv.DictReader(raw_file))
+        (destination.parent / "ingestion_report.json").write_text(
+            json.dumps(
+                {
+                    "source": "live_x",
+                    "program_id": program_id,
+                    "ingestion_run_id": run_id,
+                    "rows": record_count,
+                    "attempts_used": attempt,
+                    "from_date": start.isoformat(),
+                    "to_date": end.isoformat(),
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
         )
-        if completed_process.returncode != 0:
-            print(
-                f"Error: Tweet Harvest failed for {program_id} "
-                f"with exit code {completed_process.returncode}.",
-                file=sys.stderr,
-            )
-            return completed_process.returncode
-
-        try:
-            destination = finalize_output(
-                repository_root=repository_root,
-                output_name=output_name,
-                program_id=program_id,
-                run_id=run_id,
-                collected_date=now.date(),
-            )
-        except CollectionError as error:
-            print(f"Error: {error}", file=sys.stderr)
-            return 1
         collected_paths.append(destination)
         print(f"Saved: {destination.relative_to(repository_root)}")
 
     print(f"\nCollection complete: {len(collected_paths)} dataset(s).")
-    return 0
+    return 0, collected_paths
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Run the standalone collector and propagate its exit status."""
+    return run_collection(argv)[0]
 
 
 if __name__ == "__main__":

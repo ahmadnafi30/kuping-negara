@@ -28,6 +28,8 @@ htmlcov/
 tweets-data/
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/samples/
+!data/raw/samples/**
 data/processed/*
 !data/processed/.gitkeep
 data/labeled/*

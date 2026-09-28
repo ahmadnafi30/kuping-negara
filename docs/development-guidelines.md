@@ -106,7 +106,9 @@ after at least two real consumers exist.
 - Validate schema before moving data into the processed zone.
 - Quarantine invalid records rather than silently dropping them.
 - Preserve lineage fields through every transformation.
-- Never commit raw, processed, labeled, or model artifact contents to Git.
+- Keep runtime raw, processed, labeled, and model artifacts outside Git.
+  LK-04 permits only the small deidentified source subset under
+  `data/raw/samples/`, accompanied by provenance and publication transformations.
 - Data-contract breaking changes require a version bump and migration note.
 
 ## Logging and Error Handling
@@ -171,7 +173,7 @@ A change is complete only when:
 - data/security/privacy impact has been reviewed;
 - configuration and schema changes are versioned;
 - documentation is updated;
-- no secret, dataset, cache, or model binary is staged;
+- no secret, full runtime dataset, cache, or model binary is staged;
 - commit messages follow Conventional Commits;
 - Pull Request has enough context for an independent reviewer;
 - topic branch is deleted after merge.

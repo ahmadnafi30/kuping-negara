@@ -136,7 +136,8 @@ Reviewer verifies:
 - module placement follows project boundaries;
 - naming and API/data contracts are consistent;
 - tests cover observable behavior and CI passes;
-- no secret, raw dataset, model binary, or unrelated generated file is present;
+- no secret, full runtime dataset, model binary, or unrelated generated file is
+  present; LK-04 deidentified source samples are permitted with provenance;
 - privacy, security, migration, and operational impacts are documented;
 - README/docs reflect behavior changes;
 - commit history is understandable.

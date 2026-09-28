@@ -58,6 +58,7 @@ change. Do not include credentials, cookies, tokens, or personal data.
 - [ ] New/changed behavior has appropriate tests.
 - [ ] Documentation and examples are updated.
 - [ ] Data contract/configuration versions are updated when required.
-- [ ] No secret, raw dataset, model binary, cache, or generated artifact is committed.
+- [ ] No secret, full runtime dataset, model binary, or cache is committed;
+      LK-04 deidentified source samples include provenance.
 - [ ] Security, privacy, and operational impact has been reviewed.
 - [ ] Reviewer can reproduce the verification steps.

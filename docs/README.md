@@ -2,6 +2,7 @@
 
 | Document | Audience | Purpose |
 | --- | --- | --- |
+| [LK-04 Implementation](lk04-implementation.md) | Students and assessors | Required scripts, source samples, live ingestion, replay, periodic execution, and verification |
 | [Codespaces Setup](codespaces-setup.md) | Developers and assessors | Reproducible environment setup, verification, and troubleshooting with uv |
 | [Development Guidelines](development-guidelines.md) | All contributors | Naming, Python style, quality, security, and Definition of Done |
 | [Project Structure](project-structure.md) | Developers and reviewers | Directory ownership, dependency boundaries, and code placement |

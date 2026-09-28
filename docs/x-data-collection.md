@@ -4,6 +4,11 @@ This guide covers local pilot-data collection for all Kuping Negara programs
 with Tweet Harvest 2.7.1. The collector reads versioned keywords from
 `configs/keywords/programs.example.yaml` and stores raw CSV files outside Git.
 
+For the LK-04 wrapper, unattended mode, retry policy, and periodic simulation,
+see [LK-04 Implementation](lk04-implementation.md). Runtime CSVs remain outside
+Git; the small deidentified course subset under `data/raw/samples/` is explicitly
+versioned with provenance.
+
 ## Prerequisites
 
 - Python 3.12 managed by `uv`.
@@ -118,8 +123,8 @@ DVC versioning can track the raw zone in a later implementation phase.
 
 | Option | Required | Default | Description |
 | --- | --- | --- | --- |
-| `--from-date` | Yes | None | Start date in `DD-MM-YYYY` |
-| `--to-date` | Yes | None | Inclusive end date in `DD-MM-YYYY` |
+| `--from-date` | With `--to-date` | Rolling 7-day window |  Start date in `DD-MM-YYYY` |
+| `--to-date` | With `--from-date` | Today in Asia/Jakarta |  Inclusive end date in `DD-MM-YYYY` |
 | `--limit` | No | `50` | Maximum posts requested per program |
 | `--program` | No | All programs | Repeatable program ID selector |
 | `--tab` | No | `LATEST` | X search tab: `LATEST` or `TOP` |

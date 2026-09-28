@@ -13,7 +13,7 @@ keeps package boundaries explicit.
 | `configs/keywords/` | Program collection configuration | Versioned YAML | Access tokens |
 | `configs/schemas/` | Data contracts | JSON Schema and migration notes | Raw datasets |
 | `dags/` | Workflow orchestration | Thin Airflow DAG definitions | Transformation/model implementation |
-| `data/raw/` | Immutable source-aligned records | Local/DVC-managed artifacts | Git-tracked dataset content |
+| `data/raw/` | Immutable source-aligned records | Local/DVC artifacts; LK-04 deidentified samples | Full Git-tracked runtime datasets |
 | `data/processed/` | Validated transformed records | Local/DVC-managed artifacts | Raw credentials or identifiers |
 | `data/labeled/` | Annotation output | Versioned external artifacts | Unreviewed secrets/PII |
 | `docs/` | Engineering and operational documentation | Markdown and architecture references | Executable production logic |

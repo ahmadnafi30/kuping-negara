@@ -22,10 +22,10 @@ from kuping_negara.preprocessing.x_posts import (
     preprocess_tweet_harvest_frame,
 )
 
-
 JAKARTA_TIMEZONE = ZoneInfo("Asia/Jakarta")
 DEFAULT_CONFIG_PATH = Path("configs/keywords/programs.example.yaml")
 DEFAULT_OUTPUT_ROOT = Path("data/processed/x")
+PREPROCESSING_VERSION = "2"
 
 
 class PreprocessingPipelineError(RuntimeError):
@@ -68,9 +68,10 @@ def parse_raw_partition_path(input_path: Path) -> RawPartitionMetadata:
     ingestion_run_id = _extract_partition_value(resolved_path, "run_id=")
     collected_date_text = _extract_partition_value(resolved_path, "collected_date=")
     try:
-        collected_at = datetime.strptime(
-            ingestion_run_id, "%Y%m%dT%H%M%S%z"
+        timestamp_format = (
+            "%Y%m%dT%H%M%S%f%z" if len(ingestion_run_id) == 26 else "%Y%m%dT%H%M%S%z"
         )
+        collected_at = datetime.strptime(ingestion_run_id, timestamp_format)
         collected_date = date.fromisoformat(collected_date_text)
     except ValueError as error:
         raise PreprocessingPipelineError(
@@ -87,9 +88,7 @@ def parse_raw_partition_path(input_path: Path) -> RawPartitionMetadata:
     )
 
 
-def _load_program_keywords(
-    config_path: Path, program_id: str
-) -> tuple[str, ...]:
+def _load_program_keywords(config_path: Path, program_id: str) -> tuple[str, ...]:
     if not config_path.is_file():
         raise PreprocessingPipelineError(
             f"keyword configuration not found: {config_path}"
@@ -196,6 +195,8 @@ def run_preprocessing(
         "processed_at": execution_time.isoformat(),
         "input_file": resolved_input.name,
         "input_sha256": input_sha256,
+        "config_sha256": _sha256(config_path.resolve()),
+        "preprocessing_version": PREPROCESSING_VERSION,
         "output_file": records_path.name,
         "output_sha256": output_sha256,
         "data_version": f"sha256:{input_sha256}",
@@ -218,7 +219,14 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Preprocess one partitioned Tweet Harvest CSV."
     )
-    parser.add_argument("--input", type=Path, required=True, help="Raw CSV path")
+    inputs = parser.add_mutually_exclusive_group(required=True)
+    inputs.add_argument("--input", type=Path, help="Raw CSV path")
+    inputs.add_argument("--input-dir", type=Path, help="Find raw CSVs recursively")
+    parser.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help="Skip outputs whose report, hashes and configuration match",
+    )
     parser.add_argument(
         "--output-root",
         type=Path,
@@ -249,13 +257,42 @@ def main(argv: Sequence[str] | None = None) -> int:
             if arguments.processed_at
             else None
         )
-        artifacts = run_preprocessing(
-            input_path=arguments.input,
-            output_root=arguments.output_root,
-            config_path=arguments.config,
-            processed_at=processed_at,
-        )
-        report = json.loads(artifacts.report_path.read_text(encoding="utf-8"))
+        if arguments.input_dir is not None:
+            if not arguments.input_dir.is_dir():
+                raise PreprocessingPipelineError("raw input directory not found")
+            input_paths = sorted(arguments.input_dir.rglob("*.csv"))
+            if not input_paths:
+                raise PreprocessingPipelineError("no raw CSV files found")
+        else:
+            input_paths = [arguments.input]
+        failures = 0
+        for input_path in input_paths:
+            try:
+                if arguments.skip_existing and has_verified_output(
+                    input_path, arguments.output_root, arguments.config
+                ):
+                    print(f"Skipped verified input: {input_path.name}")
+                    continue
+                artifacts = run_preprocessing(
+                    input_path=input_path,
+                    output_root=arguments.output_root,
+                    config_path=arguments.config,
+                    processed_at=processed_at,
+                )
+                report = json.loads(artifacts.report_path.read_text(encoding="utf-8"))
+                print(f"Processed rows: {report['processed_rows']}")
+                print(f"Eligible for labeling: {report['eligible_for_labeling']}")
+                print(f"Processed CSV: {artifacts.records_path}")
+                print(f"Quality report: {artifacts.report_path}")
+            except (
+                OSError,
+                PreprocessingError,
+                PreprocessingPipelineError,
+                ValueError,
+                yaml.YAMLError,
+            ) as error:
+                print(f"Error: {input_path.name}: {error}", file=sys.stderr)
+                failures += 1
     except (
         OSError,
         PreprocessingError,
@@ -266,11 +303,31 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Error: {error}", file=sys.stderr)
         return 1
 
-    print(f"Processed rows: {report['processed_rows']}")
-    print(f"Eligible for labeling: {report['eligible_for_labeling']}")
-    print(f"Processed CSV: {artifacts.records_path}")
-    print(f"Quality report: {artifacts.report_path}")
-    return 0
+    return 1 if failures else 0
+
+
+def has_verified_output(
+    input_path: Path,
+    output_root: Path,
+    config_path: Path,
+) -> bool:
+    """Skip only a complete output produced from the same raw/config bytes."""
+    metadata = parse_raw_partition_path(input_path)
+    for report_path in output_root.glob(
+        f"processed_date=*/program={metadata.program_id}/"
+        f"run_id={metadata.ingestion_run_id}/quality_report.json"
+    ):
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        output_path = report_path.parent / f"{input_path.stem}_processed.csv"
+        if (
+            output_path.is_file()
+            and report.get("input_sha256") == _sha256(input_path)
+            and report.get("config_sha256") == _sha256(config_path)
+            and report.get("preprocessing_version") == PREPROCESSING_VERSION
+            and report.get("output_sha256") == _sha256(output_path)
+        ):
+            return True
+    return False
 
 
 if __name__ == "__main__":

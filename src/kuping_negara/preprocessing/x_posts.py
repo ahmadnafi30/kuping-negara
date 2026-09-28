@@ -12,7 +12,6 @@ from typing import Any
 
 import pandas as pd
 
-
 SCHEMA_VERSION = "1"
 SOURCE_PLATFORM = "x"
 REQUIRED_SOURCE_COLUMNS = {
@@ -151,6 +150,8 @@ def preprocess_tweet_harvest_frame(
         raise PreprocessingError("collected_at must be timezone-aware")
 
     source = frame.copy()
+    if source.empty:
+        raise PreprocessingError("source dataset must contain at least one row")
     raw_text = source["full_text"].fillna("").astype(str)
     if raw_text.str.strip().eq("").any():
         raise PreprocessingError("full_text must not be empty")
@@ -176,6 +177,7 @@ def preprocess_tweet_harvest_frame(
         for input_column, output_column in ENGAGEMENT_COLUMN_MAP.items()
     }
     cleaned_text = raw_text.map(clean_text)
+    empty_cleaned_flags = cleaned_text.str.strip().eq("")
     matched_keywords = pd.Series(
         [_match_keyword(value, keywords) for value in raw_text],
         index=source.index,
@@ -197,15 +199,17 @@ def preprocess_tweet_harvest_frame(
             strict=True,
         )
     ]
+    quality_statuses = [
+        "review_empty_cleaned_text" if empty else status
+        for empty, status in zip(empty_cleaned_flags, quality_statuses, strict=True)
+    ]
     eligible_flags = [status == "accepted" for status in quality_statuses]
     iso_calendar = published_at.dt.isocalendar()
 
     records = pd.DataFrame(
         {
             "tweet_id": tweet_ids,
-            "conversation_id": _to_optional_string(
-                source["conversation_id_str"]
-            ),
+            "conversation_id": _to_optional_string(source["conversation_id_str"]),
             "tweet_url": _to_optional_string(source["tweet_url"]),
             "target_program": program_id,
             "matched_keyword": matched_keywords,
@@ -244,9 +248,7 @@ def preprocess_tweet_harvest_frame(
         },
         "language_counts": {
             str(language): int(count)
-            for language, count in languages.fillna("unknown")
-            .value_counts()
-            .items()
+            for language, count in languages.fillna("unknown").value_counts().items()
         },
         "published_at_min": _isoformat_utc(published_at.min()),
         "published_at_max": _isoformat_utc(published_at.max()),

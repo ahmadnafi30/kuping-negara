@@ -9,11 +9,38 @@ unggahan publik dari platform X, mengklasifikasikan sentimen ke dalam kelas
 `positive`, `neutral`, atau `negative`, lalu menyajikan trend dan model
 confidence melalui API serta dashboard.
 
-> **Project status: Foundation Phase.** Repository structure, Python package,
-> Dev Container, dependency specification, data contract draft, annotation
-> guideline, smoke test, unit test, dan CI workflow sudah tersedia. Data
-> ingestion, model training, model registry, serving API, dashboard, dan
-> production monitoring masih berada dalam implementation roadmap.
+> **Project status: LK-04 Data Pipeline.** Fondasi repo, ingestion X,
+> preprocessing, simulasi periodik, sampel sumber, dan automated tests tersedia.
+> Model training, registry, API, dashboard, dan production monitoring masih
+> berada dalam implementation roadmap. Akses X live memerlukan token valid.
+
+## LK-04 Quick Start
+
+Luaran tugas tersedia di `src/ingest_data.py`, `src/preprocess.py`, dan
+[`data/raw/samples/`](data/raw/samples/README.md). Sampel berisi 20 baris sumber
+nyata yang dianonimkan dari empat program; dataset lengkap tetap lokal.
+
+```bash
+uv sync --frozen --extra dev
+uv run --frozen python src/ingest_data.py --lookback-days 7 --dry-run
+uv run --frozen python src/ingest_data.py --replay-dir data/raw/samples/x --preprocess --cycles 2 --interval-seconds 1
+uv run --frozen python src/preprocess.py --input-dir data/raw/samples/x --skip-existing
+uv run --frozen --extra dev pytest
+```
+
+`--replay-dir` adalah simulasi offline, bukan pengambilan data terbaru.
+Untuk ingestion live dan preprocessing otomatis:
+
+```bash
+uv run --frozen python src/ingest_data.py --lookback-days 7 --limit 50 --preprocess
+```
+
+Mode interaktif meminta token melalui prompt tersembunyi. Mode terjadwal
+memakai `--non-interactive` dengan `X_AUTH_TOKEN` di environment runtime.
+Collector menyediakan retry terbatas, exponential backoff, timeout, staging
+terpisah, dan output dengan timestamp mikrodetik. Panduan lengkap setup,
+periodic simulation, cron, output, error handling, dan bukti tugas ada di
+[`docs/lk04-implementation.md`](docs/lk04-implementation.md).
 
 ## Table of Contents
 
@@ -248,9 +275,10 @@ Design principles:
 | `labeled` | Annotated training/evaluation samples | Annotation guideline version required |
 | `quarantine` | Invalid or suspicious records | Excluded until reviewed; planned storage |
 
-Dataset contents are not committed to Git. The directories retain only
-`.gitkeep`; large/versioned artifacts will use object storage and DVC or an
-equivalent dataset registry.
+Full dataset contents are not committed to Git. The explicit LK-04 exception
+is a small deidentified source subset in `data/raw/samples/`, with provenance
+and checksums. Runtime datasets remain local; large/versioned artifacts will
+use object storage and DVC or an equivalent dataset registry.
 
 ### Data Contract
 
@@ -491,7 +519,7 @@ Copy-Item .env.example .env
 
 | Variable | Required | Description |
 | --- | --- | --- |
-| `X_AUTH_TOKEN` | Reserved for scheduled ingestion | Never commit it; the interactive collector does not load this value |
+| `X_AUTH_TOKEN` | Required for `--non-interactive` | Runtime environment only; never commit it; interactive mode does not load it |
 | `TZ` | Recommended | Scheduler timezone; default `Asia/Jakarta` |
 
 Non-secret configuration belongs in `configs/`. Secret values belong in local
@@ -597,8 +625,9 @@ known limitations.
 - [x] Add keyword configuration sample and initial data contract.
 - [x] Add initial annotation guideline.
 - [x] Document engineering standards, project structure, and Git/PR workflow.
-- [ ] Implement idempotent and policy-compliant ingestion.
-- [ ] Implement raw-to-processed validation and preprocessing.
+- [x] Implement initial X ingestion with immutable runs, retry, and timeout.
+- [x] Implement raw-to-processed validation, cleaning, and quality reports.
+- [x] Add LK-04 entry points, source samples, and periodic replay simulation.
 - [ ] Produce labeled dataset and agreement report.
 - [ ] Train/evaluate scikit-learn baseline.
 - [ ] Compare Indonesian transformer candidates.

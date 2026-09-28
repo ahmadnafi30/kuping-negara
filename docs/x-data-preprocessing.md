@@ -110,6 +110,7 @@ has been selected.
 | `review_language` | Relevant keyword found, but language is not `in` | Review text manually |
 | `review_relevance` | Language is `in`, but no configured keyword was found | Review query relevance |
 | `review_language_and_relevance` | Both checks need review | Review before use |
+| `review_empty_cleaned_text` | Cleaning removed all usable text | Exclude until reviewed |
 
 Rows that need review remain visible. The pipeline does not silently drop them.
 This preserves evidence for later rule improvements and prevents loss caused by
@@ -142,7 +143,8 @@ retains the source content for traceability.
 
 ## Privacy and Repository Rules
 
-- Never commit files under `data/raw/` or `data/processed/`.
+- Runtime files under `data/raw/x/` and `data/processed/` remain outside Git.
+  The only LK-04 exception is the deidentified subset in `data/raw/samples/`.
 - Never publish raw usernames or post text without an approved privacy review.
 - Use only the aggregate quality report as submission evidence when raw content
   is not required.
