@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kuping-negara"
+version = "0.1.0"
+description = "Fondasi MLOps untuk pemantauan sentimen publik terhadap program prioritas pemerintah Indonesia."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Ahmad Nafi Mubarok" }
+]
+dependencies = [
+  "pandas>=2.2,<4",
+  "pyyaml>=6,<7",
+  "scikit-learn>=1.5,<2"
+]
+
+[project.scripts]
+collect-x-data = "kuping_negara.ingestion.tweet_harvest:main"
+preprocess-x-data = "kuping_negara.preprocessing.x_pipeline:main"
+
+[project.optional-dependencies]
+dev = [
+  "jupyterlab>=4.2,<5",
+  "pytest>=8,<10"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"

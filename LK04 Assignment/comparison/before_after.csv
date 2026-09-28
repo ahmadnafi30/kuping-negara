@@ -1,0 +1,50 @@
+﻿target_program,tweet_id,text_before,text_after,quality_status,is_eligible_for_labeling
+ckg,sample_ckg_001,@anon @anon There is no need for CKG in TN. It is better to hold it in bjp states.,there is no need for ckg in tn. it is better to hold it in bjp states.,review_language,False
+ckg,sample_ckg_002,"@anon Good to see..in fact great to see @anon (looser) leaders get triggered by CKG in Indore.👏👏👏👏
+
+RaGa has hit the mark! 🎯
+
+@anon 👌👌👌🌟🌟🌟",good to see..in fact great to see (looser) leaders get triggered by ckg in indore.👏👏👏👏 raga has hit the mark! 🎯 👌👌👌🌟🌟🌟,review_language,False
+ckg,sample_ckg_003,@anon 喜んじゃって！！ヾ(*´∀｀*)ﾉｷｬｯｷｬ,喜んじゃって!!ヾ(* ́∀`*)ノキャッキャ,review_language_and_relevance,False
+ckg,sample_ckg_004,"@anon 10M views brooooo 😭😭😭😭
+
+Still,lost #DelhiUnoversity election &amp; 99 other elections
+
+Samay Raina videos have more views than this😭😭
+
+Legit,BJP needs 3-4 more such CKG events for winning 2029 election with majority✌️ https://example.test/redacted","10m views brooooo 😭😭😭😭 still,lost delhiunoversity election & 99 other elections samay raina videos have more views than this😭😭 legit,bjp needs 3-4 more such ckg events for winning 2029 election with majority✌️",review_language,False
+ckg,sample_ckg_005,"Kesehatan adalah investasi terbaik!  Yuk, luangkan waktu setahun sekali untuk jaga kesehatan sejak dini lewat CKG. Langkah kecil hari ini demi masa depan yang lebih bugar dan bahagia. 
+#CekKesehatanBerkala #JagaKesehatanSejakDini #HidupSehat https://example.test/redacted","kesehatan adalah investasi terbaik! yuk, luangkan waktu setahun sekali untuk jaga kesehatan sejak dini lewat ckg. langkah kecil hari ini demi masa depan yang lebih bugar dan bahagia. cekkesehatanberkala jagakesehatansejakdini hidupsehat",accepted,True
+kopdes_merah_putih,sample_kopdes_merah_putih_001,"prabowo dan para pejabatnya, mbg, kopdes, seleb rezim","prabowo dan para pejabatnya, mbg, kopdes, seleb rezim",accepted,True
+kopdes_merah_putih,sample_kopdes_merah_putih_002,manager kopdes habis pelatihan,manager kopdes habis pelatihan,accepted,True
+kopdes_merah_putih,sample_kopdes_merah_putih_003,@anon MBG dan kopdes jadi taruhan politik Prabowo. Jika sampai 2029 tidak menumbuhkan hasil wassalam dah karir politiknya.,mbg dan kopdes jadi taruhan politik prabowo. jika sampai 2029 tidak menumbuhkan hasil wassalam dah karir politiknya.,accepted,True
+kopdes_merah_putih,sample_kopdes_merah_putih_004,"Siapa yang mau tanggung jawab kalau Kopdes gagal? Kenapa dana desa yg harusnya buat pembangunan infrastruktur &amp; kesejahteraan warga, malah berisiko dipotong buat nutupin utang?
+Uang publik itu uang rakyat, bukan buat eksperimen proyek triliunan yang belum matang.
+#kopdes #kdmp https://example.test/redacted","siapa yang mau tanggung jawab kalau kopdes gagal? kenapa dana desa yg harusnya buat pembangunan infrastruktur & kesejahteraan warga, malah berisiko dipotong buat nutupin utang? uang publik itu uang rakyat, bukan buat eksperimen proyek triliunan yang belum matang. kopdes kdmp",accepted,True
+kopdes_merah_putih,sample_kopdes_merah_putih_005,"@anon Ingin ini itu banyak banget, urus satu proyek sejenis kopdes saja belum bisa terkendali","ingin ini itu banyak banget, urus satu proyek sejenis kopdes saja belum bisa terkendali",accepted,True
+mbg,sample_mbg_001,"@anon Stop mbg n kopdes, anak2 pinter dan nggk mampu sekolahin sampe jdi dokter biar berobat murah.","stop mbg n kopdes, anak2 pinter dan nggk mampu sekolahin sampe jdi dokter biar berobat murah.",accepted,True
+mbg,sample_mbg_002,"@anon Kok semua di kaitkan dengan mbg, bukannya harga komoditas seperti ayam ini fluktuatif","kok semua di kaitkan dengan mbg, bukannya harga komoditas seperti ayam ini fluktuatif",accepted,True
+mbg,sample_mbg_003,"Moses loves chemistry and warns Pharaoh @anon
+
+Even he was forced to live outside the palace @anon just to feed a goat in the oasis
+
+Calling Indonesia rich is blatantly slander against Rakyat Jelata
+
+Emyu baby gempa BANDUNG SPIRIT pray for Kalimantan fufufafa MBG 😹😆",moses loves chemistry and warns pharaoh even he was forced to live outside the palace just to feed a goat in the oasis calling indonesia rich is blatantly slander against rakyat jelata emyu baby gempa bandung spirit pray for kalimantan fufufafa mbg 😹😆,review_language,False
+mbg,sample_mbg_004,@anon 1.seharusnya seluruh sekolah menolak MBG.,1.seharusnya seluruh sekolah menolak mbg.,accepted,True
+mbg,sample_mbg_005,"Mendag sebut program MBG jaga stabilitas pasokan bahan pokok 
+
+ https://example.test/redacted",mendag sebut program mbg jaga stabilitas pasokan bahan pokok,accepted,True
+sekolah_rakyat,sample_sekolah_rakyat_001,"Di SKB, Anak-Anak Putus Sekolah Mendapat Ruang Menggapai Harapan.
+
+Jakarta – Harapan untuk kembali mengenyam pendidikan tumbuh di Sanggar Kegiatan Belajar (SKB) Sentra Dharma Guna Bengkulu. Bagi anak-anak yang sebelumnya tidak sekolah, putus sekolah, atau belum memperoleh https://example.test/redacted","di skb, anak-anak putus sekolah mendapat ruang menggapai harapan. jakarta – harapan untuk kembali mengenyam pendidikan tumbuh di sanggar kegiatan belajar (skb) sentra dharma guna bengkulu. bagi anak-anak yang sebelumnya tidak sekolah, putus sekolah, atau belum memperoleh",review_relevance,False
+sekolah_rakyat,sample_sekolah_rakyat_002,"Mohammad Natsir lahir pada tanggal 17 Juli 1908. Natsir mulai mengenyam pendidikan di Sekolah Rakyat Maninjau, kemudian pindah ke HIS Adabiyah di Padang.","mohammad natsir lahir pada tanggal 17 juli 1908. natsir mulai mengenyam pendidikan di sekolah rakyat maninjau, kemudian pindah ke his adabiyah di padang.",accepted,True
+sekolah_rakyat,sample_sekolah_rakyat_003,"Putus rantai kemiskinan dengan pendidikan gratis dan merata! Lewat Sekolah Rakyat berasrama, semua anak punya kesempatan meraih cita-cita. 📚🏫 #SekolahRakyat #PendidikanGratis #PrabowoGibran #IndonesiaCerdas https://example.test/redacted","putus rantai kemiskinan dengan pendidikan gratis dan merata! lewat sekolah rakyat berasrama, semua anak punya kesempatan meraih cita-cita. 📚🏫 sekolahrakyat pendidikangratis prabowogibran indonesiacerdas",accepted,True
+sekolah_rakyat,sample_sekolah_rakyat_004,"Lantunan Shalawat, Menyentuh Kalbu 🤍
+GARUT, 18 September 2026
+Melantunkan shalawat dengan cinta,
+meneladani Rasul dalam setiap langkah nyata.
+
+#KemensosSelaluAda #SekolahRakyat #CerdasBersamaTumbuhSetara #SelaluAdaKabarBaik https://example.test/redacted","lantunan shalawat, menyentuh kalbu 🤍 garut, 18 september 2026 melantunkan shalawat dengan cinta, meneladani rasul dalam setiap langkah nyata. kemensosselaluada sekolahrakyat cerdasbersamatumbuhsetara selaluadakabarbaik",review_relevance,False
+sekolah_rakyat,sample_sekolah_rakyat_005,"Karakter baik dibentuk dari kebiasaan yang dilakukan setiap hari.
+Setahun lebih menjalani proses di Sekolah Rakyat, disiplin, kejujuran, tanggung jawab, kebersihan, dan kepedulian terhadap lingkungan perlahan tumbuh menjadi bagian dari keseharian mereka. https://example.test/redacted","karakter baik dibentuk dari kebiasaan yang dilakukan setiap hari. setahun lebih menjalani proses di sekolah rakyat, disiplin, kejujuran, tanggung jawab, kebersihan, dan kepedulian terhadap lingkungan perlahan tumbuh menjadi bagian dari keseharian mereka.",accepted,True

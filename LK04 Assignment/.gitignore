@@ -1,0 +1,57 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.pytest-tmp/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Virtual environments and local configuration
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Build and test artifacts
+build/
+dist/
+*.egg-info/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local data and model artifacts
+tweets-data/
+data/raw/*
+!data/raw/.gitkeep
+!data/raw/samples/
+!data/raw/samples/**
+data/processed/*
+!data/processed/.gitkeep
+data/labeled/*
+!data/labeled/.gitkeep
+models/*
+!models/.gitkeep
+mlruns/
+.dvc/cache/
+
+# Airflow and application runtime artifacts
+airflow.cfg
+airflow.db
+logs/
+*.log
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Hasil sampel yang disertakan untuk LK-04
+!data/processed/samples/
+!data/processed/samples/**
+*.zip

@@ -1,0 +1,357 @@
+{
+  "created_at": "2026-09-28T22:48:59.501124+07:00",
+  "source_repository": "https://github.com/ahmadnafi30/kuping-negara",
+  "source_branch": "feat/lk04-ingestion-preprocessing",
+  "source_commit": "f93ac2a516fd49855a4eca7be7474c4cb1b835a3",
+  "source_files_unchanged": true,
+  "copied_files_match_original_bytes": true,
+  "sample_kind": "deidentified_subset_of_real_ingestion",
+  "source_collected_date": "2026-09-21",
+  "raw_rows": 20,
+  "processed_rows": 20,
+  "preprocessing_version": "3",
+  "files": [
+    {
+      "path": ".env.example",
+      "sha256": "a48f34aa5874d16563384bb68b0f3b734ce37013d34dd1d29a12b571106a0b61",
+      "bytes": 74,
+      "kind": "generated_submission_artifact"
+    },
+    {
+      "path": ".gitattributes",
+      "sha256": "6416ba8df98b91eea6b4f6555c7b600c5ab05a1c5b73f19b7b640ea6ba25e83e",
+      "bytes": 226,
+      "kind": "generated_submission_artifact"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "509adb7f4754f8b987a1518e4a1cdfe63d89b24b018349afc415a9436b0662f1",
+      "bytes": 864,
+      "kind": "generated_submission_artifact"
+    },
+    {
+      "path": "comparison/before_after.csv",
+      "sha256": "c7b5cb4b6d90ee0d8f12fc602283441959a04a8f701fda5dc9ccff9d28df6c51",
+      "bytes": 7455,
+      "kind": "generated_submission_artifact"
+    },
+    {
+      "path": "comparison/summary.csv",
+      "sha256": "5e6eab6419f2e581e02e7bee9e1793bac2dd27bc2775ab7bdeb6a2d5d29bdc82",
+      "bytes": 1260,
+      "kind": "generated_submission_artifact"
+    },
+    {
+      "path": "configs/keywords/programs.example.yaml",
+      "sha256": "32805d743dc09a2bdf099bc5c5a5c26e9536d9f502bd77a631dfb9ae77f6728b",
+      "bytes": 588,
+      "copied_from": "configs/keywords/programs.example.yaml"
+    },
+    {
+      "path": "data/processed/samples/x/processed_date=2026-09-28/program=ckg/run_id=20260921T183212+0700/ckg_2026-09-14_2026-09-21_processed.csv",
+      "sha256": "492d15e41ecb20c22a10a13ec59c3e5e1abb83eef6a881eedab94288571639f5",
+      "bytes": 3721,
+      "copied_from": "data/processed/lk04-samples-v3/x/processed_date=2026-09-28/program=ckg/run_id=20260921T183212+0700/ckg_2026-09-14_2026-09-21_processed.csv"
+    },
+    {
+      "path": "data/processed/samples/x/processed_date=2026-09-28/program=ckg/run_id=20260921T183212+0700/quality_report.json",
+      "sha256": "7a9ceb217e283e88a305a281efb9b036ab79904841f3ced1f09dc0af8941945d",
+      "bytes": 1639,
+      "copied_from": "data/processed/lk04-samples-v3/x/processed_date=2026-09-28/program=ckg/run_id=20260921T183212+0700/quality_report.json"
+    },
+    {
+      "path": "data/processed/samples/x/processed_date=2026-09-28/program=kopdes_merah_putih/run_id=20260921T183212+0700/kopdes_merah_putih_2026-09-14_2026-09-21_processed.csv",
+      "sha256": "d086d2ec6afa2586a359494bcaea3d8bfcfd844d2f49b5798e3d1343f152bd46",
+      "bytes": 3481,
+      "copied_from": "data/processed/lk04-samples-v3/x/processed_date=2026-09-28/program=kopdes_merah_putih/run_id=20260921T183212+0700/kopdes_merah_putih_2026-09-14_2026-09-21_processed.csv"
+    },
+    {
+      "path": "data/processed/samples/x/processed_date=2026-09-28/program=kopdes_merah_putih/run_id=20260921T183212+0700/quality_report.json",
+      "sha256": "6e21839b972ae0390198b1707925aa507b56294ec91446258a799d89e63bc582",
+      "bytes": 1588,
+      "copied_from": "data/processed/lk04-samples-v3/x/processed_date=2026-09-28/program=kopdes_merah_putih/run_id=20260921T183212+0700/quality_report.json"
+    },
+    {
+      "path": "data/processed/samples/x/processed_date=2026-09-28/program=mbg/run_id=20260921T183212+0700/mbg_2026-09-14_2026-09-21_processed.csv",
+      "sha256": "1df4bef231303e19fdbc00d16864e494cdc246654a7980ad131fb8b5a3a75fe0",
+      "bytes": 3218,
+      "copied_from": "data/processed/lk04-samples-v3/x/processed_date=2026-09-28/program=mbg/run_id=20260921T183212+0700/mbg_2026-09-14_2026-09-21_processed.csv"
+    },
+    {
+      "path": "data/processed/samples/x/processed_date=2026-09-28/program=mbg/run_id=20260921T183212+0700/quality_report.json",
+      "sha256": "91562aadc62b079657adeec8896d77b60d3e3ba05826aaffcf21aa9df6ca2847",
+      "bytes": 1584,
+      "copied_from": "data/processed/lk04-samples-v3/x/processed_date=2026-09-28/program=mbg/run_id=20260921T183212+0700/quality_report.json"
+    },
+    {
+      "path": "data/processed/samples/x/processed_date=2026-09-28/program=sekolah_rakyat/run_id=20260921T183212+0700/quality_report.json",
+      "sha256": "8247adb3bc6a6fe1ed613553ff00041746f69f45af4725089dedb71807c6a260",
+      "bytes": 1604,
+      "copied_from": "data/processed/lk04-samples-v3/x/processed_date=2026-09-28/program=sekolah_rakyat/run_id=20260921T183212+0700/quality_report.json"
+    },
+    {
+      "path": "data/processed/samples/x/processed_date=2026-09-28/program=sekolah_rakyat/run_id=20260921T183212+0700/sekolah_rakyat_2026-09-14_2026-09-21_processed.csv",
+      "sha256": "1ea5b596ef484f831e3c1d42b5c4764277302d7b962a916224069f3267da1526",
+      "bytes": 4631,
+      "copied_from": "data/processed/lk04-samples-v3/x/processed_date=2026-09-28/program=sekolah_rakyat/run_id=20260921T183212+0700/sekolah_rakyat_2026-09-14_2026-09-21_processed.csv"
+    },
+    {
+      "path": "data/raw/samples/provenance.json",
+      "sha256": "1b68fbbcc420ed228a35ff188a4e90b8ec237338f4bfd4bf10799afd7b77fe27",
+      "bytes": 2101,
+      "copied_from": "data/raw/samples/provenance.json"
+    },
+    {
+      "path": "data/raw/samples/README.md",
+      "sha256": "52ec5e2b4020b9e0e9385bd29abc79e28b13e6a883d787807e660732365565cb",
+      "bytes": 1430,
+      "copied_from": "data/raw/samples/README.md"
+    },
+    {
+      "path": "data/raw/samples/x/collected_date=2026-09-21/program=ckg/run_id=20260921T183212+0700/ckg_2026-09-14_2026-09-21.csv",
+      "sha256": "b9a5b09126e1cc96a2c03cb66f2c4f9e02e172c747b951235f1230811aa8c10d",
+      "bytes": 1477,
+      "copied_from": "data/raw/samples/x/collected_date=2026-09-21/program=ckg/run_id=20260921T183212+0700/ckg_2026-09-14_2026-09-21.csv"
+    },
+    {
+      "path": "data/raw/samples/x/collected_date=2026-09-21/program=kopdes_merah_putih/run_id=20260921T183212+0700/kopdes_merah_putih_2026-09-14_2026-09-21.csv",
+      "sha256": "b8d5b5c38d04ae1c0ea602771fccbc601c6931bc6f711767637e65d32a5f9685",
+      "bytes": 1374,
+      "copied_from": "data/raw/samples/x/collected_date=2026-09-21/program=kopdes_merah_putih/run_id=20260921T183212+0700/kopdes_merah_putih_2026-09-14_2026-09-21.csv"
+    },
+    {
+      "path": "data/raw/samples/x/collected_date=2026-09-21/program=mbg/run_id=20260921T183212+0700/mbg_2026-09-14_2026-09-21.csv",
+      "sha256": "9c35850a5aaa0de3ddcb71f160f251f5f8a1db3e9c6de9661d2c036a12ee2278",
+      "bytes": 1217,
+      "copied_from": "data/raw/samples/x/collected_date=2026-09-21/program=mbg/run_id=20260921T183212+0700/mbg_2026-09-14_2026-09-21.csv"
+    },
+    {
+      "path": "data/raw/samples/x/collected_date=2026-09-21/program=sekolah_rakyat/run_id=20260921T183212+0700/sekolah_rakyat_2026-09-14_2026-09-21.csv",
+      "sha256": "8e411f8a5e6ff9b243bbd866363b7d2578a05af86c8ae9f6e33349b1e1bb5964",
+      "bytes": 1964,
+      "copied_from": "data/raw/samples/x/collected_date=2026-09-21/program=sekolah_rakyat/run_id=20260921T183212+0700/sekolah_rakyat_2026-09-14_2026-09-21.csv"
+    },
+    {
+      "path": "docs/lk04-implementation.md",
+      "sha256": "c8eefaa4ba94bbce143357203da493b73bc18c0d7b2b4deebadcbbb6a730be68",
+      "bytes": 17156,
+      "copied_from": "docs/lk04-implementation.md"
+    },
+    {
+      "path": "docs/lk04-preprocessing-review.json",
+      "sha256": "c5cbb8f46bf38d1b783ac5ab3782c985ca7cdb6481f1d216b91c3aa25a8e2ddd",
+      "bytes": 1016,
+      "copied_from": "docs/lk04-preprocessing-review.json"
+    },
+    {
+      "path": "docs/lk04-verification.json",
+      "sha256": "66ac98e69c2e7f3ac2f8a3d04b6f1484e4ae54b055869702da8a3a74c9b081d3",
+      "bytes": 8049,
+      "copied_from": "docs/lk04-verification.json"
+    },
+    {
+      "path": "docs/x-data-collection.md",
+      "sha256": "efeec484ef47edbb8f7a092cb8724ff14a39a3b1525a7d315a662c6e52170ceb",
+      "bytes": 6734,
+      "copied_from": "docs/x-data-collection.md"
+    },
+    {
+      "path": "docs/x-data-preprocessing.md",
+      "sha256": "f74c3e6d9256e9e3e284eec3348a9e838808a00c6a29b3c8bc7b3a009023ae6d",
+      "bytes": 8294,
+      "copied_from": "docs/x-data-preprocessing.md"
+    },
+    {
+      "path": "evidence/submission_checks.json",
+      "sha256": "16aa9d9ac1121e18c2bd31aa56191e0861723bb2fd615781c94d555eb953a65f",
+      "bytes": 808,
+      "kind": "generated_submission_artifact"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "73559c7df0b0189e56c39bc5b44435a2aca7130c4e7cbc1ebe548e5b6d47b9b6",
+      "bytes": 1096,
+      "copied_from": "LICENSE"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "e863660d0d569d8749096f53fee0145884cfeb5c72e05a6cfabda120c3a0e0e9",
+      "bytes": 862,
+      "copied_from": "pyproject.toml"
+    },
+    {
+      "path": "README.md",
+      "sha256": "68e9727f90f18fdd5def42122fae0130ecd7ffb6f7901c2376b1219c875c9dad",
+      "bytes": 5805,
+      "kind": "generated_submission_artifact"
+    },
+    {
+      "path": "requirements.txt",
+      "sha256": "a97c9d0ac8ff6860f108f7515306026d971de06bab65db2df3a5db2f9fdb6cfc",
+      "bytes": 6387,
+      "copied_from": "requirements.txt"
+    },
+    {
+      "path": "scripts/run_ingestion.ps1",
+      "sha256": "d24442e93f5dbbaa3799d1e2f56c2105575379012c693f6332d5038036888e7a",
+      "bytes": 4415,
+      "copied_from": "scripts/run_ingestion.ps1"
+    },
+    {
+      "path": "scripts/tweet_harvest_browser_hook.cjs",
+      "sha256": "398a98a7bbcfc739f0cae3311fac5f8c9517b27479ca1a0181a35069d63d9c90",
+      "bytes": 2174,
+      "copied_from": "scripts/tweet_harvest_browser_hook.cjs"
+    },
+    {
+      "path": "src/ingest_data.py",
+      "sha256": "7f433a49e381f4b502e9e60022368d76ce0c461752e2a9e50a5d91978d910bc9",
+      "bytes": 181,
+      "copied_from": "src/ingest_data.py"
+    },
+    {
+      "path": "src/kuping_negara/__init__.py",
+      "sha256": "69692aae491af38ca1a8c7344c2253045988d98521bbfd0a822fa1310227dedf",
+      "bytes": 138,
+      "copied_from": "src/kuping_negara/__init__.py"
+    },
+    {
+      "path": "src/kuping_negara/__main__.py",
+      "sha256": "fffdc4f8fd4d30ec1f4ac5fcd88ae7f5b2b4123ed73480f8ce62497afbb7b540",
+      "bytes": 178,
+      "copied_from": "src/kuping_negara/__main__.py"
+    },
+    {
+      "path": "src/kuping_negara/api/__init__.py",
+      "sha256": "f125cf9e939a9c7087b3ff6643494221048a8062c69bdb6d029cd348831a4019",
+      "bytes": 57,
+      "copied_from": "src/kuping_negara/api/__init__.py"
+    },
+    {
+      "path": "src/kuping_negara/dashboard/__init__.py",
+      "sha256": "8cfbfd0e6801f7984f9f91e9729e95130a2d9d4fb77133f8b4c1208153600858",
+      "bytes": 53,
+      "copied_from": "src/kuping_negara/dashboard/__init__.py"
+    },
+    {
+      "path": "src/kuping_negara/data_pipeline.py",
+      "sha256": "f61bee3cdc97644d231a9463acd9437b2968362313eba9419dd018e4efd4cb08",
+      "bytes": 6339,
+      "copied_from": "src/kuping_negara/data_pipeline.py"
+    },
+    {
+      "path": "src/kuping_negara/healthcheck.py",
+      "sha256": "1bc6f9b06280be6b0d7485e11a2e975955424b45f77c36daccbe003d1b2b4051",
+      "bytes": 1614,
+      "copied_from": "src/kuping_negara/healthcheck.py"
+    },
+    {
+      "path": "src/kuping_negara/inference/__init__.py",
+      "sha256": "618a1f1d03893c3cd95ce06716d9712e635ac5a38dfeac983d9f6e9970ad1473",
+      "bytes": 56,
+      "copied_from": "src/kuping_negara/inference/__init__.py"
+    },
+    {
+      "path": "src/kuping_negara/ingestion/__init__.py",
+      "sha256": "efafe2307213071f9da45d9aa6385718e60948caec0dfe6db9dc1e3f14741b32",
+      "bytes": 58,
+      "copied_from": "src/kuping_negara/ingestion/__init__.py"
+    },
+    {
+      "path": "src/kuping_negara/ingestion/tweet_harvest.py",
+      "sha256": "a0cebb4c2751f69b83b405cbbe0498900d0602421aef61a8f6252521eb753ba7",
+      "bytes": 22788,
+      "copied_from": "src/kuping_negara/ingestion/tweet_harvest.py"
+    },
+    {
+      "path": "src/kuping_negara/labeling/__init__.py",
+      "sha256": "4220f30b6195b65643995142a5ebe5dfcb8abec097eb805f5e38ee35d96b9208",
+      "bytes": 70,
+      "copied_from": "src/kuping_negara/labeling/__init__.py"
+    },
+    {
+      "path": "src/kuping_negara/monitoring/__init__.py",
+      "sha256": "2e8f333a817af61ed344073f11ec12bd9b9c8fe25f338372413f5a2bd8cbcea0",
+      "bytes": 59,
+      "copied_from": "src/kuping_negara/monitoring/__init__.py"
+    },
+    {
+      "path": "src/kuping_negara/preprocessing/__init__.py",
+      "sha256": "424124dd5dd79df822da535b2ca4a6a3be0dc7c2020617113786a45b56673b2b",
+      "bytes": 82,
+      "copied_from": "src/kuping_negara/preprocessing/__init__.py"
+    },
+    {
+      "path": "src/kuping_negara/preprocessing/x_pipeline.py",
+      "sha256": "636fb0e8c30f5822add1e55dde46f31ee5984bb544ef3b71fd45d7ac4b8f88a6",
+      "bytes": 11562,
+      "copied_from": "src/kuping_negara/preprocessing/x_pipeline.py"
+    },
+    {
+      "path": "src/kuping_negara/preprocessing/x_posts.py",
+      "sha256": "598470db8f25650d1a7948a7e58ad49def2e33e00bd4b1cc2f5f4e7462a32477",
+      "bytes": 9173,
+      "copied_from": "src/kuping_negara/preprocessing/x_posts.py"
+    },
+    {
+      "path": "src/kuping_negara/training/__init__.py",
+      "sha256": "fb0e96e91a01c13dea45e03d4e5ebc3a3727056e892ccfc8b2bba3c71f438d4a",
+      "bytes": 64,
+      "copied_from": "src/kuping_negara/training/__init__.py"
+    },
+    {
+      "path": "src/kuping_negara/validation/__init__.py",
+      "sha256": "3400ffc641fa61e003cf23c20460fa54a23e6c4ba0e9333b6c2f74a093b6ff7e",
+      "bytes": 65,
+      "copied_from": "src/kuping_negara/validation/__init__.py"
+    },
+    {
+      "path": "src/preprocess.py",
+      "sha256": "7fb0b5602e4f1645979cbf0c1c55d71f3c072adc7852975c7e12daf13de95745",
+      "bytes": 192,
+      "copied_from": "src/preprocess.py"
+    },
+    {
+      "path": "tests/integration/test_lk04_pipeline.py",
+      "sha256": "cc03a8453d285975f6642f55a088974224a757d044d7d66af3e2521962d389ee",
+      "bytes": 9977,
+      "copied_from": "tests/integration/test_lk04_pipeline.py"
+    },
+    {
+      "path": "tests/integration/test_scheduled_runner.py",
+      "sha256": "6ed09066f9e158a74c2759c442502c125225ad61d71f36a0ed18f5807bcc3cee",
+      "bytes": 2761,
+      "copied_from": "tests/integration/test_scheduled_runner.py"
+    },
+    {
+      "path": "tests/integration/test_x_preprocessing_pipeline.py",
+      "sha256": "da39b482773dd8453e97595d4234e34db0fb8c3bce5d71d19f178dea61b6e012",
+      "bytes": 5549,
+      "copied_from": "tests/integration/test_x_preprocessing_pipeline.py"
+    },
+    {
+      "path": "tests/unit/preprocessing/test_x_posts.py",
+      "sha256": "b699e9894ad28434e5c4ce0c26b6edc0e01646dabc48c2030d31cf81672439d9",
+      "bytes": 6383,
+      "copied_from": "tests/unit/preprocessing/test_x_posts.py"
+    },
+    {
+      "path": "tests/unit/test_package.py",
+      "sha256": "a3aba9eb3ac8e1d4fa53a964940ccadd5f188d5ff8dee44b0891dcf10a635ca3",
+      "bytes": 464,
+      "copied_from": "tests/unit/test_package.py"
+    },
+    {
+      "path": "tests/unit/test_tweet_harvest.py",
+      "sha256": "573674d8d8255157dbcd056c7beb12b54a8dc4068ad2fe863cbb71ca7cea6d44",
+      "bytes": 9305,
+      "copied_from": "tests/unit/test_tweet_harvest.py"
+    },
+    {
+      "path": "uv.lock",
+      "sha256": "2d24e495da07cbd6d6e256d70e142019d5475b9f35dbdf15250c1b5634213247",
+      "bytes": 300221,
+      "copied_from": "uv.lock"
+    }
+  ]
+}

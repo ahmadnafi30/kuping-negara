@@ -1,0 +1,224 @@
+{
+  "verified_at": "2026-09-28T11:47:40.573599+07:00",
+  "scope": "Actual local X ingestion CSVs collected on 21 September 2026",
+  "live_x_fetch_this_session": true,
+  "original_files_unchanged": true,
+  "local_audit": [
+    {
+      "program_id": "ckg",
+      "ingestion_run_id": "20260921T183212+0700",
+      "source_rows": 60,
+      "processed_rows": 60,
+      "eligible_for_labeling": 7,
+      "quality_status_counts": {
+        "review_language_and_relevance": 33,
+        "review_language": 19,
+        "accepted": 7,
+        "review_empty_cleaned_text": 1
+      },
+      "input_sha256": "c1cb34910d49fa0b16ef85adc8c544f56c68beea3732b26fa79634588834df40",
+      "output_sha256": "8d5bc5beb4915daf087f2cf4fd7e3267d5b83a7924e28e223e4af70e8abaf4ef",
+      "config_sha256": "32805d743dc09a2bdf099bc5c5a5c26e9536d9f502bd77a631dfb9ae77f6728b"
+    },
+    {
+      "program_id": "kopdes_merah_putih",
+      "ingestion_run_id": "20260921T183212+0700",
+      "source_rows": 60,
+      "processed_rows": 60,
+      "eligible_for_labeling": 53,
+      "quality_status_counts": {
+        "accepted": 53,
+        "review_language": 6,
+        "review_relevance": 1
+      },
+      "input_sha256": "6fe0403a17b92e39b95729809a6f7c37b5a40a5c7e1a8662cce7b3ef8f1bd434",
+      "output_sha256": "6f1c8747d1cd52ec5301e0038283a90b0d691ad6406c84702719b0217ac7bfbc",
+      "config_sha256": "32805d743dc09a2bdf099bc5c5a5c26e9536d9f502bd77a631dfb9ae77f6728b"
+    },
+    {
+      "program_id": "mbg",
+      "ingestion_run_id": "20260921T182524+0700",
+      "source_rows": 20,
+      "processed_rows": 20,
+      "eligible_for_labeling": 17,
+      "quality_status_counts": {
+        "accepted": 17,
+        "review_language": 1,
+        "review_relevance": 1,
+        "review_language_and_relevance": 1
+      },
+      "input_sha256": "783cc742de48f35037bb2a787e3353d39484fc881a4b1c5e4b6ec3fc653945a1",
+      "output_sha256": "74226ebd4f042ca4cd968a78ea3f8dac4610012f8fdd90db68470cfd386a2368",
+      "config_sha256": "32805d743dc09a2bdf099bc5c5a5c26e9536d9f502bd77a631dfb9ae77f6728b"
+    },
+    {
+      "program_id": "mbg",
+      "ingestion_run_id": "20260921T183212+0700",
+      "source_rows": 60,
+      "processed_rows": 60,
+      "eligible_for_labeling": 46,
+      "quality_status_counts": {
+        "accepted": 46,
+        "review_language_and_relevance": 10,
+        "review_language": 2,
+        "review_empty_cleaned_text": 1,
+        "review_relevance": 1
+      },
+      "input_sha256": "d78d6a80ed28242531f9ca345799c6358faa623c0911e26691447cb3d091eaaa",
+      "output_sha256": "9df19e03509827d0f4047b3870e48ddea23f2250344c2ef371b49c2a99cfbc93",
+      "config_sha256": "32805d743dc09a2bdf099bc5c5a5c26e9536d9f502bd77a631dfb9ae77f6728b"
+    },
+    {
+      "program_id": "sekolah_rakyat",
+      "ingestion_run_id": "20260921T183212+0700",
+      "source_rows": 60,
+      "processed_rows": 60,
+      "eligible_for_labeling": 57,
+      "quality_status_counts": {
+        "accepted": 57,
+        "review_relevance": 3
+      },
+      "input_sha256": "4b0eaf749b04ac1d6ec4b3c13cc3c67569702022bc6a570dfbd29e43a01c08ea",
+      "output_sha256": "b05ea8bfac49e5b35329e928ed44f2d7f2bfa7ef36f342f87275bb442fa48a3e",
+      "config_sha256": "32805d743dc09a2bdf099bc5c5a5c26e9536d9f502bd77a631dfb9ae77f6728b"
+    }
+  ],
+  "invalid_local_inputs": [
+    {
+      "path": "data/raw/x/collected_date=2026-09-21/program=mbg/run_id=20260921T173705+0700/mbg_2026-09-14_2026-09-21.csv",
+      "reason": "EmptyDataError",
+      "bytes": 2
+    }
+  ],
+  "test_suite": {
+    "passed": 40,
+    "command": "uv run --frozen --extra dev pytest"
+  },
+  "code_quality": {
+    "ruff_E_F_I": "passed",
+    "node_syntax": "passed"
+  },
+  "offline_periodic_test": {
+    "cycles": 2,
+    "programs_per_cycle": 4,
+    "raw_csvs": 8,
+    "processed_csvs": 8,
+    "source_sample_rows": 20,
+    "note": "Integration test; replay is not a live source fetch"
+  },
+  "local_cli_verification": {
+    "cycles": 2,
+    "raw_csvs_created": 8,
+    "processed_csvs_created": 8,
+    "run_ids": [
+      "run_id=20260928T114741453021+0700",
+      "run_id=20260928T114742692852+0700"
+    ],
+    "original_raw_and_samples_unchanged": true,
+    "batch_second_run_skipped_verified_csvs": 4,
+    "mode": "offline_replay"
+  },
+  "live_x_check": {
+    "exit_code": 0,
+    "requested_limit_per_program": 5,
+    "attempts_per_program": 1,
+    "timeout_per_attempt_seconds": 60,
+    "token_source": "Local ignored .env loaded only for this verification child process",
+    "successful_programs": [
+      {
+        "source": "live_x",
+        "program_id": "ckg",
+        "ingestion_run_id": "20260928T115715744607+0700",
+        "rows": 20,
+        "attempts_used": 1,
+        "from_date": "2026-09-22",
+        "to_date": "2026-09-28"
+      },
+      {
+        "source": "live_x",
+        "program_id": "kopdes_merah_putih",
+        "ingestion_run_id": "20260928T115715744607+0700",
+        "rows": 20,
+        "attempts_used": 1,
+        "from_date": "2026-09-22",
+        "to_date": "2026-09-28"
+      },
+      {
+        "source": "live_x",
+        "program_id": "mbg",
+        "ingestion_run_id": "20260928T115715744607+0700",
+        "rows": 20,
+        "attempts_used": 1,
+        "from_date": "2026-09-22",
+        "to_date": "2026-09-28"
+      },
+      {
+        "source": "live_x",
+        "program_id": "sekolah_rakyat",
+        "ingestion_run_id": "20260928T115715744607+0700",
+        "rows": 20,
+        "attempts_used": 1,
+        "from_date": "2026-09-22",
+        "to_date": "2026-09-28"
+      }
+    ],
+    "status": "success",
+    "preprocessing_outputs": [
+      {
+        "program_id": "ckg",
+        "source_rows": 20,
+        "processed_rows": 20,
+        "eligible_for_labeling": 6,
+        "quality_status_counts": {
+          "review_language_and_relevance": 10,
+          "accepted": 6,
+          "review_language": 4
+        },
+        "input_sha256": "5d9ad8daa939539879a4b1c673807bbff2dee6fd272c7667d399be017685faab",
+        "output_sha256": "0c55290249e4d4cbd0bdfb7007ad39a79f7c19d10440dc73dee9a432b7109eb8",
+        "config_sha256": "32805d743dc09a2bdf099bc5c5a5c26e9536d9f502bd77a631dfb9ae77f6728b"
+      },
+      {
+        "program_id": "kopdes_merah_putih",
+        "source_rows": 20,
+        "processed_rows": 20,
+        "eligible_for_labeling": 18,
+        "quality_status_counts": {
+          "accepted": 18,
+          "review_language": 2
+        },
+        "input_sha256": "9e2606e292ad9361173918d2b376977c8f512af3d29773acb95e55e5b5bd4462",
+        "output_sha256": "77d372bce860f794535182451f21283ee227a48d597088f73e8412f6a9ba63d6",
+        "config_sha256": "32805d743dc09a2bdf099bc5c5a5c26e9536d9f502bd77a631dfb9ae77f6728b"
+      },
+      {
+        "program_id": "mbg",
+        "source_rows": 20,
+        "processed_rows": 20,
+        "eligible_for_labeling": 17,
+        "quality_status_counts": {
+          "accepted": 17,
+          "review_language": 2,
+          "review_relevance": 1
+        },
+        "input_sha256": "34d9b0a1cfe50d9462e36eff7b1d170aed49673a28503c1156f86ec9176ae2b9",
+        "output_sha256": "ac07147ba43c928dc3421d5946d0cc408828592f5a7dc8cbf1cce93cd9acd69f",
+        "config_sha256": "32805d743dc09a2bdf099bc5c5a5c26e9536d9f502bd77a631dfb9ae77f6728b"
+      },
+      {
+        "program_id": "sekolah_rakyat",
+        "source_rows": 20,
+        "processed_rows": 20,
+        "eligible_for_labeling": 18,
+        "quality_status_counts": {
+          "accepted": 18,
+          "review_relevance": 1,
+          "review_language_and_relevance": 1
+        },
+        "input_sha256": "da9a9cae6b04aaaea298ae23745002aae94c3b076fd859bcc7b92afab57b380e",
+        "output_sha256": "7c812b0302d349f61dc2aed7a985329937ef878ca511408a1c1810fb223c1441",
+        "config_sha256": "32805d743dc09a2bdf099bc5c5a5c26e9536d9f502bd77a631dfb9ae77f6728b"
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "verified_at": "2026-09-28T22:48:25.167982+07:00",
+  "scope": "Self-contained LK04 Assignment submission copies",
+  "copied_source_imported_from_submission": true,
+  "dry_run_programs": 1,
+  "raw_sample_files": 4,
+  "raw_sample_rows": 20,
+  "processed_sample_files": 4,
+  "processed_sample_rows": 20,
+  "eligible_for_labeling": 13,
+  "needs_review": 7,
+  "verified_outputs_skipped": 4,
+  "independent_preprocessing_succeeded": true,
+  "raw_samples_unchanged": true,
+  "periodic_simulation": {
+    "source": "offline_replay",
+    "cycles": 2,
+    "distinct_run_ids": 2,
+    "new_raw_files": 8,
+    "new_processed_files": 8
+  },
+  "tests_passed": 48,
+  "local_document_links_valid": true,
+  "live_fetch_during_packaging": false,
+  "operational_weekly_schedule_installed": false
+}
