@@ -100,18 +100,32 @@ status gagal. Data dari program yang sudah berhasil tetap tersimpan.
 
 ## Menjalankan pengambilan secara berkala
 
-Ada dua pilihan: mengulang pengambilan selama skrip masih berjalan, atau
-memakai penjadwal untuk memulai skrip pada jam tertentu. Repo belum memasang
-jadwal otomatis. Nilai `collection_day` di konfigurasi kata kunci masih berupa
-rencana; skrip tidak membaca nilai tersebut untuk menentukan hari pengambilan.
+Jadwal operasional mengikuti pembagian mingguan pada rancangan sebelumnya:
+
+| Hari | Kegiatan | Program yang dipilih |
+| --- | --- | --- |
+| Senin | Pengambilan dan preprocessing MBG | `mbg` |
+| Selasa | Pengambilan dan preprocessing CKG | `ckg` |
+| Rabu | Pengambilan dan preprocessing Kopdes Merah Putih | `kopdes_merah_putih` |
+| Kamis | Pengambilan dan preprocessing Sekolah Rakyat | `sekolah_rakyat` |
+| Jumat | Pelabelan dan pemeriksaan kualitas hasil minggu tersebut | Tidak ada pengambilan terjadwal |
+
+Masing-masing program diambil sekali seminggu pada harinya. Hari pengambilan
+berbeda dari rentang tanggal data: `--lookback-days 7` tetap mengambil
+unggahan dalam rentang tujuh hari, bukan hanya unggahan pada hari tugas berjalan.
+Zona waktu yang dipakai adalah Asia/Jakarta.
+
+Repo belum memasang jadwal otomatis. Nilai `collection_day` di konfigurasi
+kata kunci mencatat pembagian hari, tetapi belum dibaca oleh skrip untuk
+menjalankan jadwal. Penjadwal perlu diberi hari dan program yang sesuai.
 
 ### Mencoba pengulangan di terminal
 
-Perintah berikut menjalankan dua pengambilan dengan jeda satu menit setelah
-pengambilan pertama selesai:
+Untuk simulasi periodik LK-04, perintah berikut menjalankan dua pengambilan
+MBG dengan jeda satu menit setelah pengambilan pertama selesai:
 
 ```bash
-uv run --frozen python src/ingest_data.py --non-interactive --lookback-days 7 --preprocess --cycles 2 --interval-seconds 60
+uv run --frozen python src/ingest_data.py --program mbg --non-interactive --lookback-days 7 --preprocess --cycles 2 --interval-seconds 60
 ```
 
 Mode `--non-interactive` memakai token dari variabel environment
@@ -127,18 +141,22 @@ semua percobaan ulang habis, skrip juga berhenti dengan status gagal.
 Jeda dihitung setelah pekerjaan selesai, jadi perintah ini bukan jadwal
 tetap yang berjalan setiap menit pada jam tertentu.
 
-### Jadwal harian di Windows
+Simulasi singkat ini dipakai untuk memeriksa bahwa pengambilan dapat diulang
+dan hasil lama tetap utuh. Jadwal operasionalnya tetap sekali seminggu
+untuk setiap program.
+
+### Jadwal mingguan di Windows
 
 Untuk repo lokal, gunakan `scripts/run_ingestion.ps1`. Skrip ini menjalankan
-satu pengambilan untuk keempat program, langsung melakukan preprocessing,
-lalu menyimpan log baru di `logs/`. Token diambil dari environment atau,
+satu pengambilan untuk program yang dipilih melalui `-Program`, langsung
+melakukan preprocessing, lalu menyimpan log baru di `logs/`. Token diambil dari environment atau,
 jika belum tersedia, dari baris `X_AUTH_TOKEN=...` di `.env` lokal. Nilainya
 tidak dicetak ke log dan tidak dimasukkan ke argumen proses.
 
 Cek rencana pengambilannya terlebih dahulu dari folder repo:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_ingestion.ps1 -DryRun
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_ingestion.ps1 -Program mbg -DryRun
 ```
 
 Untuk mencoba alur dan pencatatan log tanpa mengakses X:
@@ -147,25 +165,28 @@ Untuk mencoba alur dan pencatatan log tanpa mengakses X:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_ingestion.ps1 -ReplayDir data/raw/samples/x
 ```
 
-Setelah `.env` lokal berisi token, coba pengambilan langsung:
+Setelah `.env` lokal berisi token, coba pengambilan langsung untuk MBG:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_ingestion.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_ingestion.ps1 -Program mbg
 ```
 
-Untuk memasang jadwal, buka **Task Scheduler**, lalu pilih **Create Task**:
+Pasang empat task terpisah di **Task Scheduler**, satu untuk setiap program.
+Mulai dari MBG melalui **Create Task**:
 
-1. Beri nama `Kuping Negara - Ingestion`. Gunakan akun Windows yang mempunyai
+1. Beri nama `Kuping Negara - MBG`. Gunakan akun Windows yang mempunyai
    akses ke repo, Node.js, serta Chrome atau Edge. Untuk percobaan awal, pilih
    **Run only when user is logged on**.
-2. Di **Triggers**, buat jadwal **Daily**, misalnya pukul **07.00**. Task
+2. Di **Triggers**, pilih **Weekly**, isi **Recur every: 1 week**, lalu centang
+   **Monday**. Jam **07.00** bisa dipakai sebagai contoh waktu pengambilan;
+   rancangan sebelumnya menentukan hari, belum menentukan jamnya. Task
    Scheduler mengikuti zona waktu Windows; pastikan perangkat memakai WIB.
 3. Di **Actions**, pilih **Start a program**. Isi **Program/script** dengan
    `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`.
 4. Isi **Add arguments** dengan:
 
    ```text
-   -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File "D:\Mlops\kuping-negara\scripts\run_ingestion.ps1"
+   -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File "D:\Mlops\kuping-negara\scripts\run_ingestion.ps1" -Program mbg
    ```
 
 5. Isi **Start in** dengan `D:\Mlops\kuping-negara`. Sesuaikan kedua lokasi
@@ -177,27 +198,45 @@ Untuk memasang jadwal, buka **Task Scheduler**, lalu pilih **Create Task**:
    di `logs/`. Hasil `0x0` berarti proses selesai dengan kode sukses. Tetap
    periksa jumlah baris dan laporan kualitas untuk melihat hasil datanya.
 
+Ulangi pengaturan tersebut untuk tiga program lain. Ubah nama task, hari
+trigger, dan nilai `-Program` sesuai tabel berikut:
+
+| Nama task | Hari pada trigger Weekly | Argumen program |
+| --- | --- | --- |
+| `Kuping Negara - MBG` | Monday | `-Program mbg` |
+| `Kuping Negara - CKG` | Tuesday | `-Program ckg` |
+| `Kuping Negara - Kopdes Merah Putih` | Wednesday | `-Program kopdes_merah_putih` |
+| `Kuping Negara - Sekolah Rakyat` | Thursday | `-Program sekolah_rakyat` |
+
+Gunakan satu trigger untuk satu program. Satu task yang diberi trigger
+Senin sampai Kamis akan menjalankan action yang sama pada keempat hari.
+Opsi `-Program` yang menentukan program mana yang diambil.
+
 Dengan pilihan awal di atas, akun harus sedang login dan laptop harus
 menyala. Jika ingin berjalan saat layar terkunci, pastikan pengaturan daya
 tidak membuat laptop tidur pada waktu pengambilan. Mode berjalan saat akun
 tidak login perlu diuji lagi dengan akun dan environment yang dipakai task.
 
-Jika ingin mengikuti pembagian hari pada LK-03, buat trigger mingguan dan
-tambahkan `-Program`: `mbg` untuk Senin, `ckg` untuk Selasa,
-`kopdes_merah_putih` untuk Rabu, dan `sekolah_rakyat` untuk Kamis. Tanpa opsi
-tersebut, setiap pengambilan menjalankan keempat program.
+Pemanggilan tanpa `-Program` mengambil keempat program sekaligus. Gunakan
+pilihan program pada setiap task mingguan agar sesuai pembagian hari.
+Kegiatan pelabelan dan pemeriksaan pada Jumat masih dilakukan terpisah;
+belum ada task otomatis untuk kegiatan tersebut.
 
 Pengaturan trigger dan action mengikuti
 [dokumentasi Task Scheduler dari Microsoft](https://learn.microsoft.com/en-us/windows/win32/taskschd/tasks).
 
-### Jadwal harian di Linux atau Codespaces
+### Jadwal mingguan di Linux atau Codespaces
 
-Perintah satu siklus juga bisa dijalankan melalui cron. Contoh berikut
-berjalan pukul 00.00 **menurut zona waktu mesin**; jika mesinnya memakai UTC,
-waktunya sama dengan 07.00 WIB:
+Perintah satu siklus juga bisa dijalankan melalui cron. Empat baris berikut
+mengambil satu program pada harinya setiap minggu. Contoh ini berjalan pukul
+00.00 **menurut zona waktu mesin**; jika mesinnya memakai UTC, waktunya sama
+dengan 07.00 WIB pada hari yang sama:
 
 ```cron
-0 0 * * * cd /workspaces/kuping-negara && .venv/bin/python src/ingest_data.py --non-interactive --lookback-days 7 --preprocess >> logs/lk04.log 2>&1
+0 0 * * 1 cd /workspaces/kuping-negara && .venv/bin/python src/ingest_data.py --program mbg --non-interactive --lookback-days 7 --preprocess >> logs/mbg.log 2>&1
+0 0 * * 2 cd /workspaces/kuping-negara && .venv/bin/python src/ingest_data.py --program ckg --non-interactive --lookback-days 7 --preprocess >> logs/ckg.log 2>&1
+0 0 * * 3 cd /workspaces/kuping-negara && .venv/bin/python src/ingest_data.py --program kopdes_merah_putih --non-interactive --lookback-days 7 --preprocess >> logs/kopdes.log 2>&1
+0 0 * * 4 cd /workspaces/kuping-negara && .venv/bin/python src/ingest_data.py --program sekolah_rakyat --non-interactive --lookback-days 7 --preprocess >> logs/sekolah-rakyat.log 2>&1
 ```
 
 Sesuaikan lokasi repo, buat folder `logs/`, dan pastikan token tersedia bagi
@@ -316,6 +355,6 @@ pengujian memeriksa kata kunci di URL/mention, emoji gabungan, dan peluncur
 Windows. Peluncur diuji memakai proses pengganti untuk memastikan token
 tidak tercetak serta kode sukses atau gagal diteruskan dengan benar.
 
-Pengujian tersebut belum memasang atau membuktikan jadwal harian. Jadwal
+Pengujian tersebut belum memasang atau membuktikan jadwal mingguan. Jadwal
 perlu didaftarkan di Task Scheduler, lalu hasilnya diperiksa ketika trigger
 benar-benar berjalan.
