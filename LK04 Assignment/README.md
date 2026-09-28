@@ -3,6 +3,9 @@
 Folder ini berisi berkas untuk pengumpulan LK-04. Skrip dan data merupakan
 salinan; file aslinya tetap ada di repo utama.
 
+Panduan lengkap untuk repo utama ada di [lk04-implementation.md](lk04-implementation.md).
+Cara menjalankan paket pengumpulan ini dijelaskan di README ini.
+
 ## Isi pengumpulan
 
 - `src/ingest_data.py`: mengambil data X dan menjalankan simulasi periodik.
