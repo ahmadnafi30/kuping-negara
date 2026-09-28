@@ -1,124 +1,86 @@
-# LK-04 Assignment — Kuping Negara
+# LK-04 — Kuping Negara
 
-Folder ini berisi berkas yang disiapkan untuk pengumpulan LK-04. Skrip,
-konfigurasi, dan sampel disalin dari repo utama. File aslinya tetap ada di
-tempat semula.
+Folder ini berisi berkas untuk pengumpulan LK-04. Skrip dan data merupakan
+salinan; file aslinya tetap ada di repo utama.
 
-## Yang dikumpulkan
+## Isi pengumpulan
 
-| Berkas atau folder | Isi |
-| --- | --- |
-| `src/ingest_data.py` | Skrip pengambilan data dan simulasi periodik |
-| `src/preprocess.py` | Skrip pembersihan data |
-| `src/kuping_negara/` | Modul pendukung yang dipakai kedua skrip |
-| `data/raw/samples/x/` | Empat CSV sebelum preprocessing, total 20 baris |
-| `data/processed/samples/x/` | Empat CSV sesudah preprocessing beserta laporan kualitasnya |
-| `comparison/before_after.csv` | Perbandingan teks sebelum dan sesudah untuk setiap baris |
-| `comparison/summary.csv` | Ringkasan jumlah baris dan hasil pemeriksaan per program |
-| `docs/lk04-implementation.md` | Penjelasan implementasi dan cara menjalankannya |
-| `docs/lk04-verification.json` | Bukti pemeriksaan ingestion dan simulasi awal |
-| `docs/lk04-preprocessing-review.json` | Hasil pemeriksaan ulang 80 unggahan dari pengambilan langsung |
-| `evidence/submission_checks.json` | Hasil pemeriksaan paket pengumpulan ini |
-| `manifest.json` | Daftar berkas dan checksum untuk memastikan salinannya cocok |
+- `src/ingest_data.py`: mengambil data X dan menjalankan simulasi periodik.
+- `src/preprocess.py`: membersihkan data mentah.
+- `src/kuping_negara/`: modul yang dipanggil oleh kedua skrip tersebut.
+- `data/raw/samples/x/`: empat CSV sebelum preprocessing.
+- `data/processed/samples/x/`: empat CSV sesudah preprocessing.
 
-`pyproject.toml`, `uv.lock`, `requirements.txt`, `configs/`, dan `scripts/`
-ikut disertakan supaya skrip dapat dijalankan setelah folder ini diekstrak.
-Folder `tests/` berisi salinan pengujian dari repo utama.
+Konfigurasi kata kunci di `configs/` dan pengaturan browser di `scripts/`
+ikut disertakan karena digunakan saat pengambilan langsung. Dependensi
+dicatat di `requirements.txt`; `pyproject.toml` juga menjadi penanda folder
+proyek yang dibutuhkan skrip ingestion.
 
-Untuk LMS yang menerima unggahan berkas, kumpulkan **seluruh folder ini dalam
-satu ZIP**. Jika diminta tautan GitHub, gunakan branch
-`feat/lk04-ingestion-preprocessing` dan arahkan penguji ke folder
-`LK04 Assignment`. Tidak ada kewajiban PDF atau screenshot pada instruksi
-LK-04 yang diberikan.
+Kumpulkan folder ini dalam satu ZIP.
 
-## Melihat hasil sebelum dan sesudah
+## Sampel sebelum dan sesudah
 
-Data sebelum preprocessing ada di `data/raw/samples/x/`. Hasil untuk baris
-yang sama ada di `data/processed/samples/x/`. Susunan folder program dan
-`run_id` dipertahankan agar pasangan filenya mudah dicocokkan.
+Sampel berisi **20 baris**, lima untuk masing-masing MBG, CKG, Kopdes Merah
+Putih, dan Sekolah Rakyat. Data berasal dari pengambilan X pada **21 September
+2026**. Identitas akun, ID unggahan, tautan, dan informasi pribadi sudah
+disamarkan sebelum sampel disertakan dalam repo.
 
-Buka `comparison/before_after.csv` untuk melihat `text_before`, `text_after`,
-status pemeriksaan, dan kesiapan pelabelan dalam satu tabel. Seluruh 20 baris
-tetap disimpan. Baris yang perlu diperiksa tidak dihapus.
+CSV sesudah preprocessing memuat baris yang sama dan menambahkan
+`cleaned_text`, tanda pemeriksaan kualitas, serta metadata asal data. Dari
+20 baris, **13 siap dilabeli dan 7 perlu diperiksa**. Seluruh baris tetap
+disimpan. Cocokkan program dan `run_id` pada nama folder untuk menemukan
+pasangan sebelum dan sesudahnya.
 
-Sampel berasal dari pengambilan X pada **21 September 2026**, lima baris
-untuk masing-masing MBG, CKG, Kopdes Merah Putih, dan Sekolah Rakyat.
-Identitas akun dan tautan sudah disamarkan sebelum sampel dipublikasikan.
-Penjelasan asal serta perubahan pada sampel ada di
-[catatan sampel](data/raw/samples/README.md) dan
-[provenance.json](data/raw/samples/provenance.json).
+## Cara menjalankan
 
-Laporan pengambilan langsung **80 unggahan pada 28 September 2026** di
-`docs/` merupakan bukti terpisah. Jumlah tersebut bukan jumlah baris sampel
-yang disertakan dalam paket ini.
-
-## Menjalankan dari folder ini
-
-Masuk ke folder `LK04 Assignment`, lalu siapkan environment. Gunakan Python
-3.12 dan uv:
+Gunakan Python 3.12 atau lebih baru. Jalankan perintah dari folder ini:
 
 ```bash
-uv sync --frozen --extra dev
-uv pip check
+python -m pip install -r requirements.txt
 ```
 
-Node.js dan Chrome/Edge atau Chromium dibutuhkan untuk pengambilan langsung
-di X. Preprocessing dan simulasi dari sampel tidak membutuhkan login X.
-
-### Memeriksa hasil yang sudah disertakan
+Untuk memproses sampel dan menulis hasil baru tanpa mengganti CSV yang
+dikumpulkan:
 
 ```bash
-uv run --frozen python src/preprocess.py --input-dir data/raw/samples/x --output-root data/processed/samples/x --skip-existing
+python src/preprocess.py --input-dir data/raw/samples/x --output-root data/processed/recheck --skip-existing
 ```
 
-Skrip memeriksa checksum sampel, konfigurasi, dan hasil. Jika semuanya cocok,
-empat hasil yang sudah tersedia akan dilewati tanpa diubah.
+Preprocessing merapikan Unicode, HTML entities, huruf besar-kecil, dan spasi;
+menghapus URL serta mention; dan mempertahankan kata negasi, hashtag, serta
+emoji. Baris duplikat dalam satu CSV, bahasa yang tidak sesuai, dan teks yang
+perlu diperiksa diberi tanda. Saat beberapa run digabung, duplikat antar-run
+masih perlu disaring berdasarkan `target_program` dan `tweet_id`.
 
-### Membuat hasil preprocessing sendiri
+Untuk simulasi dua pengambilan dari sampel:
 
 ```bash
-uv run --frozen python src/preprocess.py --input-dir data/raw/samples/x --output-root data/processed/recheck --skip-existing
+python src/ingest_data.py --replay-dir data/raw/samples/x --preprocess --cycles 2 --interval-seconds 1
 ```
 
-Perintah ini menulis ke folder baru. Hasil yang disertakan untuk pengumpulan
-tetap ada di `data/processed/samples/x/`.
+Simulasi ini berjalan offline dan membuat dua run baru. Ia tidak mengambil
+unggahan baru dari X. Sampel awal tetap utuh.
 
-### Mencoba pengambilan berulang
+Untuk mengambil data langsung, siapkan Node.js dan Chrome/Edge di Windows
+atau Chromium yang sesuai dengan Playwright di Linux/Codespaces. Skrip memakai
+Tweet Harvest versi 2.7.1. Periksa rencana pengambilan terlebih dahulu:
 
 ```bash
-uv run --frozen python src/ingest_data.py --replay-dir data/raw/samples/x --preprocess --cycles 2 --interval-seconds 1
+python src/ingest_data.py --program mbg --lookback-days 7 --dry-run
 ```
 
-Ini adalah simulasi **offline**: sampel disalin ke dua run baru, lalu
-dibersihkan. Hasilnya delapan CSV mentah dan delapan CSV hasil preprocessing
-di folder runtime. Simulasi ini tidak mengambil unggahan baru dari X.
-
-### Mengambil data langsung
-
-Cek rencana pengambilan satu program terlebih dahulu:
+Lalu jalankan pengambilan dan preprocessing:
 
 ```bash
-uv run --frozen python src/ingest_data.py --program mbg --lookback-days 7 --dry-run
+python src/ingest_data.py --program mbg --lookback-days 7 --limit 50 --preprocess
 ```
 
-Untuk mengambil data dan langsung menjalankan preprocessing:
+Masukkan token X melalui prompt tersembunyi. Token tidak disertakan dalam
+paket ini. Data disimpan dalam folder dengan `run_id` berbeda agar hasil
+sebelumnya tidak tertimpa. Kegagalan pengambilan dicoba ulang dan setiap
+percobaan memiliki batas waktu.
 
-```bash
-uv run --frozen python src/ingest_data.py --program mbg --lookback-days 7 --limit 50 --preprocess
-```
-
-Token dimasukkan melalui prompt tersembunyi. Pada Windows, peluncur
-`scripts/run_ingestion.ps1` juga tersedia untuk membaca `X_AUTH_TOKEN` dari
-environment atau `.env` lokal. Berkas `.env` berisi token tidak disertakan
-dalam paket ini.
-
-### Menjalankan pengujian
-
-```bash
-uv run --frozen --extra dev pytest
-```
-
-## Jadwal yang mengikuti rancangan sebelumnya
+## Jadwal mingguan
 
 | Hari | Kegiatan |
 | --- | --- |
@@ -128,16 +90,5 @@ uv run --frozen --extra dev pytest
 | Kamis | Pengambilan dan preprocessing Sekolah Rakyat |
 | Jumat | Pelabelan dan pemeriksaan kualitas |
 
-Setiap program diambil sekali seminggu. Simulasi dua siklus digunakan untuk
-membuktikan pengambilan dapat diulang. Task Scheduler atau cron mingguan
-belum diaktifkan. Cara memasangnya dijelaskan di
-[panduan implementasi](docs/lk04-implementation.md); sesuaikan lokasi repo
-pada contoh action dengan lokasi folder yang digunakan.
-
-## Catatan pemakaian data
-
-Gunakan `cleaned_text` dan pilih `is_eligible_for_labeling=True` untuk tahap
-pelabelan. Pemeriksaan bahasa memakai label dari X, dan relevansi memakai
-kata kunci, sehingga baris yang lolos tetap perlu diperiksa konteksnya.
-Jika beberapa run digabung, hapus duplikat berdasarkan `target_program`
-dan `tweet_id` sebelum menyiapkan dataset training.
+Setiap program diambil sekali seminggu. Simulasi periodik di atas dipakai
+untuk mencoba pengulangan sesuai LK-04. Jadwal operasional belum diaktifkan.
