@@ -5,6 +5,10 @@
 Sumber sesuai LK-03 adalah posting X tentang MBG, CKG, Kopdes Merah Putih,
 dan Sekolah Rakyat. Python mengorkestrasi Tweet Harvest **2.7.1**, yang
 menggunakan Playwright. Kata kunci berasal dari YAML yang telah digunakan repo.
+Jika versi 2.7.1 sudah ada di npm cache, kolektor menjalankan `node` langsung
+untuk menghindari startup npm dan pemrosesan argumen batch Windows. Instalasi
+pertama menggunakan `npx`; `--tweet-harvest-bin` dapat menunjuk `dist/bin.js`
+secara eksplisit, dan versi lain ditolak.
 
 | Luaran LK-04 | Implementasi |
 | --- | --- |
@@ -55,7 +59,9 @@ uv run --frozen python src/ingest_data.py --from-date 22-09-2026 --to-date 28-09
 
 Mode interaktif meminta token melalui prompt tersembunyi. Masukkan token
 hanya di prompt tersebut. Default adalah seluruh program; `--program mbg`
-memilih satu program, dan opsi itu boleh diulang. Tanggal awal dan akhir
+memilih satu program, dan opsi itu boleh diulang. `--limit` merupakan target
+crawler; satu batch sumber dapat melebihi target, sehingga jumlah aktual
+selalu dicatat di laporan ingestion. Tanggal awal dan akhir
 inklusif. Tanpa keduanya, rentang dihitung ulang pada setiap siklus menggunakan
 tanggal Asia/Jakarta dan `--lookback-days` (default 7).
 
@@ -174,7 +180,7 @@ uv run --frozen --extra dev python -m compileall -q src tests
 
 Pengujian mencakup isolasi retry, kegagalan tanpa secret, kegagalan koneksi,
 timestamp mikrodetik, dua siklus tanpa overwrite, integritas raw, batch skip,
-dan hook prompt tanpa mencetak token. Hasil uji dan audit data lokal dicatat
+runtime cache dengan versi yang tepat, dan hook prompt tanpa mencetak token. Hasil uji dan audit data lokal dicatat
 di `docs/lk04-verification.json`. Audit agregat tidak berisi isi posting.
 
 Untuk penyerahan, gunakan tautan branch eksperimen, kedua skrip, folder sampel,

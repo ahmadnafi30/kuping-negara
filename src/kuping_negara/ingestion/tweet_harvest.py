@@ -88,6 +88,47 @@ class CollectionError(RuntimeError):
     """Raised when Tweet Harvest cannot produce a valid raw dataset."""
 
 
+def find_cached_tweet_harvest(
+    *,
+    explicit_path: Path | None = None,
+    environment: Mapping[str, str] | None = None,
+) -> Path | None:
+    """Find a locally installed bin.js with the exact pinned package version.
+
+    Running Node directly avoids npm startup/network checks and Windows batch
+    argument forwarding when an appropriate cached package is already present.
+    """
+    current_environment = os.environ if environment is None else environment
+    if explicit_path is not None:
+        candidates = [explicit_path.expanduser().resolve()]
+    else:
+        cache_roots: list[Path] = []
+        configured_cache = current_environment.get("NPM_CONFIG_CACHE")
+        if configured_cache:
+            cache_roots.append(Path(configured_cache))
+        local_appdata = current_environment.get("LOCALAPPDATA")
+        if local_appdata:
+            cache_roots.append(Path(local_appdata) / "npm-cache")
+        cache_roots.append(Path.home() / ".npm")
+        candidates = []
+        for cache_root in cache_roots:
+            candidates.extend(
+                sorted(cache_root.glob("_npx/*/node_modules/tweet-harvest/dist/bin.js"))
+            )
+    for candidate in candidates:
+        try:
+            package = json.loads(
+                (candidate.parent.parent / "package.json").read_text(encoding="utf-8")
+            )
+            if candidate.is_file() and package.get("version") == TWEET_HARVEST_VERSION:
+                return candidate.resolve()
+        except (OSError, ValueError):
+            continue
+    if explicit_path is not None:
+        raise ValueError("tweet-harvest-bin must belong to Tweet Harvest 2.7.1")
+    return None
+
+
 def build_search_query(keywords: Sequence[str]) -> str:
     """Build an X search query for Indonesian posts from configured keywords."""
     cleaned_keywords = [keyword.strip() for keyword in keywords if keyword.strip()]
@@ -341,6 +382,11 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--retry-delay", type=float, default=5.0)
     parser.add_argument("--timeout", type=float, default=600.0)
     parser.add_argument(
+        "--tweet-harvest-bin",
+        type=Path,
+        help="Installed Tweet Harvest 2.7.1 dist/bin.js; npm cache auto-detected",
+    )
+    parser.add_argument(
         "--non-interactive",
         action="store_true",
         help="Use X_AUTH_TOKEN from the environment, without terminal prompts",
@@ -439,9 +485,17 @@ def run_collection(argv: Sequence[str] | None = None) -> tuple[int, list[Path]]:
         print("Error: --non-interactive requires X_AUTH_TOKEN.", file=sys.stderr)
         return 1, []
 
+    try:
+        cached_bin = find_cached_tweet_harvest(
+            explicit_path=arguments.tweet_harvest_bin
+        )
+    except ValueError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1, []
+    node_executable = shutil.which("node")
     npx_executable = shutil.which("npx")
-    if not npx_executable:
-        print("Error: npx is not available. Install Node.js LTS.", file=sys.stderr)
+    if not node_executable or (cached_bin is None and not npx_executable):
+        print("Error: Node.js LTS with node/npx is required.", file=sys.stderr)
         return 1, []
 
     try:
@@ -476,7 +530,10 @@ def run_collection(argv: Sequence[str] | None = None) -> tuple[int, list[Path]]:
         plans, start=1
     ):
         print(f"\n[{index}/{len(plans)}] Collecting {display_name}")
-        command[0] = npx_executable
+        if cached_bin is not None:
+            command = [node_executable, str(cached_bin), *command[3:]]
+        else:
+            command[0] = npx_executable
         destination = None
         for attempt in range(1, arguments.attempts + 1):
             # Each attempt has a fresh cwd, so a failed run cannot reuse a

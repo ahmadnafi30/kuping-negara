@@ -26,6 +26,28 @@ from kuping_negara.preprocessing.x_pipeline import (
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
+def test_cached_runtime_rejects_a_different_package_version(tmp_path: Path) -> None:
+    package = tmp_path / "_npx/test/node_modules/tweet-harvest"
+    (package / "dist").mkdir(parents=True)
+    executable = package / "dist/bin.js"
+    executable.touch()
+    metadata = package / "package.json"
+    metadata.write_text('{"version":"2.7.0"}')
+    assert (
+        collector.find_cached_tweet_harvest(
+            environment={"NPM_CONFIG_CACHE": str(tmp_path)},
+        )
+        is None
+    )
+    metadata.write_text('{"version":"2.7.1"}')
+    assert (
+        collector.find_cached_tweet_harvest(
+            explicit_path=executable,
+        )
+        == executable.resolve()
+    )
+
+
 def test_timeout_stops_crawler_without_promoting_output(tmp_path: Path) -> None:
     started = time.monotonic()
     with pytest.raises(collector.CollectionError, match="timed out"):
