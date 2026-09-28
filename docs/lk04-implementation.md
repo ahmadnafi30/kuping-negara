@@ -15,6 +15,7 @@ Jika ingin menyesuaikan pencarian, cukup ubah berkas tersebut.
 | --- | --- |
 | `src/ingest_data.py` | Skrip untuk mengambil data dan menjalankannya secara berulang |
 | `src/preprocess.py` | Skrip untuk membersihkan satu CSV atau sekumpulan CSV |
+| `scripts/run_ingestion.ps1` | Menjalankan satu siklus lewat Task Scheduler Windows dan menyimpan log |
 | `data/raw/x/` | Hasil pengambilan data lengkap yang disimpan secara lokal |
 | `data/raw/samples/x/` | Sampel kecil yang disertakan di repo |
 | `data/processed/x/` | Data yang sudah dibersihkan dan laporan pemeriksaannya |
@@ -99,6 +100,13 @@ status gagal. Data dari program yang sudah berhasil tetap tersimpan.
 
 ## Menjalankan pengambilan secara berkala
 
+Ada dua pilihan: mengulang pengambilan selama skrip masih berjalan, atau
+memakai penjadwal untuk memulai skrip pada jam tertentu. Repo belum memasang
+jadwal otomatis. Nilai `collection_day` di konfigurasi kata kunci masih berupa
+rencana; skrip tidak membaca nilai tersebut untuk menentukan hari pengambilan.
+
+### Mencoba pengulangan di terminal
+
 Perintah berikut menjalankan dua pengambilan dengan jeda satu menit setelah
 pengambilan pertama selesai:
 
@@ -114,8 +122,79 @@ tidak dibaca secara otomatis oleh skrip, dan token tidak disertakan di Git.
 Jika tanggal tidak ditentukan secara manual, rentang tujuh hari terakhir
 dihitung kembali pada setiap siklus mengikuti waktu Asia/Jakarta.
 
-Untuk pengambilan harian di Linux, perintah satu siklus bisa dijalankan
-melalui cron. Contoh ini berjalan pukul 00.00 UTC atau 07.00 WIB:
+Skrip berhenti setelah dua siklus selesai. Jika satu siklus gagal setelah
+semua percobaan ulang habis, skrip juga berhenti dengan status gagal.
+Jeda dihitung setelah pekerjaan selesai, jadi perintah ini bukan jadwal
+tetap yang berjalan setiap menit pada jam tertentu.
+
+### Jadwal harian di Windows
+
+Untuk repo lokal, gunakan `scripts/run_ingestion.ps1`. Skrip ini menjalankan
+satu pengambilan untuk keempat program, langsung melakukan preprocessing,
+lalu menyimpan log baru di `logs/`. Token diambil dari environment atau,
+jika belum tersedia, dari baris `X_AUTH_TOKEN=...` di `.env` lokal. Nilainya
+tidak dicetak ke log dan tidak dimasukkan ke argumen proses.
+
+Cek rencana pengambilannya terlebih dahulu dari folder repo:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_ingestion.ps1 -DryRun
+```
+
+Untuk mencoba alur dan pencatatan log tanpa mengakses X:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_ingestion.ps1 -ReplayDir data/raw/samples/x
+```
+
+Setelah `.env` lokal berisi token, coba pengambilan langsung:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_ingestion.ps1
+```
+
+Untuk memasang jadwal, buka **Task Scheduler**, lalu pilih **Create Task**:
+
+1. Beri nama `Kuping Negara - Ingestion`. Gunakan akun Windows yang mempunyai
+   akses ke repo, Node.js, serta Chrome atau Edge. Untuk percobaan awal, pilih
+   **Run only when user is logged on**.
+2. Di **Triggers**, buat jadwal **Daily**, misalnya pukul **07.00**. Task
+   Scheduler mengikuti zona waktu Windows; pastikan perangkat memakai WIB.
+3. Di **Actions**, pilih **Start a program**. Isi **Program/script** dengan
+   `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`.
+4. Isi **Add arguments** dengan:
+
+   ```text
+   -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File "D:\Mlops\kuping-negara\scripts\run_ingestion.ps1"
+   ```
+
+5. Isi **Start in** dengan `D:\Mlops\kuping-negara`. Sesuaikan kedua lokasi
+   tersebut jika repo dipindahkan.
+6. Di **Settings**, aktifkan **Run task as soon as possible after a scheduled
+   start is missed**. Untuk pekerjaan yang masih berjalan, pilih **Do not
+   start a new instance** agar pengambilan tidak bertumpuk.
+7. Simpan task, klik **Run**, lalu periksa **Last Run Result** dan log terbaru
+   di `logs/`. Hasil `0x0` berarti proses selesai dengan kode sukses. Tetap
+   periksa jumlah baris dan laporan kualitas untuk melihat hasil datanya.
+
+Dengan pilihan awal di atas, akun harus sedang login dan laptop harus
+menyala. Jika ingin berjalan saat layar terkunci, pastikan pengaturan daya
+tidak membuat laptop tidur pada waktu pengambilan. Mode berjalan saat akun
+tidak login perlu diuji lagi dengan akun dan environment yang dipakai task.
+
+Jika ingin mengikuti pembagian hari pada LK-03, buat trigger mingguan dan
+tambahkan `-Program`: `mbg` untuk Senin, `ckg` untuk Selasa,
+`kopdes_merah_putih` untuk Rabu, dan `sekolah_rakyat` untuk Kamis. Tanpa opsi
+tersebut, setiap pengambilan menjalankan keempat program.
+
+Pengaturan trigger dan action mengikuti
+[dokumentasi Task Scheduler dari Microsoft](https://learn.microsoft.com/en-us/windows/win32/taskschd/tasks).
+
+### Jadwal harian di Linux atau Codespaces
+
+Perintah satu siklus juga bisa dijalankan melalui cron. Contoh berikut
+berjalan pukul 00.00 **menurut zona waktu mesin**; jika mesinnya memakai UTC,
+waktunya sama dengan 07.00 WIB:
 
 ```cron
 0 0 * * * cd /workspaces/kuping-negara && .venv/bin/python src/ingest_data.py --non-interactive --lookback-days 7 --preprocess >> logs/lk04.log 2>&1
@@ -123,7 +202,11 @@ melalui cron. Contoh ini berjalan pukul 00.00 UTC atau 07.00 WIB:
 
 Sesuaikan lokasi repo, buat folder `logs/`, dan pastikan token tersedia bagi
 proses cron. Jadwal perlu dipasang sendiri dan hanya berjalan selama mesin
-atau Codespace aktif.
+atau Codespace aktif. Gunakan path lengkap untuk Node.js atau siapkan `PATH`
+di environment cron, karena environment-nya bisa berbeda dari terminal.
+Contoh cron ini memanggil Python secara langsung, jadi `.env` tidak dibaca
+otomatis. Tidak ada jadwal ingestion di GitHub Actions; workflow yang tersedia
+saat ini menjalankan pemeriksaan kode.
 
 ## Mencoba alur dengan sampel
 
@@ -162,15 +245,31 @@ jumlah interaksi seperti like atau repost. ID dibaca sebagai teks agar
 angka panjang tidak berubah. Setelah itu, skrip merapikan Unicode, HTML
 entities, huruf besar-kecil, dan spasi. URL, mention, dan karakter kontrol
 dihapus dari `cleaned_text`, sedangkan kata dalam hashtag dipertahankan.
+Karakter penghubung yang membentuk emoji gabungan tetap disimpan.
 
 Emoji, tanda baca, dan kata negasi seperti "tidak" tetap disimpan karena
 bisa memengaruhi makna sentimen. Tokenisasi, stopword removal, dan stemming
 akan disesuaikan dengan model pada tahap ekstraksi fitur.
 
+Pencocokan kata kunci dilakukan pada teks yang sudah dibersihkan. Nama akun
+atau potongan URL yang kebetulan berisi kata seperti `mbg` tidak cukup untuk
+menandai unggahan sebagai relevan. Pemeriksaan bahasa masih memakai label
+`lang` dari X, dan kecocokan kata kunci belum menjamin konteksnya benar.
+
 Baris duplikat, bahasa yang tidak sesuai, teks yang kurang relevan, serta
 teks yang kosong setelah dibersihkan diberi tanda untuk diperiksa. Hanya
 baris dengan `is_eligible_for_labeling=True` yang ditandai siap untuk
 pelabelan. Baris lainnya tetap tersimpan agar bisa diperiksa kembali.
+
+Duplikat saat ini diperiksa berdasarkan ID dalam satu CSV. Saat beberapa
+pengambilan digabung untuk pelabelan atau training, sisakan satu baris untuk
+setiap pasangan `target_program` dan `tweet_id`. Ini perlu dilakukan karena
+rentang tujuh hari yang berulang bisa mengambil unggahan yang sama lagi.
+
+Jika kolom wajib, tanggal, teks mentah, atau jumlah interaksi tidak valid,
+skrip menolak CSV tersebut dan mengembalikan status gagal. Nilai yang hilang
+tidak diisi dengan angka atau teks tebakan. Data mentahnya tetap tersimpan
+untuk diperiksa dan file lain dalam pemrosesan batch tetap dilanjutkan.
 
 Hasil disimpan di `data/processed/x/`, dengan pembagian folder berdasarkan
 tanggal pemrosesan, program, dan `run_id`. Setiap hasil terdiri dari CSV
@@ -181,6 +280,10 @@ Opsi `--skip-existing` melewati hasil yang sudah lengkap dan checksum-nya
 masih cocok. Jika data atau konfigurasi berubah, hasil lama tidak ditimpa.
 Untuk membuat hasil pemrosesan ulang di tempat lain, gunakan
 `--output-root data/processed/recheck`.
+
+Pemeriksaan ulang memperbarui aturan menjadi `preprocessing_version=3`.
+Hasil dari versi lama tidak dianggap cocok oleh `--skip-existing`. Gunakan
+folder hasil baru saat memproses ulang agar hasil pemeriksaan lama tetap ada.
 
 ## Hasil yang sudah diperoleh
 
@@ -194,6 +297,11 @@ Simulasi dua siklus juga berhasil membuat file baru tanpa mengubah data
 sebelumnya. Pemeriksaan checksum memastikan file mentah dan sampel awal
 tetap sama. Rinciannya ada di `docs/lk04-verification.json`.
 
+Setelah aturan preprocessing diperbaiki, 80 unggahan hasil pengambilan
+langsung diproses ulang di folder terpisah. Hasilnya tetap 59 baris siap
+untuk pelabelan dan 21 perlu diperiksa. File mentah tetap sama. Catatan
+pemeriksaan ulang ada di `docs/lk04-preprocessing-review.json`.
+
 Pengujian kode dapat dijalankan dengan:
 
 ```bash
@@ -201,6 +309,13 @@ uv run --frozen --extra dev pytest
 uv run --frozen --extra dev python -m compileall -q src tests
 ```
 
-Seluruh 40 pengujian lulus. Pengujian mencakup percobaan ulang saat gagal,
-batas waktu, pemilihan versi Tweet Harvest, pembersihan teks, dan penyimpanan
-hasil tanpa menimpa data lama. Pemeriksaan otomatis di GitHub juga lulus.
+Pada pemeriksaan ulang, seluruh 48 pengujian lokal lulus. Pengujian mencakup
+percobaan ulang saat gagal, batas waktu, pemilihan versi Tweet Harvest,
+pembersihan teks, dan penyimpanan hasil tanpa menimpa data lama. Tambahan
+pengujian memeriksa kata kunci di URL/mention, emoji gabungan, dan peluncur
+Windows. Peluncur diuji memakai proses pengganti untuk memastikan token
+tidak tercetak serta kode sukses atau gagal diteruskan dengan benar.
+
+Pengujian tersebut belum memasang atau membuktikan jadwal harian. Jadwal
+perlu didaftarkan di Task Scheduler, lalu hasilnya diperiksa ketika trigger
+benar-benar berjalan.

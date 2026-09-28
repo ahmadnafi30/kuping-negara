@@ -63,6 +63,37 @@ def test_clean_text_removes_identity_noise_and_preserves_sentiment_symbols() -> 
     assert cleaned == "mbg bagus! 😊 sehat"
 
 
+def test_clean_text_keeps_joined_emoji_and_negation() -> None:
+    assert clean_text("MBG tidak bagus 👩‍⚕️ 👨‍👩‍👧‍👦\x00") == (
+        "mbg tidak bagus 👩‍⚕️ 👨‍👩‍👧‍👦"
+    )
+
+
+@pytest.mark.parametrize(
+    ("text", "keywords", "expected_eligible"),
+    [
+        ("@mbg bagus sekali", ["mbg"], False),
+        ("Bagus sekali https://example.test/mbg", ["mbg"], False),
+        ("Sekolah&nbsp;Rakyat bagus", ["sekolah rakyat"], True),
+        ("#MBG tidak bagus", ["mbg"], True),
+    ],
+)
+def test_relevance_uses_usable_text(
+    text: str, keywords: list[str], expected_eligible: bool
+) -> None:
+    source = _source_frame().iloc[[0]].copy()
+    source["full_text"] = text
+    result = preprocess_tweet_harvest_frame(
+        source,
+        program_id="mbg",
+        ingestion_run_id="20260921T182524+0700",
+        collected_at=datetime(2026, 9, 21, 18, 25, 24, tzinfo=JAKARTA_TIMEZONE),
+        keywords=keywords,
+    )
+    assert bool(result.records["is_eligible_for_labeling"].iloc[0]) is expected_eligible
+    assert result.records["raw_text"].iloc[0] == text
+
+
 def test_preprocess_maps_source_fields_without_user_identifiers() -> None:
     result = preprocess_tweet_harvest_frame(
         _source_frame(),

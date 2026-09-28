@@ -43,7 +43,7 @@ The pipeline performs the following deterministic operations:
 4. Preserve the original post in `raw_text`.
 5. Create `cleaned_text` using Unicode NFKC normalization and case folding.
 6. Remove URLs and direct mentions from `cleaned_text`.
-7. Keep hashtag words, punctuation, and emoji that may carry sentiment.
+7. Keep hashtag words, punctuation, and emoji, including ZWJ/tag components.
 8. Map source names such as `favorite_count` to canonical names such as
    `like_count`.
 9. Add language, relevance, duplicate, labeling-readiness, and lineage fields.
@@ -78,7 +78,7 @@ has been selected.
 | `conversation_id` | Conversation identifier stored as text |
 | `tweet_url` | Source permalink |
 | `target_program` | Program ID from the raw partition |
-| `matched_keyword` | First configured keyword found in the raw text |
+| `matched_keyword` | First configured keyword found in cleaned text, excluding URLs and mentions |
 | `raw_text` | Original text retained for traceability |
 | `cleaned_text` | Normalized text for labeling and model preparation |
 | `language` | Language label supplied by X |
@@ -94,7 +94,7 @@ has been selected.
 | `data_version` | SHA-256 identity of the raw CSV |
 | `schema_version` | Canonical data-contract version |
 | `source_platform` | Source identifier, currently `x` |
-| `is_duplicate` | True for repeated `tweet_id` values after the first row |
+| `is_duplicate` | True for repeated `tweet_id` values after the first row within one CSV |
 | `is_indonesian` | True when the source language label is `in` |
 | `is_relevant` | True when a configured program keyword is present |
 | `is_eligible_for_labeling` | True only when status is `accepted` |
@@ -115,6 +115,20 @@ has been selected.
 Rows that need review remain visible. The pipeline does not silently drop them.
 This preserves evidence for later rule improvements and prevents loss caused by
 imperfect platform language labels.
+
+Relevance is checked against cleaned text so a keyword occurring only in a
+URL or account mention cannot make a post eligible. HTML entities are decoded
+before matching. The rules still provide a review signal, not semantic topic
+classification or independent language detection.
+
+Duplicate detection is local to a single source CSV. Before combining repeated
+collection windows for labeling or training, deduplicate by `target_program`
+and `tweet_id`. Split training/evaluation data only after this step so the
+same post cannot appear in both sets.
+
+Version 3 changes relevance matching and preserves joined emoji. Verified
+outputs from older versions are not skipped. Use a separate `--output-root`
+when reprocessing an existing run to retain the earlier quality evidence.
 
 ## MBG Pilot Audit
 

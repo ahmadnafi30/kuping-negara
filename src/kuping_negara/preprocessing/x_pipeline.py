@@ -25,7 +25,7 @@ from kuping_negara.preprocessing.x_posts import (
 JAKARTA_TIMEZONE = ZoneInfo("Asia/Jakarta")
 DEFAULT_CONFIG_PATH = Path("configs/keywords/programs.example.yaml")
 DEFAULT_OUTPUT_ROOT = Path("data/processed/x")
-PREPROCESSING_VERSION = "2"
+PREPROCESSING_VERSION = "3"
 
 
 class PreprocessingPipelineError(RuntimeError):

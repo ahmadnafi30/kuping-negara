@@ -53,13 +53,17 @@ class PreprocessingResult:
 def clean_text(text: str) -> str:
     """Normalize text while removing URLs and direct user references.
 
-    Emoji and ordinary punctuation remain available as sentiment signals.
+    Emoji, including their joiners and tag characters, remain sentiment signals.
     Hashtag words remain, but the leading hash is removed.
     """
 
     normalized = unicodedata.normalize("NFKC", html.unescape(str(text)))
     normalized = "".join(
-        " " if unicodedata.category(character).startswith("C") else character
+        " "
+        if unicodedata.category(character).startswith("C")
+        and character != "\u200d"
+        and not "\U000e0020" <= character <= "\U000e007f"
+        else character
         for character in normalized
     )
     normalized = URL_PATTERN.sub(" ", normalized)
@@ -179,7 +183,7 @@ def preprocess_tweet_harvest_frame(
     cleaned_text = raw_text.map(clean_text)
     empty_cleaned_flags = cleaned_text.str.strip().eq("")
     matched_keywords = pd.Series(
-        [_match_keyword(value, keywords) for value in raw_text],
+        [_match_keyword(value, keywords) for value in cleaned_text],
         index=source.index,
         dtype=object,
     )
