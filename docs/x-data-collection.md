@@ -4,10 +4,10 @@ This guide covers local pilot-data collection for all Kuping Negara programs
 with Tweet Harvest 2.7.1. The collector reads versioned keywords from
 `configs/keywords/programs.example.yaml` and stores raw CSV files outside Git.
 
-For the LK-04 wrapper, unattended mode, retry policy, and periodic simulation,
-see [LK-04 Implementation](lk04-implementation.md). Runtime CSVs remain outside
-Git; the small deidentified course subset under `data/raw/samples/` is explicitly
-versioned with provenance.
+Cara menjalankan pengambilan berkala dan preprocessing ada di
+[panduan implementasi](lk03-implementation.md). CSV lengkap tetap disimpan
+secara lokal. Repo menyertakan sampel kecil di `data/raw/samples/` yang
+identitasnya sudah disamarkan, beserta catatan asal datanya.
 
 ## Prerequisites
 
