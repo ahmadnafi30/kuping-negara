@@ -41,6 +41,30 @@ python src/eda_initial_data.py --input-dir data/processed/training_initial/reche
 Empat CSV sampel LK-04 yang lebih lama tetap berguna untuk menguji
 pipeline: 20 barisnya berada dalam tanggal yang diminta dan menghasilkan
 13 calon anotasi. Itu hanya sampel kecil tanpa label sentimen, bukan
-pengganti pengumpulan data awal yang representatif. Sebelum melatih model,
-pengambilan historis perlu diulang sampai ada unggahan yang lolos pemeriksaan
-tanggal, kemudian diperiksa relevansi dan diberi label secara manual.
+pengganti pengumpulan data awal yang representatif.
+
+Pada percobaan berikutnya, saya mengambil **hari lengkap 2 Oktober 2026**
+untuk keempat program. Empat CSV baru berisi 80 unggahan yang seluruhnya
+sesuai tanggal. Setelah pemeriksaan bahasa, kata kunci, dan duplikat, 64
+unggahan masuk daftar calon anotasi; 16 lainnya perlu ditinjau. Satu program
+sempat mengembalikan beberapa unggahan di luar tanggal, tetapi percobaan
+ulangnya menghasilkan batch yang lolos pemeriksaan.
+
+| Pilot valid 2 Oktober | Jumlah |
+| --- | ---: |
+| File mentah baru | 4 |
+| Unggahan sesuai tanggal | 80 |
+| Calon anotasi unik | 64 |
+| Perlu tinjauan bahasa/relevansi | 16 |
+
+EDA keseluruhan di `reports/eda/initial-pilot-2026-10-03/index.html`
+memuat delapan file versi 4: empat batch pertama yang gagal dan empat
+batch 2 Oktober yang valid. Karena itu totalnya 160 baris, dengan 80
+`review_out_of_window` dan 64 calon anotasi. Daftar calon anotasi terbaru
+ada di `data/processed/training_initial/v4/annotation_pool/` dan dilacak
+oleh DVC lokal. Laporan Git hanya berisi angka agregat, tanpa teks
+unggahan atau identitas akun.
+
+Ini baru sampel **satu hari**, belum data latih berlabel. Sebelum melatih
+model, rentang hari dan jumlah unggahan perlu diperluas, lalu kandidat
+diperiksa relevansinya dan diberi label sentimen secara manual.
