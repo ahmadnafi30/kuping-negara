@@ -134,8 +134,8 @@ def build_annotation_pool(
         "note": "Unlabeled annotation candidates; sentiment labels are not inferred.",
     }
 
-    build_id = build_id or datetime.now(JAKARTA_TIMEZONE).strftime(
-        "%Y%m%dT%H%M%S%f%z"
+    build_id = build_id or (
+        datetime.now(JAKARTA_TIMEZONE).strftime("%Y%m%dT%H%M%S%f") + "WIB"
     )
     if not re.fullmatch(r"[A-Za-z0-9_-]+", build_id):
         raise CandidatePoolError("build-id must contain only letters, digits, _ or -")

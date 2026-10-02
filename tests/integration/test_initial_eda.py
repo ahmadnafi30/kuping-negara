@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from kuping_negara.analysis.eda import analyze_processed_runs, render_html
+from kuping_negara.analysis.eda import analyze_processed_runs, main, render_html
 from kuping_negara.preprocessing.x_pipeline import run_preprocessing
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -33,3 +33,5 @@ def test_sample_eda_reports_quality_without_exposing_post_text(tmp_path):
     source_text = pd.read_csv(sample_files[0])["full_text"].iloc[0]
     assert source_text not in page
     assert "tweet_id" not in page
+    assert main(["--input-dir", str(processed_root), "--output-root", str(tmp_path / "eda")]) == 0
+    assert len(list((tmp_path / "eda").glob("run_id=*WIB/index.html"))) == 1

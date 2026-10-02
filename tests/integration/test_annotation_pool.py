@@ -45,6 +45,8 @@ def test_annotation_pool_keeps_one_candidate_from_repeated_runs(tmp_path):
     assert candidates[["target_program", "tweet_id"]].duplicated().sum() == 0
     assert candidates["quality_status"].eq("accepted").all()
     assert csv_path.parent.name == "build_id=sample-v1"
+    default_csv, _ = build_annotation_pool(processed_root, tmp_path / "default-pool")
+    assert default_csv.parent.name.endswith("WIB")
 
 
 def test_pool_rejects_a_processed_csv_changed_after_reporting(tmp_path):

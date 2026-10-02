@@ -195,8 +195,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         output_root = root / output_root
     try:
         summary = analyze_processed_runs(input_dir)
-        run_id = arguments.run_id or datetime.now(JAKARTA_TIMEZONE).strftime(
-            "%Y%m%dT%H%M%S%f%z"
+        run_id = arguments.run_id or (
+            datetime.now(JAKARTA_TIMEZONE).strftime("%Y%m%dT%H%M%S%f") + "WIB"
         )
         if not re.fullmatch(r"[A-Za-z0-9_-]+", run_id):
             raise ValueError("run-id must contain only letters, digits, _ or -")
