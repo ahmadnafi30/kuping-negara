@@ -1,0 +1,16 @@
+.git
+.venv
+.env*
+!.env.example
+LK04 Assignment
+data
+tweets-data
+logs
+tests
+docs
+notebooks
+models
+mlruns
+**/__pycache__
+**/.pytest_cache
+

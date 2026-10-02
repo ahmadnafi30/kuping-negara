@@ -1,0 +1,29 @@
+services:
+  airflow:
+    build:
+      context: .
+      dockerfile: docker/airflow/Dockerfile
+    image: kuping-negara-airflow:3.3.1
+    command: standalone
+    restart: unless-stopped
+    environment:
+      AIRFLOW_HOME: /opt/airflow/state
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: Asia/Jakarta
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      KUPING_NEGARA_BROWSER_EXECUTABLE: /usr/bin/chromium
+      X_AUTH_TOKEN: ${X_AUTH_TOKEN:-}
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags:ro
+      - ./data:/opt/airflow/project/data
+      - ./tweets-data:/opt/airflow/project/tweets-data
+      - airflow-state:/opt/airflow/state
+    shm_size: 1gb
+
+volumes:
+  airflow-state:
+
