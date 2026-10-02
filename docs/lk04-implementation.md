@@ -115,9 +115,11 @@ berbeda dari rentang tanggal data: `--lookback-days 7` tetap mengambil
 unggahan dalam rentang tujuh hari, bukan hanya unggahan pada hari tugas berjalan.
 Zona waktu yang dipakai adalah Asia/Jakarta.
 
-Repo belum memasang jadwal otomatis. Nilai `collection_day` di konfigurasi
-kata kunci mencatat pembagian hari, tetapi belum dibaca oleh skrip untuk
-menjalankan jadwal. Penjadwal perlu diberi hari dan program yang sesuai.
+Jadwal Airflow lokal sekarang tersedia dan membaca `collection_day` dari
+konfigurasi kata kunci. Keempat jadwal dibuat dalam keadaan nonaktif sampai
+diperiksa dan diaktifkan di UI. Cara menjalankannya ada di
+`docs/airflow-scheduling.md`. Panduan Task Scheduler di bawah tetap bisa
+dipakai bila lebih cocok menjalankan skrip langsung di Windows.
 
 ### Mencoba pengulangan di terminal
 
@@ -355,6 +357,6 @@ pengujian memeriksa kata kunci di URL/mention, emoji gabungan, dan peluncur
 Windows. Peluncur diuji memakai proses pengganti untuk memastikan token
 tidak tercetak serta kode sukses atau gagal diteruskan dengan benar.
 
-Pengujian tersebut belum memasang atau membuktikan jadwal mingguan. Jadwal
-perlu didaftarkan di Task Scheduler, lalu hasilnya diperiksa ketika trigger
-benar-benar berjalan.
+Pengujian tersebut memeriksa alur skrip, sedangkan jadwal Airflow diuji
+terpisah. Jadwal baru dapat dibuktikan berjalan otomatis setelah DAG
+diaktifkan dan satu trigger mingguan benar-benar selesai.
