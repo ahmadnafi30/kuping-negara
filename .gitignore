@@ -34,6 +34,7 @@ data/processed/*
 !data/processed/.gitkeep
 data/labeled/*
 !data/labeled/.gitkeep
+data/bootstrap/
 models/*
 !models/.gitkeep
 mlruns/
