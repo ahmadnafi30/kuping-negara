@@ -28,12 +28,15 @@ terpisah dari `data/raw/x` dan `data/processed/x` yang dipakai pengambilan
 langsung, sehingga `dvc repro` tidak menghapus hasil live. Jika tidak ada
 perubahan sumber atau kode, DVC akan melewati tahap yang sudah mutakhir.
 
-Setelah pengumpulan langsung menghasilkan data nyata dan izin penyimpanannya
-sudah jelas, snapshot lokalnya bisa dicatat dengan:
+Snapshot lokal untuk arsip mentah, hasil preprocessing awal, dan laporan
+EDA sudah dibuat. Isinya termasuk uji pengambilan 2 Oktober yang gagal
+memenuhi rentang tanggal; baca `docs/initial-data-audit-2026-10-03.md`
+sebelum menggunakan data tersebut. Untuk memperbarui pointer setelah ada
+run baru:
 
 ```bash
-dvc add data/raw/x data/processed/x data/processed/training_initial
-git add data/raw/x.dvc data/processed/x.dvc data/processed/training_initial.dvc .gitignore
+dvc add data/raw/x data/processed/training_initial data/analysis/eda
+git add data/raw/x.dvc data/processed/training_initial.dvc data/analysis/eda.dvc .gitignore
 git commit -m "data: record new raw and processed snapshots"
 ```
 
