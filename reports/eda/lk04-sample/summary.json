@@ -41,6 +41,7 @@
     "review_relevance": 2,
     "review_language_and_relevance": 1
   },
+  "out_of_window_rows": 0,
   "source_language_counts": {
     "in": 15,
     "en": 4,
@@ -91,10 +92,10 @@
     "published_at": 0
   },
   "input_sha256": {
-    "processed_date=2026-10-02/program=ckg/run_id=20260921T183212+0700/ckg_2026-09-14_2026-09-21_processed.csv": "e88d15dd6e1a6ae620ee7114d888f6a5b56d9481b40057d511936e7ee86ef7ea",
-    "processed_date=2026-10-02/program=kopdes_merah_putih/run_id=20260921T183212+0700/kopdes_merah_putih_2026-09-14_2026-09-21_processed.csv": "b5437936e1a2d1b2167c9277da2318a24c7135c1785e4b8e6fcb652830db0e4d",
-    "processed_date=2026-10-02/program=mbg/run_id=20260921T183212+0700/mbg_2026-09-14_2026-09-21_processed.csv": "24855a2292809c70b1f9f1fc6893905340be4738c06771d65f332196f8875205",
-    "processed_date=2026-10-02/program=sekolah_rakyat/run_id=20260921T183212+0700/sekolah_rakyat_2026-09-14_2026-09-21_processed.csv": "7491be0b9875a32cdb894c8118ac82e37dfa83a26943debfcecf55ef001fd727"
+    "processed_date=2026-09-22/program=ckg/run_id=20260921T183212+0700/ckg_2026-09-14_2026-09-21_processed.csv": "ec3e30a2750d568789569fed69571b7cdbb704e2f29c6ae44448af023d4a542a",
+    "processed_date=2026-09-22/program=kopdes_merah_putih/run_id=20260921T183212+0700/kopdes_merah_putih_2026-09-14_2026-09-21_processed.csv": "1c8ff48f58827ea6c91248800d639cd268939b385cd7322159ebdf43feb9b4b9",
+    "processed_date=2026-09-22/program=mbg/run_id=20260921T183212+0700/mbg_2026-09-14_2026-09-21_processed.csv": "07a713871eb691b792cf05c55e91aec5507a38d96f38bc7304a50ba4f273a57b",
+    "processed_date=2026-09-22/program=sekolah_rakyat/run_id=20260921T183212+0700/sekolah_rakyat_2026-09-14_2026-09-21_processed.csv": "b851f0b8695aa5ebcd60651bb69987107bbe9503b20658207e30f202ae9847df"
   },
   "limitations": [
     "Language codes come from X/Tweet Harvest; no independent detection is run.",

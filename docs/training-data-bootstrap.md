@@ -5,7 +5,7 @@ empat program. Ia membagi rentang tanggal menjadi potongan tujuh hari,
 memanggil pengambil data yang sudah dipakai pada LK-04, lalu menjalankan
 preprocessing untuk setiap file yang berhasil disimpan. Hasil mentah masuk ke
 `data/raw/x`, sedangkan hasil bersih khusus bootstrap masuk ke
-`data/processed/training_initial/x`. Pemisahan ini menjaga simulasi replay
+`data/processed/training_initial/v4/x`. Pemisahan ini menjaga simulasi replay
 LK-04 di `data/processed/x` agar tidak ikut menjadi kandidat training.
 Setiap pengambilan membuat run baru, sehingga data lama tidak tertimpa.
 
@@ -46,8 +46,8 @@ laporan kualitas dan melakukan deduplikasi lintas run; rinciannya ada di
 `docs/preprocessing-audit.md`.
 
 ```bash
-python src/build_annotation_pool.py --input-dir data/processed/training_initial/x
-python src/eda_initial_data.py --input-dir data/processed/training_initial/x
+python src/build_annotation_pool.py --input-dir data/processed/training_initial/v4/x
+python src/eda_initial_data.py --input-dir data/processed/training_initial/v4/x
 ```
 
 Hasil ini **belum menjadi data latih berlabel**. Kolom `language` berasal dari
@@ -56,4 +56,12 @@ menandai calon unggahan yang layak diperiksa. Sentimen harus diberi label
 manual sesuai `docs/annotation-guidelines.md`, lalu diperiksa kesepakatan
 antar anotator sebelum dipakai melatih model. Batas per potongan tanggal juga
 berarti data ini sampel, bukan seluruh percakapan pada periode tersebut.
+
+Sebelum CSV hasil pencarian disimpan, skrip memeriksa tanggal publikasi
+setiap unggahan dalam waktu Jakarta. Jika ada yang di luar tanggal yang
+diminta, pengambilan dianggap gagal dan file tetap berada di area sementara
+untuk diaudit. Ini penting karena hasil pencarian X bisa saja tidak mengikuti
+filter tanggal. Arsip lama yang sudah terlanjur masuk tetap bisa diproses,
+tetapi versi 4 memberi status `review_out_of_window` dan tidak memasukkannya
+ke kandidat anotasi. Hasil versi 3 disimpan terpisah sebagai jejak audit.
 

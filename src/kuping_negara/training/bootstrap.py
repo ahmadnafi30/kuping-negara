@@ -98,7 +98,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--processed-root",
         type=Path,
-        default=Path("data/processed/training_initial/x"),
+        default=Path("data/processed/training_initial/v4/x"),
         help="Keep initial training candidates separate from replay outputs",
     )
     parser.add_argument(

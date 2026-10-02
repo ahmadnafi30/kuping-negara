@@ -51,6 +51,7 @@ def analyze_processed_runs(input_dir: Path) -> dict[str, Any]:
     published = pd.to_datetime(frame["published_at"], errors="coerce", utc=True)
     if published.isna().any():
         raise ValueError("processed rows contain invalid published_at values")
+    published_local = published.dt.tz_convert(JAKARTA_TIMEZONE)
     lengths = frame["cleaned_text"].str.len()
     engagement: dict[str, dict[str, float | int]] = {}
     for column in ENGAGEMENT_COLUMNS:
@@ -87,9 +88,12 @@ def analyze_processed_runs(input_dir: Path) -> dict[str, Any]:
         "candidate_program_counts": candidate_counts,
         "program_quality_counts": program_quality,
         "quality_status_counts": _counts(frame["quality_status"]),
+        "out_of_window_rows": int(
+            frame["is_in_requested_window"].eq("False").sum()
+        ),
         "source_language_counts": language_counts,
-        "published_date_counts": _counts(published.dt.strftime("%Y-%m-%d")),
-        "published_week_counts": _counts(published.dt.strftime("%G-W%V")),
+        "published_date_counts": _counts(published_local.dt.strftime("%Y-%m-%d")),
+        "published_week_counts": _counts(published_local.dt.strftime("%G-W%V")),
         "published_at_min": published.min().isoformat(),
         "published_at_max": published.max().isoformat(),
         "cleaned_text_length": {
@@ -135,6 +139,7 @@ def render_html(summary: dict[str, Any]) -> str:
         ("Baris diproses", summary["processed_rows"]),
         ("Siap diperiksa", summary["eligible_rows"]),
         ("Kandidat unik", summary["unique_annotation_candidates"]),
+        ("Di luar rentang tanggal", summary["out_of_window_rows"]),
         ("Duplikat antar-run", summary["duplicates_across_runs"]),
     ]
     card_html = "".join(
