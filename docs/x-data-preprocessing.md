@@ -126,9 +126,11 @@ collection windows for labeling or training, deduplicate by `target_program`
 and `tweet_id`. Split training/evaluation data only after this step so the
 same post cannot appear in both sets.
 
-Version 3 changes relevance matching and preserves joined emoji. Verified
-outputs from older versions are not skipped. Use a separate `--output-root`
-when reprocessing an existing run to retain the earlier quality evidence.
+Version 4 checks each post against the requested dates in Jakarta time and
+marks out-of-window rows for review. Emoji remain available as sentiment
+signals. Verified outputs from older versions are not skipped. Use a separate
+`--output-root` when reprocessing an existing run so earlier reports remain
+available for audit.
 
 ## MBG Pilot Audit
 

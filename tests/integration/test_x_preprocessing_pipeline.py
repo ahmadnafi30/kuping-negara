@@ -139,6 +139,27 @@ def test_run_preprocessing_refuses_to_overwrite_existing_run(
         run_preprocessing(**parameters)
 
 
+def test_out_of_window_post_is_preserved_but_ineligible(tmp_path: Path) -> None:
+    raw_path = _write_raw_fixture(tmp_path)
+    source = pd.read_csv(raw_path, dtype=str, keep_default_na=False)
+    source.loc[0, "created_at"] = "Fri Oct 02 12:00:00 +0000 2026"
+    source.to_csv(raw_path, index=False, encoding="utf-8-sig")
+
+    artifacts = run_preprocessing(
+        input_path=raw_path,
+        output_root=tmp_path / "processed",
+        config_path=_write_config(tmp_path),
+        processed_at=datetime(2026, 10, 3, 0, 0, tzinfo=JAKARTA_TIMEZONE),
+    )
+    rows = pd.read_csv(artifacts.records_path, dtype=str)
+    report = json.loads(artifacts.report_path.read_text(encoding="utf-8"))
+    assert rows["quality_status"].tolist() == ["review_out_of_window"]
+    assert rows["is_in_requested_window"].tolist() == ["False"]
+    assert rows["is_eligible_for_labeling"].tolist() == ["False"]
+    assert report["out_of_window_rows"] == 1
+    assert report["eligible_for_labeling"] == 0
+
+
 def test_cli_reports_created_artifacts(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

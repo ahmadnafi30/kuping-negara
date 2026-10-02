@@ -15,6 +15,10 @@ memakai kata kunci dalam konteks lain tetap mungkin perlu koreksi manual.
 
 Pipeline memeriksa kolom wajib, ID dan teks kosong, karakter pengganti yang
 menandakan teks rusak, timestamp, serta angka interaksi yang tidak valid.
+Versi 4 juga membandingkan tanggal publikasi dalam waktu Jakarta dengan
+rentang pada nama file mentah. Baris di luar rentang tetap disimpan untuk
+audit, tetapi berstatus `review_out_of_window` dan tidak lolos sebagai
+kandidat anotasi.
 Laporan kualitas mencatat jumlah baris, status pemeriksaan, bahasa, hash
 sumber, hash hasil, dan versi preprocessing. Jika satu file berisi nilai wajib
 yang rusak, pemrosesan file tersebut berhenti dan file mentah tetap tersimpan
@@ -39,7 +43,7 @@ Hasilnya masuk ke run baru di `data/processed/annotation_pool/` bersama
 laporan jumlah kandidat dan duplikat yang dibuang. File lama tidak ditimpa.
 Jika satu `tweet_id` muncul di beberapa program, laporan mencatatnya.
 Untuk data awal yang dibuat oleh `src/collect_training_data.py`, gunakan
-`--input-dir data/processed/training_initial/x` agar hasil replay LK-04
+`--input-dir data/processed/training_initial/v4/x` agar hasil replay LK-04
 tidak tercampur.
 Ketika nanti membagi data latih dan uji, kelompokkan berdasarkan `tweet_id`
 agar teks unggahan yang sama tidak bocor ke dua bagian.

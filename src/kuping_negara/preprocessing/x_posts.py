@@ -7,7 +7,7 @@ import re
 import unicodedata
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 import pandas as pd
@@ -113,8 +113,11 @@ def _isoformat_utc(timestamp: pd.Timestamp) -> str:
 
 
 def _quality_status(
-    *, is_duplicate: bool, is_indonesian: bool, is_relevant: bool
+    *, is_duplicate: bool, is_indonesian: bool, is_relevant: bool,
+    is_in_requested_window: bool,
 ) -> str:
+    if not is_in_requested_window:
+        return "review_out_of_window"
     if is_duplicate:
         return "duplicate"
     if not is_indonesian and not is_relevant:
@@ -133,6 +136,8 @@ def preprocess_tweet_harvest_frame(
     ingestion_run_id: str,
     collected_at: datetime,
     keywords: Sequence[str],
+    requested_start: date | None = None,
+    requested_end: date | None = None,
 ) -> PreprocessingResult:
     """Map Tweet Harvest fields to the canonical processed-data contract.
 
@@ -152,6 +157,12 @@ def preprocess_tweet_harvest_frame(
         raise PreprocessingError("ingestion_run_id must not be empty")
     if collected_at.tzinfo is None or collected_at.utcoffset() is None:
         raise PreprocessingError("collected_at must be timezone-aware")
+    if (requested_start is None) != (requested_end is None):
+        raise PreprocessingError(
+            "requested_start and requested_end must be provided together"
+        )
+    if requested_start is not None and requested_start > requested_end:
+        raise PreprocessingError("requested_start must not exceed requested_end")
 
     source = frame.copy()
     if source.empty:
@@ -175,6 +186,13 @@ def preprocess_tweet_harvest_frame(
             str(index) for index in source.index[published_at.isna()].tolist()
         )
         raise PreprocessingError(f"created_at is invalid at rows: {rows}")
+    published_local = published_at.dt.tz_convert("Asia/Jakarta")
+    local_dates = published_local.dt.date
+    in_window_flags = (
+        local_dates.between(requested_start, requested_end)
+        if requested_start is not None
+        else pd.Series(True, index=source.index)
+    )
 
     engagement = {
         output_column: _to_nonnegative_integer(source[input_column], input_column)
@@ -195,11 +213,13 @@ def preprocess_tweet_harvest_frame(
             is_duplicate=bool(is_duplicate),
             is_indonesian=bool(is_indonesian),
             is_relevant=bool(is_relevant),
+            is_in_requested_window=bool(is_in_window),
         )
-        for is_duplicate, is_indonesian, is_relevant in zip(
+        for is_duplicate, is_indonesian, is_relevant, is_in_window in zip(
             duplicate_flags,
             indonesian_flags,
             relevance_flags,
+            in_window_flags,
             strict=True,
         )
     ]
@@ -208,7 +228,7 @@ def preprocess_tweet_harvest_frame(
         for empty, status in zip(empty_cleaned_flags, quality_statuses, strict=True)
     ]
     eligible_flags = [status == "accepted" for status in quality_statuses]
-    iso_calendar = published_at.dt.isocalendar()
+    iso_calendar = published_local.dt.isocalendar()
 
     records = pd.DataFrame(
         {
@@ -228,7 +248,7 @@ def preprocess_tweet_harvest_frame(
                     iso_calendar["year"], iso_calendar["week"], strict=True
                 )
             ],
-            "year_month": published_at.dt.strftime("%Y-%m"),
+            "year_month": published_local.dt.strftime("%Y-%m"),
             **engagement,
             "ingestion_run_id": ingestion_run_id,
             "schema_version": SCHEMA_VERSION,
@@ -236,6 +256,7 @@ def preprocess_tweet_harvest_frame(
             "is_duplicate": duplicate_flags,
             "is_indonesian": indonesian_flags,
             "is_relevant": relevance_flags,
+            "is_in_requested_window": in_window_flags,
             "is_eligible_for_labeling": eligible_flags,
             "quality_status": quality_statuses,
         }
@@ -247,6 +268,9 @@ def preprocess_tweet_harvest_frame(
         "processed_rows": int(len(records)),
         "duplicate_tweet_ids": int(duplicate_flags.sum()),
         "eligible_for_labeling": int(sum(eligible_flags)),
+        "out_of_window_rows": int((~in_window_flags).sum()),
+        "requested_start": requested_start.isoformat() if requested_start else None,
+        "requested_end": requested_end.isoformat() if requested_end else None,
         "quality_status_counts": {
             str(status): int(count) for status, count in status_counts.items()
         },

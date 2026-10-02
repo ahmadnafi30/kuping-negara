@@ -27,6 +27,7 @@ REQUIRED_COLUMNS = {
     "ingestion_run_id",
     "quality_status",
     "is_eligible_for_labeling",
+    "is_in_requested_window",
 }
 
 
@@ -66,6 +67,13 @@ def load_verified_run(path: Path) -> pd.DataFrame:
     ].ne("accepted")
     if inconsistent.any():
         raise CandidatePoolError(f"non-accepted row marked eligible: {path}")
+    if not frame["is_in_requested_window"].isin(["True", "False"]).all():
+        raise CandidatePoolError(f"invalid requested-window values: {path}")
+    if (
+        frame["is_eligible_for_labeling"].eq("True")
+        & frame["is_in_requested_window"].eq("False")
+    ).any():
+        raise CandidatePoolError(f"out-of-window row marked eligible: {path}")
     if frame["tweet_id"].eq("").any() or frame["target_program"].eq("").any():
         raise CandidatePoolError(f"missing tweet identity or target program: {path}")
     if frame["cleaned_text"].eq("").any() and frame.loc[
@@ -122,6 +130,7 @@ def build_annotation_pool(
             str(key): int(value)
             for key, value in all_rows["quality_status"].value_counts().items()
         },
+        "out_of_window_rows": int(all_rows["is_in_requested_window"].eq("False").sum()),
         "candidate_program_counts": {
             str(key): int(value)
             for key, value in candidates["target_program"].value_counts().items()

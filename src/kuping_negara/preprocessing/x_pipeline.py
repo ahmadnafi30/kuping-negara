@@ -6,6 +6,7 @@ import argparse
 import csv
 import hashlib
 import json
+import re
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -25,7 +26,7 @@ from kuping_negara.preprocessing.x_posts import (
 JAKARTA_TIMEZONE = ZoneInfo("Asia/Jakarta")
 DEFAULT_CONFIG_PATH = Path("configs/keywords/programs.example.yaml")
 DEFAULT_OUTPUT_ROOT = Path("data/processed/x")
-PREPROCESSING_VERSION = "3"
+PREPROCESSING_VERSION = "4"
 
 
 class PreprocessingPipelineError(RuntimeError):
@@ -88,6 +89,28 @@ def parse_raw_partition_path(input_path: Path) -> RawPartitionMetadata:
     )
 
 
+def parse_requested_window(input_path: Path, program_id: str) -> tuple[date, date]:
+    """Read the inclusive search dates encoded in an immutable raw filename."""
+    date_pattern = r"(\d{4}-\d{2}-\d{2})"
+    pattern = re.fullmatch(
+        rf"{re.escape(program_id)}_{date_pattern}_{date_pattern}\.csv",
+        input_path.name,
+    )
+    if pattern is None:
+        raise PreprocessingPipelineError(
+            "raw filename does not contain its requested window"
+        )
+    try:
+        start, end = (date.fromisoformat(value) for value in pattern.groups())
+    except ValueError as error:
+        raise PreprocessingPipelineError(
+            "raw filename contains invalid dates"
+        ) from error
+    if start > end:
+        raise PreprocessingPipelineError("raw filename has a decreasing date window")
+    return start, end
+
+
 def _load_program_keywords(config_path: Path, program_id: str) -> tuple[str, ...]:
     if not config_path.is_file():
         raise PreprocessingPipelineError(
@@ -141,6 +164,9 @@ def run_preprocessing(
     if not resolved_input.is_file():
         raise PreprocessingPipelineError(f"raw CSV not found: {resolved_input}")
     metadata = parse_raw_partition_path(resolved_input)
+    requested_start, requested_end = parse_requested_window(
+        resolved_input, metadata.program_id
+    )
     keywords = _load_program_keywords(config_path.resolve(), metadata.program_id)
     execution_time = _validate_processed_at(
         processed_at or datetime.now(JAKARTA_TIMEZONE)
@@ -159,6 +185,8 @@ def run_preprocessing(
         ingestion_run_id=metadata.ingestion_run_id,
         collected_at=metadata.collected_at,
         keywords=keywords,
+        requested_start=requested_start,
+        requested_end=requested_end,
     )
     records = result.records.copy()
     records["data_version"] = f"sha256:{input_sha256}"
