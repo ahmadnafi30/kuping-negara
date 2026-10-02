@@ -132,13 +132,20 @@ def test_collector_retries_without_promoting_stale_csv(
         if len(attempts) == 1:
             (staging / filename).write_text("id_str,full_text\n1,stale\n")
             raise collector.CollectionError("connection failed")
-        (staging / filename).write_text("id_str,full_text\n2,fresh\n")
+        (staging / filename).write_text(
+            "id_str,full_text,created_at\n"
+            "2,fresh,Mon Sep 21 11:15:29 +0000 2026\n"
+        )
 
     monkeypatch.setattr(collector, "execute_collection", fake_execution)
     code, paths = collector.run_collection(
         [
             "--program",
             "mbg",
+            "--from-date",
+            "21-09-2026",
+            "--to-date",
+            "21-09-2026",
             "--attempts",
             "2",
             "--retry-delay",

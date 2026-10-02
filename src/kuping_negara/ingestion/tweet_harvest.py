@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
+import pandas as pd
 import yaml
 
 TWEET_HARVEST_VERSION = "2.7.1"
@@ -86,6 +87,10 @@ def execute_collection(
 
 class CollectionError(RuntimeError):
     """Raised when Tweet Harvest cannot produce a valid raw dataset."""
+
+
+class CollectionWindowError(CollectionError):
+    """Raised when fetched posts do not match the requested search dates."""
 
 
 def find_cached_tweet_harvest(
@@ -328,6 +333,36 @@ def load_programs(config_path: Path) -> dict[str, Mapping[str, Any]]:
     return programs
 
 
+def validate_staging_window(
+    path: Path, *, start: date, end: date
+) -> int:
+    """Check every fetched post in Jakarta time before publishing the raw CSV."""
+    if not path.is_file():
+        raise CollectionError("Tweet Harvest did not produce a CSV")
+    with path.open(encoding="utf-8-sig", newline="") as source_file:
+        reader = csv.DictReader(source_file)
+        if not reader.fieldnames or "created_at" not in reader.fieldnames:
+            raise CollectionWindowError("result has no created_at column")
+        timestamps = [row.get("created_at", "") for row in reader]
+    if not timestamps:
+        raise CollectionWindowError("result has no tweet rows")
+    published = pd.to_datetime(
+        pd.Series(timestamps), errors="coerce", utc=True, format="mixed"
+    )
+    if published.isna().any():
+        raise CollectionWindowError(
+            f"result has {int(published.isna().sum())} invalid timestamps"
+        )
+    local_dates = published.dt.tz_convert(JAKARTA_TIMEZONE).dt.date
+    outside = ~local_dates.between(start, end)
+    if outside.any():
+        raise CollectionWindowError(
+            f"result has {int(outside.sum())}/{len(timestamps)} posts outside "
+            f"{start.isoformat()} through {end.isoformat()}"
+        )
+    return len(timestamps)
+
+
 def finalize_output(
     *,
     repository_root: Path,
@@ -555,6 +590,11 @@ def run_collection(argv: Sequence[str] | None = None) -> tuple[int, list[Path]]:
                     timeout=arguments.timeout,
                     non_interactive=arguments.non_interactive,
                 )
+                validate_staging_window(
+                    staging_root / "tweets-data" / f"{output_name}.csv",
+                    start=start,
+                    end=end,
+                )
                 destination = finalize_output(
                     repository_root=repository_root,
                     output_name=output_name,
@@ -564,6 +604,14 @@ def run_collection(argv: Sequence[str] | None = None) -> tuple[int, list[Path]]:
                     staging_root=staging_root,
                 )
                 break
+            except CollectionWindowError as error:
+                print(
+                    f"Collection date check failed: program={program_id} "
+                    f"attempt={attempt}/{arguments.attempts}: {error}",
+                    file=sys.stderr,
+                )
+                if attempt < arguments.attempts:
+                    time.sleep(min(arguments.retry_delay * 2 ** (attempt - 1), 60))
             except (CollectionError, OSError, UnicodeError, csv.Error):
                 # Do not expose upstream exception text that may contain
                 # credentials or personal source data.

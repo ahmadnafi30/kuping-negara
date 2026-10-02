@@ -17,6 +17,7 @@ from kuping_negara.ingestion.tweet_harvest import (
     main,
     parse_collection_window,
     select_programs,
+    validate_staging_window,
 )
 
 
@@ -176,6 +177,29 @@ def test_finalize_output_moves_csv_into_partitioned_raw_zone(tmp_path: Path) -> 
         "id_str,full_text\n1,contoh\n"
     )
     assert not source.exists()
+
+
+def test_staging_window_uses_jakarta_local_date(tmp_path: Path) -> None:
+    source = tmp_path / "posts.csv"
+    source.write_text(
+        "created_at,id_str\n"
+        "Mon Sep 21 17:30:00 +0000 2026,1\n",
+        encoding="utf-8",
+    )
+    start, end = parse_collection_window("22-09-2026", "22-09-2026")
+    assert validate_staging_window(source, start=start, end=end) == 1
+
+
+def test_staging_window_rejects_dates_outside_search(tmp_path: Path) -> None:
+    source = tmp_path / "posts.csv"
+    source.write_text(
+        "created_at,id_str\n"
+        "Fri Oct 02 12:00:00 +0000 2026,1\n",
+        encoding="utf-8",
+    )
+    start, end = parse_collection_window("25-09-2026", "01-10-2026")
+    with pytest.raises(CollectionError, match="outside"):
+        validate_staging_window(source, start=start, end=end)
 
 
 def test_finalize_output_rejects_csv_without_header_or_data_rows(
