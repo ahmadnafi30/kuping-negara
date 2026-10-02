@@ -1,0 +1,43 @@
+stages:
+  preprocess_lk04_sample:
+    cmd: >-
+      uv run --frozen python src/preprocess.py
+      --input-dir data/raw/samples/x
+      --output-root data/experiments/lk04-sample/processed/x
+      --processed-at 2026-09-22T00:00:00+07:00
+    deps:
+      - configs/keywords/programs.example.yaml
+      - data/raw/samples/x
+      - src/preprocess.py
+      - src/kuping_negara/preprocessing/x_posts.py
+      - src/kuping_negara/preprocessing/x_pipeline.py
+    outs:
+      - data/experiments/lk04-sample/processed/x
+
+  build_lk04_annotation_pool:
+    cmd: >-
+      uv run --frozen python src/build_annotation_pool.py
+      --input-dir data/experiments/lk04-sample/processed/x
+      --output-root data/experiments/lk04-sample/annotation_pool
+      --build-id sample-v1
+    deps:
+      - data/experiments/lk04-sample/processed/x
+      - src/build_annotation_pool.py
+      - src/kuping_negara/training/candidates.py
+    outs:
+      - data/experiments/lk04-sample/annotation_pool
+
+  eda_lk04_sample:
+    cmd: >-
+      uv run --frozen python src/eda_initial_data.py
+      --input-dir data/experiments/lk04-sample/processed/x
+      --output-root data/experiments/lk04-sample/eda
+      --run-id sample-v1
+    deps:
+      - data/experiments/lk04-sample/processed/x
+      - src/eda_initial_data.py
+      - src/kuping_negara/analysis/eda.py
+      - src/kuping_negara/training/candidates.py
+    outs:
+      - data/experiments/lk04-sample/eda
+

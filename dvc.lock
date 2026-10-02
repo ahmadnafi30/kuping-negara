@@ -1,0 +1,86 @@
+schema: '2.0'
+stages:
+  preprocess_lk04_sample:
+    cmd: uv run --frozen python src/preprocess.py --input-dir data/raw/samples/x
+      --output-root data/experiments/lk04-sample/processed/x --processed-at 
+      2026-09-22T00:00:00+07:00
+    deps:
+    - path: configs/keywords/programs.example.yaml
+      hash: md5
+      md5: 2eb6e518e99c3da6406dabb7f41f3bb2
+      size: 600
+    - path: data/raw/samples/x
+      hash: md5
+      md5: f431a41c75f81fd36ac2987983bcac9e.dir
+      size: 6061
+      nfiles: 4
+    - path: src/kuping_negara/preprocessing/x_pipeline.py
+      hash: md5
+      md5: 6c43856eef6d1f1de3c4b0362f9f15e4
+      size: 11896
+    - path: src/kuping_negara/preprocessing/x_posts.py
+      hash: md5
+      md5: 1218c7e16edb49c2ea3c5c353fa30f13
+      size: 9434
+    - path: src/preprocess.py
+      hash: md5
+      md5: 800596b2a2e06ac98fcf61d3177eab0a
+      size: 198
+    outs:
+    - path: data/experiments/lk04-sample/processed/x
+      hash: md5
+      md5: e87768a46871226deac60c04242f4d93.dir
+      size: 21327
+      nfiles: 8
+  build_lk04_annotation_pool:
+    cmd: uv run --frozen python src/build_annotation_pool.py --input-dir 
+      data/experiments/lk04-sample/processed/x --output-root 
+      data/experiments/lk04-sample/annotation_pool --build-id sample-v1
+    deps:
+    - path: data/experiments/lk04-sample/processed/x
+      hash: md5
+      md5: e87768a46871226deac60c04242f4d93.dir
+      size: 21327
+      nfiles: 8
+    - path: src/build_annotation_pool.py
+      hash: md5
+      md5: b127c55bc4421bcd88985a54ff60705f
+      size: 187
+    - path: src/kuping_negara/training/candidates.py
+      hash: md5
+      md5: f980fc1261b8baf1ec30b64a42995a43
+      size: 7351
+    outs:
+    - path: data/experiments/lk04-sample/annotation_pool
+      hash: md5
+      md5: cd828558723351999d034d082209e62c.dir
+      size: 10778
+      nfiles: 2
+  eda_lk04_sample:
+    cmd: uv run --frozen python src/eda_initial_data.py --input-dir 
+      data/experiments/lk04-sample/processed/x --output-root 
+      data/experiments/lk04-sample/eda --run-id sample-v1
+    deps:
+    - path: data/experiments/lk04-sample/processed/x
+      hash: md5
+      md5: e87768a46871226deac60c04242f4d93.dir
+      size: 21327
+      nfiles: 8
+    - path: src/eda_initial_data.py
+      hash: md5
+      md5: 63eae6af162b58c7c0d6be86f9777046
+      size: 170
+    - path: src/kuping_negara/analysis/eda.py
+      hash: md5
+      md5: 05c5277616957f9be434b73a035c32b9
+      size: 10625
+    - path: src/kuping_negara/training/candidates.py
+      hash: md5
+      md5: f980fc1261b8baf1ec30b64a42995a43
+      size: 7351
+    outs:
+    - path: data/experiments/lk04-sample/eda
+      hash: md5
+      md5: 850242922c71db34646949b4dc07a457.dir
+      size: 8232
+      nfiles: 2
