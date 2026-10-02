@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import html
 import json
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -183,6 +184,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Summarize processed X data safely.")
     parser.add_argument("--input-dir", type=Path, default=Path("data/processed/x"))
     parser.add_argument("--output-root", type=Path, default=Path("data/analysis/eda"))
+    parser.add_argument("--run-id", help="Stable ID for reproducible DVC runs")
     arguments = parser.parse_args(argv)
     root = find_repository_root([Path.cwd(), Path(__file__)])
     input_dir = arguments.input_dir
@@ -193,7 +195,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         output_root = root / output_root
     try:
         summary = analyze_processed_runs(input_dir)
-        run_id = datetime.now(JAKARTA_TIMEZONE).strftime("%Y%m%dT%H%M%S%f%z")
+        run_id = arguments.run_id or datetime.now(JAKARTA_TIMEZONE).strftime(
+            "%Y%m%dT%H%M%S%f%z"
+        )
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", run_id):
+            raise ValueError("run-id must contain only letters, digits, _ or -")
         destination = output_root / f"run_id={run_id}"
         destination.mkdir(parents=True, exist_ok=False)
         (destination / "summary.json").write_text(

@@ -34,7 +34,9 @@ def test_annotation_pool_keeps_one_candidate_from_repeated_runs(tmp_path):
         processed_at=datetime(2026, 9, 23, tzinfo=timezone.utc),
     )
 
-    csv_path, report_path = build_annotation_pool(processed_root, tmp_path / "pool")
+    csv_path, report_path = build_annotation_pool(
+        processed_root, tmp_path / "pool", build_id="sample-v1"
+    )
     candidates = pd.read_csv(csv_path, dtype=str, keep_default_na=False)
     report = json.loads(report_path.read_text(encoding="utf-8"))
     first_report = json.loads(first.report_path.read_text(encoding="utf-8"))
@@ -42,6 +44,7 @@ def test_annotation_pool_keeps_one_candidate_from_repeated_runs(tmp_path):
     assert report["duplicates_removed_across_runs"] == len(candidates)
     assert candidates[["target_program", "tweet_id"]].duplicated().sum() == 0
     assert candidates["quality_status"].eq("accepted").all()
+    assert csv_path.parent.name == "build_id=sample-v1"
 
 
 def test_pool_rejects_a_processed_csv_changed_after_reporting(tmp_path):

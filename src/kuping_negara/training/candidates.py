@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -74,7 +75,9 @@ def load_verified_run(path: Path) -> pd.DataFrame:
     return frame
 
 
-def build_annotation_pool(input_dir: Path, output_root: Path) -> tuple[Path, Path]:
+def build_annotation_pool(
+    input_dir: Path, output_root: Path, *, build_id: str | None = None
+) -> tuple[Path, Path]:
     """Write one immutable candidate CSV and aggregate quality report."""
     files = sorted(input_dir.rglob("*_processed.csv"))
     if not files:
@@ -131,7 +134,11 @@ def build_annotation_pool(input_dir: Path, output_root: Path) -> tuple[Path, Pat
         "note": "Unlabeled annotation candidates; sentiment labels are not inferred.",
     }
 
-    build_id = datetime.now(JAKARTA_TIMEZONE).strftime("%Y%m%dT%H%M%S%f%z")
+    build_id = build_id or datetime.now(JAKARTA_TIMEZONE).strftime(
+        "%Y%m%dT%H%M%S%f%z"
+    )
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", build_id):
+        raise CandidatePoolError("build-id must contain only letters, digits, _ or -")
     destination = output_root / f"build_id={build_id}"
     destination.mkdir(parents=True, exist_ok=False)
     csv_path = destination / "candidate_pool.csv"
@@ -150,6 +157,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--output-root", type=Path, default=Path("data/processed/annotation_pool")
     )
+    parser.add_argument("--build-id", help="Stable ID for reproducible DVC runs")
     arguments = parser.parse_args(argv)
     root = find_repository_root([Path.cwd(), Path(__file__)])
     input_dir = arguments.input_dir
@@ -159,7 +167,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not output_root.is_absolute():
         output_root = root / output_root
     try:
-        csv_path, report_path = build_annotation_pool(input_dir, output_root)
+        csv_path, report_path = build_annotation_pool(
+            input_dir, output_root, build_id=arguments.build_id
+        )
     except (OSError, ValueError) as error:
         print(f"Candidate pool error: {error}", file=sys.stderr)
         return 1
