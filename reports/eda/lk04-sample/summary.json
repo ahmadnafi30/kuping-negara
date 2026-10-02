@@ -1,0 +1,105 @@
+{
+  "source_files": 4,
+  "processed_rows": 20,
+  "eligible_rows": 13,
+  "unique_annotation_candidates": 13,
+  "duplicates_across_runs": 0,
+  "tweet_ids_in_multiple_programs": 0,
+  "program_counts": {
+    "ckg": 5,
+    "kopdes_merah_putih": 5,
+    "mbg": 5,
+    "sekolah_rakyat": 5
+  },
+  "candidate_program_counts": {
+    "kopdes_merah_putih": 5,
+    "mbg": 4,
+    "sekolah_rakyat": 3,
+    "ckg": 1
+  },
+  "program_quality_counts": {
+    "ckg": {
+      "review_language": 3,
+      "review_language_and_relevance": 1,
+      "accepted": 1
+    },
+    "kopdes_merah_putih": {
+      "accepted": 5
+    },
+    "mbg": {
+      "accepted": 4,
+      "review_language": 1
+    },
+    "sekolah_rakyat": {
+      "accepted": 3,
+      "review_relevance": 2
+    }
+  },
+  "quality_status_counts": {
+    "accepted": 13,
+    "review_language": 4,
+    "review_relevance": 2,
+    "review_language_and_relevance": 1
+  },
+  "source_language_counts": {
+    "in": 15,
+    "en": 4,
+    "ja": 1
+  },
+  "published_date_counts": {
+    "2026-09-21": 20
+  },
+  "published_week_counts": {
+    "2026-W39": 20
+  },
+  "published_at_min": "2026-09-21T03:30:36+00:00",
+  "published_at_max": "2026-09-21T11:32:22+00:00",
+  "cleaned_text_length": {
+    "min": 23,
+    "median": 117.0,
+    "p95": 271.2,
+    "max": 275,
+    "empty": 0,
+    "under_20_characters": 0
+  },
+  "engagement": {
+    "reply_count": {
+      "median": 0.0,
+      "p95": 1.0,
+      "max": 1
+    },
+    "retweet_count": {
+      "median": 0.0,
+      "p95": 1.0,
+      "max": 1
+    },
+    "like_count": {
+      "median": 0.0,
+      "p95": 1.0,
+      "max": 1
+    },
+    "quote_count": {
+      "median": 0.0,
+      "p95": 0.05000000000000071,
+      "max": 1
+    }
+  },
+  "missing_values": {
+    "raw_text": 0,
+    "cleaned_text": 0,
+    "language": 0,
+    "published_at": 0
+  },
+  "input_sha256": {
+    "processed_date=2026-10-02/program=ckg/run_id=20260921T183212+0700/ckg_2026-09-14_2026-09-21_processed.csv": "e88d15dd6e1a6ae620ee7114d888f6a5b56d9481b40057d511936e7ee86ef7ea",
+    "processed_date=2026-10-02/program=kopdes_merah_putih/run_id=20260921T183212+0700/kopdes_merah_putih_2026-09-14_2026-09-21_processed.csv": "b5437936e1a2d1b2167c9277da2318a24c7135c1785e4b8e6fcb652830db0e4d",
+    "processed_date=2026-10-02/program=mbg/run_id=20260921T183212+0700/mbg_2026-09-14_2026-09-21_processed.csv": "24855a2292809c70b1f9f1fc6893905340be4738c06771d65f332196f8875205",
+    "processed_date=2026-10-02/program=sekolah_rakyat/run_id=20260921T183212+0700/sekolah_rakyat_2026-09-14_2026-09-21_processed.csv": "7491be0b9875a32cdb894c8118ac82e37dfa83a26943debfcecf55ef001fd727"
+  },
+  "limitations": [
+    "Language codes come from X/Tweet Harvest; no independent detection is run.",
+    "Keywords indicate possible relevance, not semantic verification.",
+    "Collection is capped per window and uses the Latest search tab.",
+    "Sentiment labels are not present; this is not a labeled training set."
+  ]
+}
