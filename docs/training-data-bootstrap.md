@@ -3,9 +3,11 @@
 Skrip `src/collect_training_data.py` menyiapkan kumpulan unggahan awal dari
 empat program. Ia membagi rentang tanggal menjadi potongan tujuh hari,
 memanggil pengambil data yang sudah dipakai pada LK-04, lalu menjalankan
-preprocessing untuk setiap file yang berhasil disimpan. Hasil mentah dan hasil
-bersih tetap berada di folder proyek seperti biasa. Setiap pengambilan membuat
-run baru, sehingga data lama tidak tertimpa.
+preprocessing untuk setiap file yang berhasil disimpan. Hasil mentah masuk ke
+`data/raw/x`, sedangkan hasil bersih khusus bootstrap masuk ke
+`data/processed/training_initial/x`. Pemisahan ini menjaga simulasi replay
+LK-04 di `data/processed/x` agar tidak ikut menjadi kandidat training.
+Setiap pengambilan membuat run baru, sehingga data lama tidak tertimpa.
 
 Lihat rencananya dulu tanpa menghubungi X:
 
@@ -39,9 +41,14 @@ preprocessing. Bila satu pengambilan gagal, proses berhenti dan manifest
 menunjukkan bagian yang sudah selesai. Jalankan lagi hanya untuk bagian yang
 gagal lewat `--start-date`, `--end-date`, dan `--program`. Karena file mentah
 bersifat immutable, pengulangan akan membuat run baru. Gabungkan hasil untuk
-anotasi dengan `python src/build_annotation_pool.py`. Perintah itu memeriksa
+anotasi dengan perintah berikut. Perintah ini memeriksa
 laporan kualitas dan melakukan deduplikasi lintas run; rinciannya ada di
 `docs/preprocessing-audit.md`.
+
+```bash
+python src/build_annotation_pool.py --input-dir data/processed/training_initial/x
+python src/eda_initial_data.py --input-dir data/processed/training_initial/x
+```
 
 Hasil ini **belum menjadi data latih berlabel**. Kolom `language` berasal dari
 X, bukan hasil deteksi bahasa independen. `is_eligible_for_labeling` hanya

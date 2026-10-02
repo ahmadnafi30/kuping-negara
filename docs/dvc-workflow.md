@@ -32,8 +32,8 @@ Setelah pengumpulan langsung menghasilkan data nyata dan izin penyimpanannya
 sudah jelas, snapshot lokalnya bisa dicatat dengan:
 
 ```bash
-dvc add data/raw/x data/processed/x
-git add data/raw/x.dvc data/processed/x.dvc .gitignore
+dvc add data/raw/x data/processed/x data/processed/training_initial
+git add data/raw/x.dvc data/processed/x.dvc data/processed/training_initial.dvc .gitignore
 git commit -m "data: record new raw and processed snapshots"
 ```
 

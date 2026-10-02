@@ -38,6 +38,9 @@ satu kandidat untuk setiap pasangan `target_program` dan `tweet_id`.
 Hasilnya masuk ke run baru di `data/processed/annotation_pool/` bersama
 laporan jumlah kandidat dan duplikat yang dibuang. File lama tidak ditimpa.
 Jika satu `tweet_id` muncul di beberapa program, laporan mencatatnya.
+Untuk data awal yang dibuat oleh `src/collect_training_data.py`, gunakan
+`--input-dir data/processed/training_initial/x` agar hasil replay LK-04
+tidak tercampur.
 Ketika nanti membagi data latih dan uji, kelompokkan berdasarkan `tweet_id`
 agar teks unggahan yang sama tidak bocor ke dua bagian.
 
