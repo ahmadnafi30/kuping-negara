@@ -35,6 +35,7 @@ data/processed/*
 !data/processed/.gitkeep
 !data/processed/x.dvc
 !data/processed/annotation_pool.dvc
+!data/processed/training_initial.dvc
 data/labeled/*
 !data/labeled/.gitkeep
 data/bootstrap/

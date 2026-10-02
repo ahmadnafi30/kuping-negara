@@ -96,6 +96,12 @@ def _parser() -> argparse.ArgumentParser:
         "--manifest-dir", type=Path, default=Path("data/bootstrap/runs")
     )
     parser.add_argument(
+        "--processed-root",
+        type=Path,
+        default=Path("data/processed/training_initial/x"),
+        help="Keep initial training candidates separate from replay outputs",
+    )
+    parser.add_argument(
         "--execute", action="store_true", help="Actually contact X and save data"
     )
     return parser
@@ -136,6 +142,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     manifest_dir = arguments.manifest_dir
     if not manifest_dir.is_absolute():
         manifest_dir = repository_root / manifest_dir
+    processed_root = arguments.processed_root
+    if not processed_root.is_absolute():
+        processed_root = repository_root / processed_root
     run_id = datetime.now(JAKARTA_TIMEZONE).strftime("%Y%m%dT%H%M%S%f%z")
     manifest_path = manifest_dir / f"bootstrap_{run_id}.json"
     manifest: dict = {
@@ -168,7 +177,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             try:
                 artifacts = run_preprocessing(
                     input_path=raw_path,
-                    output_root=repository_root / "data/processed/x",
+                    output_root=processed_root,
                     config_path=config_path,
                 )
             except (OSError, ValueError, PreprocessingPipelineError) as error:
