@@ -39,7 +39,9 @@ preprocessing. Bila satu pengambilan gagal, proses berhenti dan manifest
 menunjukkan bagian yang sudah selesai. Jalankan lagi hanya untuk bagian yang
 gagal lewat `--start-date`, `--end-date`, dan `--program`. Karena file mentah
 bersifat immutable, pengulangan akan membuat run baru. Gabungkan hasil untuk
-anotasi dengan deduplikasi lintas run sebelum dipakai melatih model.
+anotasi dengan `python src/build_annotation_pool.py`. Perintah itu memeriksa
+laporan kualitas dan melakukan deduplikasi lintas run; rinciannya ada di
+`docs/preprocessing-audit.md`.
 
 Hasil ini **belum menjadi data latih berlabel**. Kolom `language` berasal dari
 X, bukan hasil deteksi bahasa independen. `is_eligible_for_labeling` hanya
