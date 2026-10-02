@@ -4,6 +4,8 @@ DVC sudah diinisialisasi pada branch ini. Kode, konfigurasi, `dvc.yaml`, dan
 `dvc.lock` disimpan di Git. Isi data yang dihasilkan pipeline masuk ke cache
 DVC lokal, bukan ke commit Git. Belum ada remote DVC yang diatur, jadi
 `dvc push` dan `dvc pull` untuk berbagi data belum bisa dipakai.
+File sumber Python, YAML, dan CSV sampel memakai akhiran baris LF melalui
+`.gitattributes`, agar hash DVC tetap sama di Windows dan Linux.
 
 Untuk memasang tool sesuai versi yang dipakai proyek:
 
@@ -51,4 +53,3 @@ bukan commit Git. Sampai remote disiapkan, hasil `dvc repro` dan snapshot
 DVC mencatat versi data; ia tidak menilai sentimen. Kumpulan kandidat masih
 perlu anotasi manual, pemeriksaan kesepakatan label, serta pembagian data
 latih/uji yang mencegah `tweet_id` sama muncul di kedua sisi.
-
