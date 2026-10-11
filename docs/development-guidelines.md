@@ -136,12 +136,12 @@ after at least two real consumers exist.
 Minimum local verification:
 
 ```bash
-uv sync --locked --extra dev
+uv sync --locked --extra dev --extra data-versioning
 uv pip check
-uv run --locked --extra dev python -m kuping_negara.healthcheck
-uv run --locked --extra dev ruff check src tests dags docker/airflow
-uv run --locked --extra dev ruff format --check src tests dags docker/airflow
-uv run --locked --extra dev pytest
+uv run --locked --no-sync python -m kuping_negara.healthcheck
+uv run --locked --no-sync ruff check src tests dags docker/airflow
+uv run --locked --no-sync ruff format --check src tests dags docker/airflow
+uv run --locked --no-sync pytest
 ```
 
 ## Notebook Standard

@@ -20,10 +20,7 @@ PREPROCESSING_VERSION = 3
 def preprocessing_lock(root: Path, timeout: float = 120):
     root.mkdir(parents=True, exist_ok=True)
     with (root / ".preprocessing.lock").open("a+b") as handle:
-        handle.seek(0, os.SEEK_END)
-        if handle.tell() == 0:
-            handle.write(b"0")
-            handle.flush()
+        # Lock the empty file directly; initializing it can race with a Windows lock.
         deadline = time.monotonic() + timeout
         while True:
             try:

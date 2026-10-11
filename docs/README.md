@@ -1,35 +1,35 @@
 # Dokumentasi Kuping Negara
 
-Mulai dari [README](../README.md) untuk menjalankan fitur yang tersedia.
-Dokumentasi operasional menjelaskan kode di `main`; proposal dan roadmap
-menjelaskan pekerjaan yang belum tersedia.
+[README proyek](../README.md) menyediakan mulai cepat dan status fitur.
+Panduan berikut menjelaskan implementasi yang tersedia pada `main`.
 
-## Penggunaan
+## Menjalankan pipeline
 
-| Dokumen | Isi |
+| Panduan | Isi |
 | --- | --- |
-| [Codespaces Setup](codespaces-setup.md) | Setup Python/uv, Dev Container, dan troubleshooting |
-| [X Data Collection](x-data-collection.md) | Pengumpulan interaktif, keyword, browser, dan raw storage |
-| [X Data Preprocessing](x-data-preprocessing.md) | Transformasi CSV, flag kualitas, dan lineage |
-| [Airflow Docker](airflow-docker.md) | Jadwal 23.59 WIB, Docker, token lokal, retry, dan operasi |
-| [DVC Data Versioning](dvc-data-versioning.md) | Versi raw LK-05, append, diff, remote dan pemulihan |
-| [Annotation Guidelines](annotation-guidelines.md) | Definisi sentimen dan prosedur review manual |
+| [Setup Codespaces](codespaces-setup.md) | Python, uv, Dev Container, dan troubleshooting |
+| [Pengumpulan data X](x-data-collection.md) | Keyword, CLI, browser, rentang WIB, dan raw storage |
+| [Preprocessing data X](x-data-preprocessing.md) | Transformasi, flag kualitas, duplikat, dan lineage |
+| [Airflow di Docker](airflow-docker.md) | Stack dua container, jadwal 23.59 WIB, dan operasi |
+| [Alur penambahan versi data](dvc.md) | Collect, append, pelacakan DVC, upload, commit/tag, dan pemulihan |
+| [Konfigurasi DVC dan remote](dvc-data-versioning.md) | Cache, remote lokal, OAuth Drive, dan audit dataset |
+| [Pedoman anotasi](annotation-guidelines.md) | Relevansi, kelas sentimen, review, dan adjudication |
 
-## Pengembangan
+## Mengembangkan proyek
 
-| Dokumen | Isi |
+| Panduan | Isi |
 | --- | --- |
-| [Project Structure](project-structure.md) | Struktur aktual dan batas tanggung jawab modul |
-| [Development Guidelines](development-guidelines.md) | Gaya kode, dependensi, pengujian, dan dokumentasi |
-| [Git Workflow](git-workflow.md) | Branch, commit, Pull Request, dan rilis |
-| [Keyword Configuration](../configs/keywords/README.md) | Konfigurasi program bersama untuk dua pipeline |
-| [Data Contract](../configs/schemas/README.md) | Rancangan JSON Schema dan status validasinya |
+| [Struktur proyek](project-structure.md) | Kepemilikan modul dan batas dependensi |
+| [Standar pengembangan](development-guidelines.md) | Konvensi kode, dependensi, dan pemeriksaan kualitas |
+| [Alur Git](git-workflow.md) | Main/develop, branch sementara, merge, dan sinkronisasi |
+| [Konfigurasi keyword](../configs/keywords/README.md) | Konfigurasi bersama pengumpulan dan preprocessing |
+| [Kontrak data](../configs/schemas/README.md) | Rancangan JSON Schema dan status validasinya |
 
-## Perencanaan dan riwayat
+## Perencanaan dan arsip
 
-- [Project Proposal](project-proposal.md): konteks riset, arsitektur target, dan metrik.
-- [Roadmap](roadmap.md): status implementasi dan urutan pekerjaan berikutnya.
-- [Archive](archive/README.md): proposal infrastruktur terdahulu.
+- [Proposal proyek](project-proposal.md): tujuan riset dan arsitektur target.
+- [Roadmap](roadmap.md): fitur tersedia dan pekerjaan berikutnya.
+- [Arsip](archive/README.md): desain historis dan riwayat branch eksperimen.
 
-Perubahan perilaku, kontrak, atau cara menjalankan proyek harus memperbarui
-dokumen terkait dalam Pull Request yang sama.
+Perbarui panduan terkait ketika perilaku, konfigurasi, atau alur penggunaan
+berubah. Proposal dan arsip tidak menjadi petunjuk menjalankan stack saat ini.

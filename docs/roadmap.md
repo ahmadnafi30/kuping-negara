@@ -14,7 +14,9 @@ arsitektur lengkap ada dalam [proposal](project-proposal.md).
 - Teks model yang mempertahankan makna sentimen, relevansi hashtag, duplikat
   per target program, serta flag kemiripan dan petunjuk grup dataset.
 - Pedoman anotasi manual serta rancangan JSON Schema.
-- DVC untuk snapshot raw tervalidasi, penambahan versi, dan remote lokal.
+- DVC untuk snapshot raw tervalidasi, penambahan versi, remote lokal dan Google Drive.
+- Pemulihan dua versi dataset dari Google Drive dengan verifikasi hash dan cache kosong.
+- Laporan agregat review AI; label belum disetujui sebagai target training.
 - Pengujian unit/integrasi, pemeriksaan format dan lint, serta CI.
 - Airflow Docker lokal: empat jadwal mingguan 23.59 WIB, collect → preprocess,
   token via secret, publikasi atomik, dan verifikasi checksum pada retry.
@@ -27,7 +29,7 @@ arsitektur lengkap ada dalam [proposal](project-proposal.md).
 | Dataset berlabel | Anotasi, adjudication, dan split berbasis waktu/conversation | Dataset version dan laporan agreement |
 | Baseline model | Training/evaluation scikit-learn | Macro-F1 dan recall per kelas dengan split terdokumentasi |
 | Eksperimen model | Bandingkan kandidat model Bahasa Indonesia | Metrik, biaya inference, calibration, dan lineage |
-| Infrastruktur | Perluas remote DVC dan implementasikan MLflow dan persiapkan deployment Airflow produksi | Backup, autentikasi, secret management, dan runbook produksi |
+| Infrastruktur | Siapkan backup lintas perangkat, MLflow, dan deployment Airflow produksi | Backup, autentikasi, secret management, dan runbook produksi |
 | Serving | API prediksi dan dashboard | Tes kontrak dan tampilan uncertainty |
 | Operasi | Monitoring, alerting, retraining, dan rollback | Metrik, prosedur recovery, dan review kesiapan |
 

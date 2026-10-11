@@ -1,87 +1,107 @@
-# Git Workflow
+# Alur Git dan Sinkronisasi Branch
 
-`main` menyimpan versi stabil. `develop` mengintegrasikan pekerjaan sebelum
-rilis. Gunakan branch pendek dan Pull Request dengan tujuan yang jelas.
+Repositori mempertahankan dua branch utama. Branch pekerjaan dibuat untuk satu
+tujuan, diperbarui mengikuti `main`, lalu dihapus setelah selesai.
 
-## Branch
+| Branch | Peran |
+| --- | --- |
+| `main` | Versi stabil yang telah lulus pemeriksaan |
+| `develop` | Basis integrasi pekerjaan berikutnya; mengikuti perubahan `main` |
+| `feat/<nama>` | Fitur baru |
+| `fix/<nama>` atau `hotfix/<nama>` | Perbaikan biasa atau mendesak |
+| `refactor/<nama>` | Perubahan struktur kode |
+| `docs/<nama>` | Dokumentasi |
+| `chore/<nama>` atau `test/<nama>` | Pemeliharaan atau pengujian |
 
-| Branch | Basis | Tujuan |
-| --- | --- | --- |
-| `main` | — | Versi stabil yang lulus CI |
-| `develop` | `main` | Integrasi fitur yang sudah direview |
-| `feat/<nama>` | `develop` | Fitur baru |
-| `fix/<nama>` | `develop` | Perbaikan bug |
-| `refactor/<nama>` | `develop` | Perubahan struktur kode |
-| `docs/<nama>` | `develop` | Dokumentasi |
-| `chore/<nama>` | `develop` | Tooling atau pemeliharaan |
-| `test/<nama>` | `develop` | Pengujian |
-| `hotfix/<nama>` | `main` | Perbaikan mendesak pada versi stabil |
+Nama branch memakai lower-case kebab-case. Pemeliharaan yang secara khusus
+menyasar `main` dapat dibuat dari `main`; fitur biasa dibuat dari `develop`.
 
-Nama branch memakai lower-case kebab-case, misalnya `refactor/data-pipeline`.
-Pemeliharaan yang secara khusus ditujukan ke `main` dapat dibuat dari `main`
-dan diajukan langsung ke `main`; sebutkan alasan tersebut pada Pull Request.
+## Memulai pekerjaan
 
-## Mulai bekerja
+Sinkronkan branch dasar sebelum membuat branch baru:
 
 ```bash
+git fetch origin --prune
 git switch develop
 git pull --ff-only origin develop
+git merge --ff-only origin/main
 git switch -c feat/short-description
 ```
 
-Untuk pekerjaan yang ditujukan langsung ke `main`, ganti basis pada contoh
-dengan `main`. Jangan menimpa perubahan lokal ketika berganti branch.
+Jika `develop` memiliki pekerjaan yang belum dirilis dan tidak bisa
+fast-forward, integrasikan `origin/main` menggunakan merge biasa pada branch
+sinkronisasi, selesaikan konflik, dan jalankan pemeriksaan sebelum push.
+Jangan memakai reset atau force push untuk menghilangkan pekerjaan tersebut.
 
-## Commit dan pemeriksaan
+## Menjaga branch tetap mengikuti main
 
-Gunakan format `<type>(optional-scope): <summary>`. Contoh:
-
-```text
-feat(ingestion): add program selection
-fix(preprocessing): reject empty datasets
-refactor: separate collection and storage responsibilities
-docs: clarify supported workflows
-```
-
-Setiap commit membawa satu tujuan yang dapat dipahami. Sebelum push:
+Pada branch pekerjaan yang masih diperlukan:
 
 ```bash
-uv sync --locked --extra dev
+git fetch origin
+git merge origin/main
+```
+
+Selesaikan konflik sesuai kontrak terbaru, lalu jalankan pemeriksaan. Menghapus
+branch yang telah selesai mengurangi daftar branch tertinggal tanpa membuat
+commit sinkronisasi yang tidak diperlukan.
+
+## Commit dan verifikasi
+
+Gunakan Conventional Commits seperti `feat(ingestion): ...`,
+`fix(preprocessing): ...`, atau `docs: ...`. Pilih file staging secara eksplisit.
+
+```bash
+uv sync --locked --extra dev --extra data-versioning --extra google-drive
 uv pip check
-uv run --locked --extra dev ruff check src tests
-uv run --locked --extra dev ruff format --check src tests
-uv run --locked --extra dev pytest
+uv run --locked --no-sync python -m kuping_negara.healthcheck
+uv run --locked --no-sync ruff check src tests dags docker/airflow
+uv run --locked --no-sync ruff format --check src tests dags docker/airflow
+uv run --locked --no-sync pytest
 git diff --check
 git status --short
 ```
 
-Pilih file dengan sengaja saat staging. Kredensial, dataset, model binary,
-virtual environment, dan cache tidak boleh masuk commit.
+Data, cache, model, token, dan konfigurasi rahasia tetap di luar Git.
+Untuk perubahan dokumentasi, periksa tautan, contoh perintah, dan konsistensi
+hasil yang dijelaskan. Jangan membuat pengujian yang hanya menyalin isi dokumen.
 
-## Pull Request
+## Publikasi dan merge
 
-1. Push branch pekerjaan dengan `git push -u origin <branch>`.
-2. Pilih target `develop` untuk fitur biasa atau `main` untuk rilis/pemeliharaan langsung.
-3. Jelaskan masalah, perilaku setelah perubahan, hasil pemeriksaan, dan risiko.
-4. Perbarui dokumentasi serta kontrak/dependensi yang ikut berubah.
-5. Tunggu seluruh CI selesai dan tangani feedback sebelum merge.
+1. Push branch pekerjaan dan ajukan Pull Request ke `develop`, atau ke `main`
+   untuk pemeliharaan yang langsung ditujukan ke versi stabil.
+2. Jelaskan perubahan, pemeriksaan, dan dampak yang relevan.
+3. Tunggu CI Windows/Linux dan Airflow lulus sebelum merge.
+4. Setelah rilis masuk `main`, sinkronkan `develop` dengan `main`.
+5. Hapus branch pekerjaan yang telah selesai, lalu prune referensi lokal.
 
-CI menjalankan pengujian, pemeriksaan dependensi, health check, lint, dan format
-pada Linux dan Windows. Review independen dianjurkan ketika ada contributor
-lain. Jangan melewati perlindungan branch yang sudah diterapkan.
+Untuk pemeliharaan oleh satu maintainer tanpa Pull Request, commit yang sama
+harus lulus CI pada branch pekerjaan sebelum fast-forward ke branch utama.
+Perlindungan branch yang aktif tetap berlaku. `main` dan `develop` tidak di-force-push.
 
-## Merge dan sinkronisasi
+Sinkronisasi `develop` setelah rilis, saat tidak ada commit unik di sana:
 
-- Topic branch ke `develop`: squash merge untuk perubahan yang koheren.
-- `develop` ke `main`: Pull Request rilis.
-- Pemeliharaan langsung ke `main`: merge setelah pemeriksaan lulus, lalu
-  sinkronkan perubahan ke `develop` melalui Pull Request bila diperlukan.
-- Hapus topic branch setelah memastikan pekerjaan sudah digabungkan.
-- Pertahankan `main` dan `develop`; jangan force push kedua branch tersebut.
+```bash
+git switch develop
+git merge --ff-only main
+git push origin develop
+```
 
-Label *ahead*/*behind* menunjukkan perbedaan riwayat commit, bukan kualitas
-branch. Branch yang selesai dapat dihapus; tidak perlu membuat commit kosong
-untuk mengubah angka pembanding.
+Periksa hasilnya:
 
-Jika branch bersama sudah divergen, periksa riwayat dan gunakan merge yang
-direview. Jangan menghapus riwayat dengan reset atau force push.
+```bash
+git fetch origin --prune
+git rev-list --left-right --count origin/develop...origin/main
+```
+
+Hasil `0 0` berarti keduanya menunjuk riwayat yang sama. Jika `develop` masih
+memiliki perubahan yang belum dirilis, angka pertama boleh lebih besar dari
+nol; angka kedua harus nol setelah sinkronisasi.
+
+## Arsip pekerjaan lama
+
+Branch eksperimen yang tidak menjadi implementasi aktif dipertahankan melalui
+tag arsip sebelum branch dihapus. [Catatan arsip](archive/2026-10-11-branch-cleanup.md)
+memuat commit setiap branch dan cara memulihkan pekerjaan tersebut.
+Tag `lk05-data-v1` dan `lk05-data-v2` tetap menjadi penanda dataset; tag
+`archive/legacy-mlops-2026-10-11` menyimpan riwayat kode eksperimen.

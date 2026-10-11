@@ -48,9 +48,9 @@ headlessly; the interactive CLI behavior described here is unchanged.
 Run this before using a real token:
 
 ```powershell
-uv run --locked collect-x-data `
+uv run --locked --no-sync collect-x-data `
   --from-date 14-09-2026 `
-  --to-date 21-09-2026 `
+  --to-date 20-09-2026 `
   --limit 50 `
   --dry-run
 ```
@@ -61,9 +61,9 @@ The command prints four program IDs and their queries. It does not execute
 ## Collect All Programs
 
 ```powershell
-uv run --locked collect-x-data `
+uv run --locked --no-sync collect-x-data `
   --from-date 14-09-2026 `
-  --to-date 21-09-2026 `
+  --to-date 20-09-2026 `
   --limit 50 `
   --tab LATEST
 ```
@@ -84,19 +84,19 @@ collector while the first one is running.
 Repeat `--program` to select more than one program:
 
 ```powershell
-uv run --locked collect-x-data `
+uv run --locked --no-sync collect-x-data `
   --program mbg `
   --program sekolah_rakyat `
   --from-date 14-09-2026 `
-  --to-date 21-09-2026 `
+  --to-date 20-09-2026 `
   --limit 25
 ```
 
 `--from-date` and `--to-date` are inclusive. The example covers 14 September
-through 21 September 2026 in Asia/Jakarta. X searches use UTC calendar dates,
+through 20 September 2026 in Asia/Jakarta. X searches use UTC calendar dates,
 so the adapter passes 13 September as the broad `since` boundary and
-22 September as exclusive `until`. It then filters each timestamp against the
-exact Jakarta interval (13 September 17:00 UTC through 21 September 17:00 UTC,
+21 September as exclusive `until`. It then filters each timestamp against the
+exact Jakarta interval (13 September 17:00 UTC through 20 September 17:00 UTC,
 end exclusive) before counting toward the limit. A checked in-memory fix also
 awaits the search form before consuming responses; unknown collector source
 versions fail instead of collecting unfiltered initial results.
@@ -124,7 +124,8 @@ data/raw/x/
 The unique `run_id` prevents a later ingestion run from overwriting an earlier
 raw dataset. Both `tweets-data/` and raw dataset contents are ignored by Git.
 The manifest records requested dates/limit, input/configuration hashes, and
-validation evidence. DVC versioning can track the raw zone in a later phase.
+validation evidence. [DVC versioning](dvc.md) tracks a validated combined raw
+snapshot while retaining the original per-run files.
 
 ## CLI Options
 
@@ -147,7 +148,7 @@ The local environment does not contain the current project entry point:
 
 ```powershell
 uv sync --locked --extra dev
-uv run --locked collect-x-data --help
+uv run --locked --no-sync collect-x-data --help
 ```
 
 ### Hardlink warning from `uv`
@@ -174,9 +175,9 @@ editing the global npm cache and does not expose the X token.
 If automatic detection cannot find a browser, provide its executable path:
 
 ```powershell
-uv run --locked collect-x-data `
+uv run --locked --no-sync collect-x-data `
   --from-date 14-09-2026 `
-  --to-date 21-09-2026 `
+  --to-date 20-09-2026 `
   --limit 50 `
   --browser-executable "C:\Program Files\Google\Chrome\Application\chrome.exe"
 ```

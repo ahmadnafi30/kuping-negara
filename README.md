@@ -1,154 +1,167 @@
 # Kuping Negara
 
 Pipeline data untuk riset analisis sentimen percakapan publik di X mengenai
-program prioritas pemerintah Indonesia: Makan Bergizi Gratis, Cek Kesehatan
-Gratis, Koperasi Desa Merah Putih, dan Sekolah Rakyat.
+Makan Bergizi Gratis, Cek Kesehatan Gratis, Koperasi Desa Merah Putih, dan
+Sekolah Rakyat.
 
-## Status
+## Fitur yang tersedia
 
-Branch `main` menyediakan pengumpulan data interaktif, preprocessing CSV,
-dan penjadwalan melalui Airflow di Docker untuk pengembangan lokal.
-DVC menyediakan versi dataset raw dan pemulihan data. Training model, API
-prediksi, dashboard, dan MLflow masih direncanakan.
-
-| Tersedia | Hasil |
+| Komponen | Fungsi |
 | --- | --- |
-| Kolektor Tweet Harvest | Query dari YAML, rentang tanggal inklusif, raw CSV per program/run |
-| Preprocessing | Normalisasi teks, pemetaan kolom, flag kualitas, CSV dan laporan JSON |
-| DVC | Snapshot raw tervalidasi, hash metadata, append tanpa duplikat, dan remote lokal/Google Drive |
-| Lineage | Run ID, timestamp, SHA-256 sumber dan output |
-| Lingkungan pengembangan | Python 3.12, uv lockfile, Dev Container, pytest, Ruff, CI |
-| Airflow Docker | Dua container (Airflow + PostgreSQL), jadwal 23.59 WIB, preprocessing berurutan, retry tanpa overwrite |
+| Pengumpulan X | Keyword bersama, batas tanggal WIB, raw CSV dan manifest per run |
+| Preprocessing | Normalisasi yang mempertahankan petunjuk sentimen, flag kualitas, dan lineage |
+| Airflow di Docker | Dua container: Airflow dan PostgreSQL; collect dilanjutkan preprocess |
+| DVC | Snapshot raw, append tanpa pasangan ID duplikat, perbandingan dan pemulihan versi |
+| Google Drive | Remote DVC untuk dua versi dataset yang telah diuji pemulihannya |
+| Anotasi | Pedoman review dan laporan agregat; hasil review AI masih memerlukan validasi manusia |
+| Pengembangan | Python 3.12, uv lockfile, Dev Container, pengujian, dan CI Windows/Linux |
 
-Hasil analisis dirancang sebagai bahan riset. Percakapan pengguna X tidak
-mewakili seluruh penduduk Indonesia.
+Training model, MLflow, API prediksi, dan dashboard tercantum dalam
+[roadmap](docs/roadmap.md). Percakapan di X digunakan sebagai bahan riset dan
+tidak mewakili seluruh penduduk Indonesia.
 
 ## Mulai cepat
 
-Jalankan dari root repositori dengan Python 3.12 dan `uv`:
+Gunakan Python 3.12 dan `uv`, lalu jalankan dari root repositori:
 
 ```bash
 git clone https://github.com/ahmadnafi30/kuping-negara.git
 cd kuping-negara
 uv sync --locked --extra dev
 uv pip check
-uv run --locked --extra dev --extra data-versioning python -m kuping_negara
+uv run --locked --no-sync python -m kuping_negara
 ```
 
-Alternatif: buat Codespace dari `main`. Panduan setup dan troubleshooting ada
-di [Codespaces Setup](docs/codespaces-setup.md).
+`uv run --no-sync` memakai lingkungan yang sudah dipasang. Pilih extra yang
+diperlukan saat `uv sync`: `dev` untuk pengembangan, `data-versioning` untuk
+DVC lokal, dan `google-drive` untuk backend Drive. Sertakan kembali extra
+tersebut saat menyinkronkan lingkungan agar tetap tersedia.
 
-Validasi rencana pengumpulan tanpa token atau akses X:
+[Setup Codespaces](docs/codespaces-setup.md) menjelaskan lingkungan tanpa
+instalasi Python lokal.
+
+### Pengumpulan dan preprocessing
+
+Periksa rencana pengumpulan tanpa token atau akses X:
 
 ```bash
-uv run --locked collect-x-data --from-date 14-09-2026 --to-date 21-09-2026 --limit 50 --dry-run
+uv run --locked --no-sync collect-x-data --from-date 04-10-2026 --to-date 10-10-2026 --limit 50 --dry-run
 ```
 
-Untuk pengumpulan sungguhan, siapkan Node.js dengan `npx` dan browser sesuai
-[panduan pengumpulan](docs/x-data-collection.md). Masukkan token hanya melalui
-prompt tersembunyi Tweet Harvest.
-
-Preprocess CSV yang dihasilkan kolektor:
+Untuk koleksi interaktif, siapkan Node.js/`npx` dan browser sesuai
+[panduan pengumpulan](docs/x-data-collection.md). Raw yang berhasil dapat
+diproses menggunakan:
 
 ```bash
-uv run --locked preprocess-x-data --input "data/raw/x/collected_date=2026-09-21/program=mbg/run_id=20260921T182524+0700/mbg_2026-09-14_2026-09-21.csv"
+uv run --locked --no-sync preprocess-x-data --input "<path-raw-run.csv>"
 ```
 
-Path tersebut adalah contoh format; ganti dengan file hasil pengumpulan Anda.
-Dataset contoh tidak disertakan di Git. Preprocessing menghasilkan CSV dan
-`quality_report.json`, mempertahankan semua baris dengan flag review, dan
-menolak menimpa run yang sudah ada. Detail ada di
-[panduan preprocessing](docs/x-data-preprocessing.md).
+Ganti placeholder dengan raw CSV dari kolektor. Dataset tidak disertakan di
+Git. [Panduan preprocessing](docs/x-data-preprocessing.md) menjelaskan output,
+flag review, duplikat, dan batas kesiapan data untuk anotasi.
+
+### Penjadwalan Airflow
+
+Ikuti [Airflow di Docker](docs/airflow-docker.md) untuk menjalankan stack lokal.
+
+| Program | Hari | Jam |
+| --- | --- | --- |
+| MBG | Senin | 23.59 WIB |
+| CKG | Selasa | 23.59 WIB |
+| Kopdes Merah Putih | Rabu | 23.59 WIB |
+| Sekolah Rakyat | Kamis | 23.59 WIB |
+
+Setiap run mengambil tujuh hari kalender penuh sebelumnya, lalu menjalankan
+preprocessing. Secret akun X dipasang secara lokal. Docker, laptop, dan koneksi
+internet perlu aktif agar jadwal berjalan.
 
 ## Versi dataset dengan DVC (LK-05)
 
-Git menyimpan penunjuk `data/raw/lk05_dataset.csv.dvc` dan metadata audit;
-isi CSV disimpan melalui cache/remote DVC. Contoh tugas menggunakan dua versi:
-`lk05-data-v1` (50 baris CKG) dan `lk05-data-v2` (200 baris empat program).
-Penambahan 150 baris berasal dari koleksi nyata yang berhasil; 50 ID CKG yang
-sudah ada dilewati. Ini simulasi pertumbuhan dataset, belum retraining model.
+Git melacak `data/raw/lk05_dataset.csv.dvc` dan metrik audit. Isi CSV disimpan
+pada cache serta remote DVC. Dua versi yang tersedia:
+
+| Tag | Baris | Isi |
+| --- | ---: | --- |
+| `lk05-data-v1` | 50 | CKG |
+| `lk05-data-v2` | 200 | Empat program, masing-masing 50 baris |
+
+Sebanyak 150 pasangan program/post ditambahkan; 50 pasangan CKG yang sudah ada
+dilewati. Ini pertumbuhan dataset dari koleksi nyata dalam periode
+4-10 Oktober 2026 WIB, belum training ulang model.
 
 ```bash
-uv sync --locked --extra dev --extra data-versioning
-uv run --locked --no-sync --extra data-versioning dvc status
-uv run --locked --no-sync --extra data-versioning dvc diff --show-hash lk05-data-v1 lk05-data-v2
+uv sync --locked --extra dev --extra data-versioning --extra google-drive
+uv run --locked --no-sync dvc status
+uv run --locked --no-sync dvc diff --show-hash lk05-data-v1 lk05-data-v2
 ```
 
-Untuk menambah versi: jalankan koleksi, buat snapshot dengan `--append`, jalankan
-`dvc add`, lalu commit penunjuk serta metrik dan `dvc push`. Cara konfigurasi
-remote, pengambilan versi lama, dan perintah lengkap ada pada
-[panduan DVC](docs/dvc-data-versioning.md). Checkout baru perlu remote yang
-berisi objek dataset sebelum `dvc pull`; dataset tidak ikut `git clone`.
+[Alur penambahan versi data](docs/dvc.md) menjelaskan collect, append,
+`dvc add`, upload objek, commit/tag, diff, dan pemulihan. [Konfigurasi DVC](docs/dvc-data-versioning.md)
+menjelaskan remote lokal, OAuth Google Drive, dan setup pada mesin baru.
 
-Google Drive tersedia melalui extra `google-drive`. Gunakan OAuth Desktop app
-milik sendiri, folder Drive khusus, serta konfigurasi lokal yang diabaikan Git.
-[Setup Google Drive](docs/dvc-data-versioning.md#google-drive) menjelaskan login,
-unggah versi, dan pemulihan tanpa memasukkan kredensial ke repositori.
+Kedua versi sudah diunggah ke folder `kuping-negara-dvc` dan berhasil dipulihkan
+dengan cache kosong; [bukti verifikasi](reports/lk05/google_drive_verification.json)
+tersedia di repo. Konfigurasi remote dan token tidak ikut `git clone`.
+Pengunggahan DVC masih dilakukan secara eksplisit setelah penambahan versi.
 
-## Struktur
-
-Untuk pengambilan terjadwal, ikuti [panduan Airflow Docker](docs/airflow-docker.md).
-Jadwal: MBG Senin, CKG Selasa, Kopdes Rabu, Sekolah Rakyat Kamis, pukul 23.59 WIB,
-mengambil tujuh hari penuh sebelumnya. Token dipasang melalui file secret lokal.
+## Struktur repositori
 
 ```text
 kuping-negara/
 ├── .devcontainer/          # Lingkungan Codespaces
 ├── .github/                # CI dan template Pull Request
+├── .dvc/                   # Konfigurasi DVC; cache/token lokal diabaikan Git
 ├── configs/                # Keyword program dan rancangan kontrak data
-├── dags/                   # Workflow Airflow: collect kemudian preprocess
-├── docker/                 # Image, dependensi Node, dan bootstrap secret lokal
-├── compose.yaml            # Airflow dan PostgreSQL lokal
-├── data/
-│   ├── raw/                # Output pengumpulan lokal; isi diabaikan Git
-│   └── processed/          # Output preprocessing lokal; isi diabaikan Git
-├── docs/                   # Panduan, proposal, roadmap, dan arsip desain
-├── scripts/                # Hook browser untuk Tweet Harvest
-├── src/kuping_negara/
-│   ├── configuration.py    # Pembacaan dan validasi konfigurasi bersama
-│   ├── paths.py            # Root repositori dan default pipeline
-│   ├── healthcheck.py      # Pemeriksaan lingkungan pengembangan
-│   ├── ingestion/          # Query, browser, raw storage, dan CLI koleksi
-│   ├── data_versioning/   # Snapshot raw, append, dan audit metadata DVC
-│   ├── preprocessing/      # Normalisasi teks, transformasi, dan pipeline file
-│   └── orchestration/      # Adapter terjadwal, publikasi atomik, dan retry
-├── tests/                  # Pengujian unit dan integrasi tanpa layanan eksternal
-├── pyproject.toml          # Metadata, dependensi, dan aturan kualitas
-├── uv.lock                 # Resolusi dependensi yang digunakan CI
+├── dags/                   # Empat DAG collect → preprocess
+├── docker/                 # Image, lock Node, dan bootstrap secret
+├── compose.yaml            # Stack Airflow/PostgreSQL
+├── data/                   # Raw, processed, dan metadata dataset
+├── docs/                   # Panduan penggunaan, pengembangan, dan arsip
+├── reports/                # Metrik agregat dan audit tanpa isi post
+├── scripts/                # Adapter browser dan secret Tweet Harvest
+├── src/kuping_negara/       # Modul ingestion, preprocessing, orchestration, DVC
+├── tests/                  # Pengujian unit dan integrasi
+├── pyproject.toml          # Dependensi dan pengaturan proyek
+├── uv.lock                 # Resolusi dependensi
 └── requirements.txt        # Ekspor kompatibilitas untuk pip
 ```
 
-Tambahkan folder dan paket saat ada implementasi yang memerlukannya.
-Panduan batas modul tersedia di [Project Structure](docs/project-structure.md).
+[Kepemilikan modul](docs/project-structure.md) menjelaskan batas tanggung jawab
+setiap komponen. Folder fitur baru dibuat bersama implementasinya.
 
 ## Pemeriksaan kualitas
 
 ```bash
-uv sync --locked --extra dev --extra data-versioning
-uv run --locked --extra dev --extra data-versioning ruff check src tests dags docker/airflow
-uv run --locked --extra dev --extra data-versioning ruff format --check src tests dags docker/airflow
-uv run --locked --extra dev --extra data-versioning pytest
+uv sync --locked --extra dev --extra data-versioning --extra google-drive
+uv pip check
+uv run --locked --no-sync python -m kuping_negara.healthcheck
+uv run --locked --no-sync ruff check src tests dags docker/airflow
+uv run --locked --no-sync ruff format --check src tests dags docker/airflow
+uv run --locked --no-sync pytest
 ```
 
-CI menjalankan pemeriksaan ini pada Pull Request dan push ke `main`/`develop`.
-Perubahan dependensi harus menyertakan pembaruan `uv.lock` dan ekspor
-`requirements.txt`. `--locked` memeriksa bahwa lockfile sesuai dengan deklarasi.
+CI memeriksa lingkungan Python pada Windows/Linux serta menjalankan verifikasi
+stack Airflow. Perubahan dependensi menyertakan `uv.lock` dan ekspor
+`requirements.txt` yang sesuai.
 
-## Dokumentasi dan kontribusi
+## Dokumentasi dan branch
 
 - [Indeks dokumentasi](docs/README.md)
-- [Panduan pengembangan](docs/development-guidelines.md)
-- [Alur branch dan Pull Request](docs/git-workflow.md)
 - [Pedoman anotasi](docs/annotation-guidelines.md)
+- [Standar pengembangan](docs/development-guidelines.md)
+- [Alur Git dan sinkronisasi branch](docs/git-workflow.md)
 - [Proposal proyek](docs/project-proposal.md)
-- [Roadmap](docs/roadmap.md)
+- [Arsip pekerjaan terdahulu](docs/archive/README.md)
 
-Raw data, processed data, dataset berlabel, model, cache, dan kredensial disimpan
-di luar Git. Preprocessing menghapus kolom akun eksplisit, tetapi `raw_text`
-dan permalink tetap dapat mengandung informasi personal; output belum boleh
-dianggap anonim.
+`main` menyimpan versi stabil; `develop` mengikuti rilis terbaru dan digunakan
+sebagai basis pekerjaan berikutnya. Branch pekerjaan bersifat sementara dan
+dihapus setelah selesai. Riwayat eksperimen lama dipertahankan dalam tag arsip.
 
-## Lisensi
+## Data dan lisensi
+
+Raw, processed, label, model, cache, dan kredensial diabaikan Git. Preprocessing
+menghapus kolom akun eksplisit, tetapi teks serta permalink masih dapat memuat
+informasi personal; output belum dapat dianggap anonim.
 
 Kode menggunakan [MIT License](LICENSE). Lisensi kode tidak memberikan hak
-redistribusi atas data dari pihak ketiga.
+redistribusi atas data pihak ketiga.

@@ -17,8 +17,8 @@ uv pip check
 Preprocess a CSV produced by the collector (replace this example path with your own file):
 
 ```powershell
-uv run --locked preprocess-x-data `
-  --input "data/raw/x/collected_date=2026-09-21/program=mbg/run_id=20260921T182524+0700/mbg_2026-09-14_2026-09-21.csv"
+uv run --locked --no-sync preprocess-x-data `
+  --input "<path-raw-run.csv>"
 ```
 
 The input path must contain these partition segments:
@@ -254,8 +254,8 @@ retains the source content for traceability.
 Run all automated checks:
 
 ```powershell
-uv run --locked --extra dev pytest
-uv run --locked --extra dev python -m compileall -q src tests
+uv run --locked --no-sync pytest
+uv run --locked --no-sync python -m compileall -q src tests
 ```
 
 Inspect only aggregate quality evidence:

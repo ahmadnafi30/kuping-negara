@@ -17,6 +17,6 @@
       }
     }
   },
-  "postCreateCommand": "python -m pip install --disable-pip-version-check uv==0.12.12 && uv sync --locked --extra dev && uv pip check && uv run --locked --extra dev python -m kuping_negara.healthcheck",
+  "postCreateCommand": "python -m pip install --disable-pip-version-check uv==0.12.12 && uv sync --locked --extra dev --extra data-versioning && uv pip check && uv run --locked --no-sync python -m kuping_negara.healthcheck",
   "remoteUser": "vscode"
 }

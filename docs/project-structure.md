@@ -48,13 +48,15 @@ preprocessing pipeline ──> configuration / paths / x_posts ──> text
 | --- | --- |
 | `configs/keywords/` | YAML versi 1 dan dokumentasi keyword; tanpa token |
 | `configs/schemas/` | Rancangan kontrak JSON Schema; validator runtime belum terintegrasi |
-| `data/raw/` | Raw CSV lokal, dipartisi menurut tanggal/program/run; immutable |
+| `data/raw/` | Raw per run immutable, snapshot gabungan, dan penunjuk `.dvc` |
 | `data/quarantine/` | Output processed lama/invalid; dikecualikan dari labeling/training |
 | `data/processed/` | CSV dan laporan kualitas lokal; run lama tidak ditimpa |
 | `scripts/` | Hook browser, perbaikan integritas collector, dan adapter secret Node.js |
 | `dags/` | Empat jadwal Airflow yang memanggil runtime dalam virtual environment terpisah |
 | `docker/` dan `compose.yaml` | Stack Airflow/PostgreSQL, image, lock Node, dan setup secrets lokal |
-| `docs/archive/` | Riwayat desain yang belum diimplementasikan |
+| `docs/archive/` | Desain historis dan catatan branch eksperimen yang diarsipkan |
+| `reports/` | Metrik agregat DVC/anotasi tanpa isi post |
+| `.dvc/` | Konfigurasi DVC; cache, token, dan config.local diabaikan Git |
 | `tests/unit/` | Pengujian perilaku fungsi dan konfigurasi |
 | `tests/integration/` | Pengujian alur raw CSV hingga output dan laporan |
 

@@ -49,16 +49,16 @@ Aktifkan Docker Desktop dalam mode Linux containers. Sediakan minimal 4 GB RAM
 untuk Docker; 8 GB lebih nyaman. Dari root repo:
 
 ```bash
-uv run --locked python docker/airflow/bootstrap.py
+python docker/airflow/bootstrap.py
 docker compose config --quiet
 docker compose build airflow
 docker compose up -d --wait
 ```
 
-Jika Python/uv belum tersedia, `python docker/airflow/bootstrap.py` juga bekerja
-dengan Python 3 yang sudah terpasang. Bootstrap menghasilkan secret acak lokal,
-tidak mencetak nilainya, dan tidak mengubah file yang sudah ada. File rahasia
-diabaikan Git dan tidak dikirim ke build Docker.
+Bootstrap hanya memerlukan Python 3 dan standard library; environment aplikasi
+tidak perlu dipasang pada host untuk menjalankan stack Docker. Bootstrap
+menghasilkan secret acak lokal, tidak mencetak nilainya, dan tidak mengubah
+file yang sudah ada. File rahasia diabaikan Git dan tidak dikirim ke build Docker.
 
 Buka <http://localhost:8080>. Username `admin`; lihat password **secara lokal**
 dalam `docker/airflow/secrets/admin_password`. Jangan unggah folder secrets atau

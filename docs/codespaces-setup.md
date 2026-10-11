@@ -10,7 +10,7 @@ A Codespace is ready when all of the following are true:
 
 - the container starts without a Dev Container error;
 - Python reports version `3.12.x`;
-- `uv sync --locked --extra dev` succeeds without changing `uv.lock`;
+- `uv sync --locked --extra dev --extra data-versioning` succeeds without changing `uv.lock`;
 - `uv pip check` reports no incompatible or missing dependencies;
 - the environment health check reports pandas, scikit-learn, JupyterLab, and
   pytest as installed;
@@ -35,7 +35,7 @@ No local Python installation is required when using Codespaces.
 
 During creation, GitHub clones the repository and builds the container defined
 in `.devcontainer/devcontainer.json`. The post-create process then installs the
-pinned `uv` release, creates `.venv`, installs the locked runtime and `dev`
+pinned `uv` release, creates `.venv`, installs the locked runtime, `dev`, and `data-versioning`
 dependencies, validates dependency consistency, and runs the health check.
 
 ## Verify the Environment
@@ -45,12 +45,12 @@ Run these commands from the repository root:
 ```bash
 python --version
 uv --version
-uv sync --locked --extra dev
+uv sync --locked --extra dev --extra data-versioning
 uv pip check
-uv run --locked --extra dev python -m kuping_negara.healthcheck
-uv run --locked --extra dev ruff check src tests
-uv run --locked --extra dev ruff format --check src tests
-uv run --locked --extra dev pytest
+uv run --locked --no-sync python -m kuping_negara.healthcheck
+uv run --locked --no-sync ruff check src tests
+uv run --locked --no-sync ruff format --check src tests
+uv run --locked --no-sync pytest
 git status --short
 ```
 
@@ -76,27 +76,29 @@ committed lockfile without silently rewriting repository files.
 | `requirements.txt` | Generated compatibility export for pip-based tools |
 | `.python-version` | Python 3.12 selection for local uv and automation |
 
-Do not install planned components such as Airflow, MLflow, FastAPI, Streamlit,
-DVC, or transformers until repository code actually imports or operates them.
-Premature installation makes the Codespace slower and introduces avoidable
-dependency conflicts.
+DVC is provided by the `data-versioning` extra and is installed for dataset
+versioning and its integration test. Add `--extra google-drive` to `uv sync`
+when configuring a Drive remote. Keep requested extras on later sync commands;
+`uv run --no-sync` preserves the installed environment. Airflow has a separate
+Docker environment. MLflow, FastAPI, Streamlit, and transformers remain planned
+components and are not installed by the base project.
 
 ## Daily uv Workflow
 
 Synchronize after pulling dependency changes:
 
 ```bash
-uv sync --locked --extra dev
+uv sync --locked --extra dev --extra data-versioning
 ```
 
 Run project commands inside the managed environment:
 
 ```bash
-uv run --locked --extra dev python -m kuping_negara
-uv run --locked --extra dev ruff check src tests
-uv run --locked --extra dev ruff format --check src tests
-uv run --locked --extra dev pytest
-uv run --locked --extra dev jupyter lab
+uv run --locked --no-sync python -m kuping_negara
+uv run --locked --no-sync ruff check src tests
+uv run --locked --no-sync ruff format --check src tests
+uv run --locked --no-sync pytest
+uv run --locked --no-sync jupyter lab
 ```
 
 Add a runtime dependency:
@@ -141,7 +143,7 @@ Resolution on the dependency-authoring branch:
 
 ```bash
 uv lock
-uv sync --locked --extra dev
+uv sync --locked --extra dev --extra data-versioning
 ```
 
 Commit the updated lockfile. Do not remove `--locked` from Codespaces or CI to
@@ -162,9 +164,9 @@ Then reload the VS Code window.
 Run:
 
 ```bash
-uv sync --locked --extra dev
+uv sync --locked --extra dev --extra data-versioning
 uv pip check
-uv run --locked --extra dev python -m kuping_negara.healthcheck
+uv run --locked --no-sync python -m kuping_negara.healthcheck
 ```
 
 If the issue remains, review the Codespace creation log and rebuild the

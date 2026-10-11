@@ -1,4 +1,4 @@
-# DVC Data Versioning - LK-05
+# Konfigurasi DVC, Remote, dan Pemulihan
 
 ## Cakupan dan hasil
 
@@ -51,7 +51,7 @@ virtual environment, token, dan `.dvc/config.local`. Ignore raw ditempatkan
 pada `data/raw/.gitignore`; jangan mengabaikan folder `data/raw` dari root
 karena metadata `.dvc` harus tetap dapat ditemukan dan dilacak.
 
-## Remote lokal (opsional LK-05)
+## Remote lokal
 
 Contoh instalasi lokal Windows menggunakan direktori di luar repo:
 
@@ -143,20 +143,15 @@ diverifikasi dapat tampil untuk client milik sendiri dalam mode Testing.
 Airflow menggunakan port 8080, sehingga callback login lokal memakai port 8090
 bila 8080 sudah terpakai.
 
-Untuk migrasi LK-05, periksa `git tag --list` terlebih dahulu. Jika daftar tag
-hanya berisi `lk05-data-v1` dan `lk05-data-v2`, perintah berikut mengunggah kedua
-objek untuk satu penunjuk dataset:
+Migrasi dua versi LK-05 sudah selesai dan diverifikasi. Untuk batch berikutnya,
+unggah penunjuk dataset yang sedang aktif secara eksplisit. Repo juga memiliki
+tag arsip eksperimen, sehingga `dvc push --all-tags` tidak menjadi perintah
+operasional rutin. Gunakan checkout terpisah dan tag dataset yang dipilih untuk
+mengunggah atau memulihkan versi lama.
 
-```bash
-uv run --locked --no-sync --extra google-drive dvc push --all-tags --remote gdrive data/raw/lk05_dataset.csv.dvc
-```
-
-Jangan memakai `--all-tags` untuk migrasi ini apabila ada tag lain yang belum
-diaudit. DVC menyimpan objek berdasarkan hash; file di Drive tidak harus
-bernama seperti CSV asli. Penunjuk Git menentukan objek versi yang dipulihkan.
-Uji masing-masing tag pada checkout terpisah dengan cache kosong menggunakan
-`dvc pull --remote gdrive data/raw/lk05_dataset.csv.dvc`, lalu cocokkan jumlah
-baris dan SHA-256 dengan `reports/lk05/version_comparison.json`.
+DVC menyimpan objek berdasarkan hash; nama file pada Drive dapat berbeda dari
+nama CSV. Untuk memeriksa pemulihan, jalankan `dvc pull --remote gdrive data/raw/lk05_dataset.csv.dvc` pada checkout tag dataset dengan cache kosong,
+lalu cocokkan jumlah baris dan SHA-256 dengan metadata audit.
 
 Setelah kedua versi berhasil dipulihkan, jadikan Drive remote utama:
 
@@ -176,56 +171,19 @@ Lihat [masa berlaku token Google](https://developers.google.com/identity/protoco
 Panduan resmi: [DVC Google Drive](https://dvc.org/doc/user-guide/data-management/remote-storage/google-drive)
 dan [pengaturan OAuth Google](https://developers.google.com/workspace/guides/configure-oauth-consent).
 
-## Membuat versi awal
+## Menambahkan versi data
 
-Jalankan pengumpulan, atau gunakan raw dari DAG yang sudah sukses. Ganti
-`<raw-run.csv>` dengan raw pada partisi `program=...` yang memiliki
-`collection.json` valid. Jangan menggunakan data karantina.
-
-```bash
-uv run --locked --no-sync collect-x-data --program ckg --from-date 04-10-2026 --to-date 10-10-2026 --limit 50
-uv run --locked --no-sync python -m kuping_negara.data_versioning.snapshots --input "<raw-run.csv>"
-uv run --locked --no-sync --extra data-versioning dvc add data/raw/lk05_dataset.csv
-uv run --locked --no-sync --extra data-versioning dvc status
-git add data/raw/lk05_dataset.csv.dvc reports/lk05/dataset_metrics.json
-git commit -m "data(dvc): track initial raw snapshot"
-git tag lk05-data-v1
-uv run --locked --no-sync --extra data-versioning dvc push
-```
-
-Tag contoh sudah dibuat di repositori ini; untuk eksperimen selanjutnya gunakan
-nama versi yang baru. CLI koleksi interaktif memerlukan token tersembunyi.
-Pilihan program adalah `--program`; cek `collect-x-data --help` untuk opsi.
-
-## Menambah versi berikutnya
-
-Jalankan koleksi lagi untuk mendapatkan data tambahan. Gunakan tanggal berikut
-atau program lainnya dan pastikan pasangan ID baru tersedia. `--input` dapat
-diulang untuk beberapa raw run.
-
-```bash
-uv run --locked --no-sync python -m kuping_negara.data_versioning.snapshots --input "<raw-baru.csv>" --append
-uv run --locked --no-sync --extra data-versioning dvc status
-uv run --locked --no-sync --extra data-versioning dvc add data/raw/lk05_dataset.csv
-git diff -- data/raw/lk05_dataset.csv.dvc reports/lk05/dataset_metrics.json
-git add data/raw/lk05_dataset.csv.dvc reports/lk05/dataset_metrics.json
-git commit -m "data(dvc): append new validated collections"
-git tag lk05-data-v2
-uv run --locked --no-sync --extra data-versioning dvc push
-```
-
-Adapter memeriksa checksum raw dan konfigurasi, periode WIB, batas baris,
-skema kolom, ID, serta sumber pada raw zone. Semua input diperiksa sebelum
-publikasi CSV. Raw tidak diubah. Append yang tidak memiliki ID baru gagal dan
-tidak menghasilkan versi palsu. Output existing membutuhkan `--append`.
-Metrik berisi jumlah baris, jumlah ID baru, hash snapshot lama/baru, dan sumber.
+[Alur penambahan versi data](dvc.md) menjelaskan pengumpulan, validasi, append,
+`dvc add`, upload objek, commit metadata, serta pemberian tag baru. Gunakan tag
+yang belum tersedia; `lk05-data-v1` dan `lk05-data-v2` mempertahankan dua versi
+historis yang sudah diverifikasi.
 
 ## Audit dan pemulihan
 
 ```bash
 uv run --locked --no-sync --extra data-versioning dvc diff --show-hash lk05-data-v1 lk05-data-v2
 uv run --locked --no-sync --extra data-versioning dvc status
-uv run --locked --no-sync --extra data-versioning dvc status --cloud
+uv run --locked --no-sync --extra google-drive dvc status --cloud --remote gdrive
 git diff lk05-data-v1 lk05-data-v2 -- reports/lk05/dataset_metrics.json
 git ls-files -- data/raw/lk05_dataset.csv
 ```
@@ -241,22 +199,20 @@ Unduh versi tertentu ke file terpisah agar snapshot yang dipakai pipeline
 lokal tidak terganti:
 
 ```bash
-uv run --locked --no-sync --extra data-versioning dvc get . data/raw/lk05_dataset.csv --rev lk05-data-v1 --out tmp/lk05-v1.csv
-uv run --locked --no-sync --extra data-versioning dvc get . data/raw/lk05_dataset.csv --rev lk05-data-v2 --out tmp/lk05-v2.csv
+uv run --locked --no-sync --extra data-versioning dvc get . data/raw/lk05_dataset.csv --rev lk05-data-v1 --config .dvc/config.local --remote gdrive --out tmp/lk05-v1.csv
+uv run --locked --no-sync --extra data-versioning dvc get . data/raw/lk05_dataset.csv --rev lk05-data-v2 --config .dvc/config.local --remote gdrive --out tmp/lk05-v2.csv
 ```
 
 Untuk rollback penuh, checkout tag Git lalu `dvc pull` pada checkout terpisah;
 Git saja tidak memulihkan CSV. Pastikan objek tersedia pada remote dan cache.
 Jangan mengubah live workspace Airflow hanya untuk demonstrasi rollback.
 
-## Luaran tugas
+## Bukti dataset
 
-- `.dvc/`, `.dvcignore`, `.gitignore`, `data/raw/.gitignore` dan penunjuk CSV.
-- Dua commit/tag serta metrik audit dengan sumber nyata dan hash.
-- README dan panduan ini menjelaskan penambahan serta pengambilan versi.
-- Laporan singkat lokal: `output/pdf/laporan_lk05_dvc.pdf`, dengan tangkapan
-  halaman bukti yang menampilkan keluaran asli perintah DVC.
+- [Metrik penambahan](../reports/lk05/dataset_metrics.json).
+- [Perbandingan versi](../reports/lk05/version_comparison.json).
+- [Pemulihan dua versi dari Drive](../reports/lk05/google_drive_verification.json).
 
-PDF dan data tidak masuk Git. Simpan PDF untuk dikumpulkan ke LMS. Riwayat
-metadata tidak mengungkapkan isi post; tetap perlakukan raw dan label sebagai
-data terbatas sesuai aturan sumber.
+Laporan PDF lokal `output/pdf/laporan_lk05_dvc.pdf` merekam tahap remote lokal.
+Laporan verifikasi Drive mencatat penyimpanan eksternal yang dilakukan
+sesudahnya. Data dan PDF diabaikan Git; metrik audit tidak memuat isi post.
