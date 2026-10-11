@@ -1,5 +1,8 @@
 # Local MLOps Stack Design
 
+> Archived proposal. The infrastructure described here is not implemented on main.
+> See [the roadmap](../roadmap.md) for current scope.
+
 ## Status
 
 Approved direction: installation-first infrastructure scaffold for local Linux,
@@ -131,7 +134,7 @@ kuping-negara/
 ├── docs/
 │   ├── dvc-workflow.md
 │   ├── local-mlops-stack.md
-│   └── superpowers/
+│   └── archive/
 │       ├── plans/
 │       └── specs/
 ├── scripts/

@@ -10,10 +10,11 @@ A Codespace is ready when all of the following are true:
 
 - the container starts without a Dev Container error;
 - Python reports version `3.12.x`;
-- `uv sync --frozen --extra dev` succeeds without changing `uv.lock`;
+- `uv sync --locked --extra dev` succeeds without changing `uv.lock`;
 - `uv pip check` reports no incompatible or missing dependencies;
 - the environment health check reports pandas, scikit-learn, JupyterLab, and
   pytest as installed;
+- Ruff lint and format checks pass;
 - the complete test suite passes.
 
 ## Prerequisites
@@ -44,10 +45,12 @@ Run these commands from the repository root:
 ```bash
 python --version
 uv --version
-uv sync --frozen --extra dev
+uv sync --locked --extra dev
 uv pip check
-uv run --frozen --extra dev python -m kuping_negara.healthcheck
-uv run --frozen --extra dev pytest
+uv run --locked --extra dev python -m kuping_negara.healthcheck
+uv run --locked --extra dev ruff check src tests
+uv run --locked --extra dev ruff format --check src tests
+uv run --locked --extra dev pytest
 git status --short
 ```
 
@@ -83,15 +86,17 @@ dependency conflicts.
 Synchronize after pulling dependency changes:
 
 ```bash
-uv sync --frozen --extra dev
+uv sync --locked --extra dev
 ```
 
 Run project commands inside the managed environment:
 
 ```bash
-uv run --frozen --extra dev python -m kuping_negara
-uv run --frozen --extra dev pytest
-uv run --frozen --extra dev jupyter lab
+uv run --locked --extra dev python -m kuping_negara
+uv run --locked --extra dev ruff check src tests
+uv run --locked --extra dev ruff format --check src tests
+uv run --locked --extra dev pytest
+uv run --locked --extra dev jupyter lab
 ```
 
 Add a runtime dependency:
@@ -110,12 +115,12 @@ After an approved dependency change, refresh the compatibility manifest:
 
 ```bash
 uv lock
-uv export --frozen --extra dev --format requirements.txt --no-hashes \
+uv export --locked --extra dev --format requirements.txt --no-hashes \
   --no-emit-project --output-file requirements.txt
 ```
 
 Commit `pyproject.toml`, `uv.lock`, and `requirements.txt` together. CI uses
-`--frozen`, so it fails when the lockfile does not match the project metadata.
+`--locked`, so it fails when the lockfile does not match the project metadata.
 
 ## Rebuild After Container Changes
 
@@ -128,7 +133,7 @@ When `.devcontainer/devcontainer.json` changes:
 
 ## Troubleshooting
 
-### Frozen lockfile error
+### Locked environment error
 
 Cause: `pyproject.toml` changed without a matching `uv.lock` update.
 
@@ -136,10 +141,10 @@ Resolution on the dependency-authoring branch:
 
 ```bash
 uv lock
-uv sync --frozen --extra dev
+uv sync --locked --extra dev
 ```
 
-Commit the updated lockfile. Do not remove `--frozen` from Codespaces or CI to
+Commit the updated lockfile. Do not remove `--locked` from Codespaces or CI to
 hide a stale lockfile.
 
 ### VS Code uses the wrong Python interpreter
@@ -157,9 +162,9 @@ Then reload the VS Code window.
 Run:
 
 ```bash
-uv sync --frozen --extra dev
+uv sync --locked --extra dev
 uv pip check
-uv run --frozen --extra dev python -m kuping_negara.healthcheck
+uv run --locked --extra dev python -m kuping_negara.healthcheck
 ```
 
 If the issue remains, review the Codespace creation log and rebuild the

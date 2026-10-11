@@ -7,6 +7,11 @@ on:
       - develop
       - "feat/**"
       - "fix/**"
+      - "refactor/**"
+      - "chore/**"
+      - "docs/**"
+      - "test/**"
+      - "hotfix/**"
   pull_request:
     branches:
       - main
@@ -17,7 +22,11 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     env:
       UV_PYTHON: "3.12"
     steps:
@@ -34,13 +43,19 @@ jobs:
         run: uv python install 3.12
 
       - name: Sync locked environment
-        run: uv sync --frozen --extra dev
+        run: uv sync --locked --extra dev
 
       - name: Check dependency consistency
         run: uv pip check
 
+      - name: Check code quality
+        run: uv run --locked --extra dev ruff check src tests
+
+      - name: Check code formatting
+        run: uv run --locked --extra dev ruff format --check src tests
+
       - name: Run environment health check
-        run: uv run --frozen --extra dev python -m kuping_negara.healthcheck
+        run: uv run --locked --extra dev python -m kuping_negara.healthcheck
 
       - name: Run tests
-        run: uv run --frozen --extra dev pytest
+        run: uv run --locked --extra dev pytest

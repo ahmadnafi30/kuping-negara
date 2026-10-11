@@ -1,15 +1,33 @@
-# Documentation Index
+# Dokumentasi Kuping Negara
 
-| Document | Audience | Purpose |
-| --- | --- | --- |
-| [Codespaces Setup](codespaces-setup.md) | Developers and assessors | Reproducible environment setup, verification, and troubleshooting with uv |
-| [Development Guidelines](development-guidelines.md) | All contributors | Naming, Python style, quality, security, and Definition of Done |
-| [Project Structure](project-structure.md) | Developers and reviewers | Directory ownership, dependency boundaries, and code placement |
-| [Git Workflow](git-workflow.md) | Contributors and maintainers | Branch lifecycle, commits, Pull Requests, reviews, and releases |
-| [Annotation Guidelines](annotation-guidelines.md) | Annotators and ML team | Operational sentiment-label definitions and quality process |
-| [X Data Collection](x-data-collection.md) | Data engineers and researchers | Four-program Tweet Harvest execution, raw storage, security, and troubleshooting |
-| [X Data Preprocessing](x-data-preprocessing.md) | Data engineers and annotators | Deterministic cleaning, canonical mapping, quality flags, lineage, and pilot results |
+Mulai dari [README](../README.md) untuk menjalankan fitur yang tersedia.
+Dokumentasi operasional menjelaskan kode di `main`; proposal dan roadmap
+menjelaskan pekerjaan yang belum tersedia.
 
-Documentation is versioned with the source code. A change that alters system
-behavior, data contract, development rules, or operations must update the
-relevant document in the same Pull Request.
+## Penggunaan
+
+| Dokumen | Isi |
+| --- | --- |
+| [Codespaces Setup](codespaces-setup.md) | Setup Python/uv, Dev Container, dan troubleshooting |
+| [X Data Collection](x-data-collection.md) | Pengumpulan interaktif, keyword, browser, dan raw storage |
+| [X Data Preprocessing](x-data-preprocessing.md) | Transformasi CSV, flag kualitas, dan lineage |
+| [Annotation Guidelines](annotation-guidelines.md) | Definisi sentimen dan prosedur review manual |
+
+## Pengembangan
+
+| Dokumen | Isi |
+| --- | --- |
+| [Project Structure](project-structure.md) | Struktur aktual dan batas tanggung jawab modul |
+| [Development Guidelines](development-guidelines.md) | Gaya kode, dependensi, pengujian, dan dokumentasi |
+| [Git Workflow](git-workflow.md) | Branch, commit, Pull Request, dan rilis |
+| [Keyword Configuration](../configs/keywords/README.md) | Konfigurasi program bersama untuk dua pipeline |
+| [Data Contract](../configs/schemas/README.md) | Rancangan JSON Schema dan status validasinya |
+
+## Perencanaan dan riwayat
+
+- [Project Proposal](project-proposal.md): konteks riset, arsitektur target, dan metrik.
+- [Roadmap](roadmap.md): status implementasi dan urutan pekerjaan berikutnya.
+- [Archive](archive/README.md): proposal infrastruktur terdahulu.
+
+Perubahan perilaku, kontrak, atau cara menjalankan proyek harus memperbarui
+dokumen terkait dalam Pull Request yang sama.

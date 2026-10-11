@@ -16,7 +16,7 @@ with Tweet Harvest 2.7.1. The collector reads versioned keywords from
 Install the locked Python environment:
 
 ```powershell
-uv sync --frozen --extra dev
+uv sync --locked --extra dev
 uv pip check
 ```
 
@@ -44,7 +44,7 @@ through its hidden prompt for every selected program.
 Run this before using a real token:
 
 ```powershell
-uv run --frozen collect-x-data `
+uv run --locked collect-x-data `
   --from-date 14-09-2026 `
   --to-date 21-09-2026 `
   --limit 50 `
@@ -57,7 +57,7 @@ The command prints four program IDs and their queries. It does not execute
 ## Collect All Programs
 
 ```powershell
-uv run --frozen collect-x-data `
+uv run --locked collect-x-data `
   --from-date 14-09-2026 `
   --to-date 21-09-2026 `
   --limit 50 `
@@ -80,7 +80,7 @@ collector while the first one is running.
 Repeat `--program` to select more than one program:
 
 ```powershell
-uv run --frozen collect-x-data `
+uv run --locked collect-x-data `
   --program mbg `
   --program sekolah_rakyat `
   --from-date 14-09-2026 `
@@ -134,8 +134,8 @@ DVC versioning can track the raw zone in a later implementation phase.
 The local environment does not contain the current project entry point:
 
 ```powershell
-uv sync --frozen --extra dev
-uv run --frozen collect-x-data --help
+uv sync --locked --extra dev
+uv run --locked collect-x-data --help
 ```
 
 ### Hardlink warning from `uv`
@@ -162,7 +162,7 @@ editing the global npm cache and does not expose the X token.
 If automatic detection cannot find a browser, provide its executable path:
 
 ```powershell
-uv run --frozen collect-x-data `
+uv run --locked collect-x-data `
   --from-date 14-09-2026 `
   --to-date 21-09-2026 `
   --limit 50 `

@@ -10,14 +10,14 @@ support the technical decisions and evidence described in LK-03.
 Install the locked project environment:
 
 ```powershell
-uv sync --frozen --extra dev
+uv sync --locked --extra dev
 uv pip check
 ```
 
-Preprocess the MBG pilot dataset:
+Preprocess a CSV produced by the collector (replace this example path with your own file):
 
 ```powershell
-uv run --frozen preprocess-x-data `
+uv run --locked preprocess-x-data `
   --input "data/raw/x/collected_date=2026-09-21/program=mbg/run_id=20260921T182524+0700/mbg_2026-09-14_2026-09-21.csv"
 ```
 
@@ -115,7 +115,10 @@ Rows that need review remain visible. The pipeline does not silently drop them.
 This preserves evidence for later rule improvements and prevents loss caused by
 imperfect platform language labels.
 
-## MBG Pilot Audit
+## Historical MBG Pilot Audit
+
+These figures are historical notes from a local pilot. The dataset is not
+tracked in this repository and the figures are not a reproducible test fixture.
 
 The 21 September 2026 pilot contains 20 records and 15 source columns. The raw
 CSV decoded as UTF-8 with no replacement character, mojibake marker, control
@@ -143,6 +146,8 @@ retains the source content for traceability.
 ## Privacy and Repository Rules
 
 - Never commit files under `data/raw/` or `data/processed/`.
+- Processed records still contain `raw_text` and source permalinks. They are
+  not fully anonymized even though explicit account columns are removed.
 - Never publish raw usernames or post text without an approved privacy review.
 - Use only the aggregate quality report as submission evidence when raw content
   is not required.
@@ -155,8 +160,8 @@ retains the source content for traceability.
 Run all automated checks:
 
 ```powershell
-uv run --frozen --extra dev pytest
-uv run --frozen --extra dev python -m compileall -q src tests
+uv run --locked --extra dev pytest
+uv run --locked --extra dev python -m compileall -q src tests
 ```
 
 Inspect only aggregate quality evidence:

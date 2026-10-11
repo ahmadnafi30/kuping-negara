@@ -1,1 +1,1 @@
-"""Text cleaning, anonymization, normalization, and deduplication components."""
+"""Text normalization, canonical records, quality flags, and file lineage."""

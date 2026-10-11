@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import html
-import re
-import unicodedata
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -12,6 +9,7 @@ from typing import Any
 
 import pandas as pd
 
+from kuping_negara.preprocessing.text import clean_text, match_keyword
 
 SCHEMA_VERSION = "1"
 SOURCE_PLATFORM = "x"
@@ -33,10 +31,6 @@ ENGAGEMENT_COLUMN_MAP = {
     "favorite_count": "like_count",
     "quote_count": "quote_count",
 }
-URL_PATTERN = re.compile(r"(?:https?://|www\.)\S+", re.IGNORECASE)
-MENTION_PATTERN = re.compile(r"(?<!\w)@[\w_]+", re.UNICODE)
-HASHTAG_PATTERN = re.compile(r"(?<!\w)#([\w_]+)", re.UNICODE)
-WHITESPACE_PATTERN = re.compile(r"\s+")
 
 
 class PreprocessingError(ValueError):
@@ -49,44 +43,6 @@ class PreprocessingResult:
 
     records: pd.DataFrame
     report: dict[str, Any]
-
-
-def clean_text(text: str) -> str:
-    """Normalize text while removing URLs and direct user references.
-
-    Emoji and ordinary punctuation remain available as sentiment signals.
-    Hashtag words remain, but the leading hash is removed.
-    """
-
-    normalized = unicodedata.normalize("NFKC", html.unescape(str(text)))
-    normalized = "".join(
-        " " if unicodedata.category(character).startswith("C") else character
-        for character in normalized
-    )
-    normalized = URL_PATTERN.sub(" ", normalized)
-    normalized = MENTION_PATTERN.sub(" ", normalized)
-    normalized = HASHTAG_PATTERN.sub(r"\1", normalized)
-    return WHITESPACE_PATTERN.sub(" ", normalized).strip().casefold()
-
-
-def _normalized_for_matching(text: str) -> str:
-    return WHITESPACE_PATTERN.sub(
-        " ", unicodedata.normalize("NFKC", str(text)).casefold()
-    ).strip()
-
-
-def _match_keyword(text: str, keywords: Sequence[str]) -> str | None:
-    normalized_text = _normalized_for_matching(text)
-    for keyword in keywords:
-        normalized_keyword = _normalized_for_matching(keyword)
-        if not normalized_keyword:
-            continue
-        pattern = re.compile(
-            rf"(?<!\w){re.escape(normalized_keyword)}(?!\w)", re.UNICODE
-        )
-        if pattern.search(normalized_text):
-            return keyword
-    return None
 
 
 def _to_nonnegative_integer(series: pd.Series, column_name: str) -> pd.Series:
@@ -150,6 +106,9 @@ def preprocess_tweet_harvest_frame(
     if collected_at.tzinfo is None or collected_at.utcoffset() is None:
         raise PreprocessingError("collected_at must be timezone-aware")
 
+    if frame.empty:
+        raise PreprocessingError("source dataset must contain at least one row")
+
     source = frame.copy()
     raw_text = source["full_text"].fillna("").astype(str)
     if raw_text.str.strip().eq("").any():
@@ -177,7 +136,7 @@ def preprocess_tweet_harvest_frame(
     }
     cleaned_text = raw_text.map(clean_text)
     matched_keywords = pd.Series(
-        [_match_keyword(value, keywords) for value in raw_text],
+        [match_keyword(value, keywords) for value in raw_text],
         index=source.index,
         dtype=object,
     )
@@ -203,9 +162,7 @@ def preprocess_tweet_harvest_frame(
     records = pd.DataFrame(
         {
             "tweet_id": tweet_ids,
-            "conversation_id": _to_optional_string(
-                source["conversation_id_str"]
-            ),
+            "conversation_id": _to_optional_string(source["conversation_id_str"]),
             "tweet_url": _to_optional_string(source["tweet_url"]),
             "target_program": program_id,
             "matched_keyword": matched_keywords,
@@ -244,9 +201,7 @@ def preprocess_tweet_harvest_frame(
         },
         "language_counts": {
             str(language): int(count)
-            for language, count in languages.fillna("unknown")
-            .value_counts()
-            .items()
+            for language, count in languages.fillna("unknown").value_counts().items()
         },
         "published_at_min": _isoformat_utc(published_at.min()),
         "published_at_max": _isoformat_utc(published_at.max()),

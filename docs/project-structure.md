@@ -1,144 +1,61 @@
-# Project Structure and Code Placement
+# Project Structure
 
-Kuping Negara uses the `src` layout with a single top-level Python namespace:
-`kuping_negara`. This avoids accidental imports from the repository root and
-keeps package boundaries explicit.
+Kode yang dapat digunakan ulang berada dalam `src/kuping_negara/`. Struktur
+repositori mengikuti implementasi yang tersedia; folder untuk fitur masa depan
+dibuat ketika pekerjaan dimulai, bukan sebagai placeholder.
 
-## Directory Ownership
+## Kepemilikan modul
 
-| Path | Responsibility | Typical Contents | Must Not Contain |
-| --- | --- | --- | --- |
-| `.devcontainer/` | Reproducible developer environment | `devcontainer.json` | Application logic or secrets |
-| `.github/workflows/` | CI/CD automation | YAML workflows | Business logic |
-| `configs/keywords/` | Program collection configuration | Versioned YAML | Access tokens |
-| `configs/schemas/` | Data contracts | JSON Schema and migration notes | Raw datasets |
-| `dags/` | Workflow orchestration | Thin Airflow DAG definitions | Transformation/model implementation |
-| `data/raw/` | Immutable source-aligned records | Local/DVC-managed artifacts | Git-tracked dataset content |
-| `data/processed/` | Validated transformed records | Local/DVC-managed artifacts | Raw credentials or identifiers |
-| `data/labeled/` | Annotation output | Versioned external artifacts | Unreviewed secrets/PII |
-| `docs/` | Engineering and operational documentation | Markdown and architecture references | Executable production logic |
-| `models/` | Local model artifacts | Serialized models and metadata | Git-tracked binaries |
-| `notebooks/` | EDA and experiment narratives | Numbered notebooks | Only copy of reusable logic |
-| `src/kuping_negara/` | Installable application package | Domain modules | Large data/model artifacts |
-| `tests/unit/` | Isolated deterministic tests | Function/class behavior | Live external calls |
-| `tests/integration/` | Cross-boundary tests | Pipeline/API/storage tests | Production secrets |
-
-## Python Package Boundaries
-
-### `ingestion/`
-
-Source adapters, collection request construction, response normalization,
-idempotency keys, raw persistence, and ingestion metadata. A source-specific
-adapter converts upstream field names into the canonical internal contract.
-
-### `validation/`
-
-JSON Schema checks, required-field validation, range checks, duplicate checks,
-quality reports, and quarantine decisions. Validation produces explicit results
-and never silently repairs unknown corruption.
-
-### `preprocessing/`
-
-Text cleaning, URL/mention handling, normalization, language-related transforms,
-anonymization, and deduplication. Prefer pure functions so outputs are
-reproducible and easy to test.
-
-### `labeling/`
-
-Annotation sample preparation, guideline-version metadata, annotator agreement,
-adjudication input/output, and label quality checks. UI-specific tools may call
-this layer but must not redefine label semantics.
-
-### `training/`
-
-Feature construction, split strategy, training, evaluation, experiment logging,
-model-card creation, and registry submission. Training consumes versioned data
-and never calls the source platform directly.
-
-### `inference/`
-
-Model loading, input validation at the model boundary, batch prediction, online
-prediction, probability/confidence formatting, and model-version reporting.
-
-### `api/`
-
-FastAPI routes, request/response schema, authentication hooks, and HTTP error
-mapping. Routes delegate business behavior to package services.
-
-### `dashboard/`
-
-Streamlit views, filters, charts, and presentation formatting. It consumes a
-documented API or query interface rather than importing training internals.
-
-### `monitoring/`
-
-Metric calculation, drift analysis, service/pipeline health checks, and alert
-payload construction. Alert policy and thresholds are configuration-driven.
-
-## Code Placement Decision Guide
-
-| Change | Place It Here |
+| Path | Tanggung jawab |
 | --- | --- |
-| New X/Tweet Harvest field mapping | `src/kuping_negara/ingestion/` |
-| New required data field or enum | `configs/schemas/` plus `validation/` |
-| Text normalization rule | `preprocessing/` with unit tests |
-| Annotation decision rule | `docs/annotation-guidelines.md` and `labeling/` if automated |
-| Train/test split or estimator code | `training/` |
-| Model prediction formatting | `inference/` |
-| HTTP endpoint | `api/`; prediction logic remains in `inference/` |
-| Dashboard chart | `dashboard/` |
-| Drift metric or alert payload | `monitoring/` |
-| Pipeline schedule/dependency | `dags/`; called logic stays in `src/` |
-| Exploratory analysis | `notebooks/`; promote reusable logic into `src/` |
-| Small deterministic behavior test | `tests/unit/` |
-| Multi-component/storage/API test | `tests/integration/` |
+| `configuration.py` | Membaca YAML, memvalidasi schema/ID/nama/keyword, dan memilih program |
+| `paths.py` | Menemukan root repositori dan menyediakan default konfigurasi/timezone |
+| `healthcheck.py` | Memeriksa metadata dan dependensi lingkungan pengembangan |
+| `ingestion/queries.py` | Membentuk query, rentang tanggal, dan argumen Tweet Harvest |
+| `ingestion/browser.py` | Menemukan browser dan menyiapkan environment proses anak |
+| `ingestion/storage.py` | Memvalidasi staging CSV dan memindahkannya ke raw zone |
+| `ingestion/tweet_harvest.py` | CLI dan orkestrasi koleksi; entry point `collect-x-data` |
+| `preprocessing/text.py` | Normalisasi Unicode, cleaning, dan pencocokan keyword |
+| `preprocessing/x_posts.py` | Transformasi DataFrame dan ringkasan flag kualitas |
+| `preprocessing/x_pipeline.py` | Lineage file, checksum, persistensi, dan CLI `preprocess-x-data` |
 
-## Dependency Direction
+CLI tetap menggunakan entry point yang sama. Import fungsi lama di
+`ingestion.tweet_harvest` dan `preprocessing.x_posts.clean_text` tetap tersedia
+untuk kompatibilitas; kode baru dapat mengimpor langsung dari modul pemiliknya.
 
-Recommended dependency flow:
-
-```text
-ingestion → validation → preprocessing
-labeling → validation
-training → validation/preprocessing
-inference → trained model contract
-api → inference
-dashboard → API/query contract
-monitoring ← events/metrics from all runtime stages
-dags → public functions from package modules
-```
-
-Avoid reverse dependencies such as `inference` importing `api`, or
-`preprocessing` importing `training`. Avoid cyclic imports and catch-all
-`utils.py` modules. Create a shared abstraction only after its ownership and
-multiple real consumers are clear.
-
-## Adding a New Module
-
-Before adding a module:
-
-1. identify one owning package from the responsibility table;
-2. choose a `snake_case.py` name that describes one concern;
-3. define its public input/output contract and side effects;
-4. add type hints and a module docstring;
-5. add unit tests mirroring its package path;
-6. add integration tests when it crosses I/O or component boundaries;
-7. update data contract/configuration/documentation if behavior changes;
-8. verify the module does not introduce a cyclic dependency.
-
-Example mapping:
+## Batas dependensi
 
 ```text
-src/kuping_negara/preprocessing/text_normalization.py
-tests/unit/preprocessing/test_text_normalization.py
+ingestion CLI ──> configuration / paths / queries / browser / storage
+preprocessing pipeline ──> configuration / paths / x_posts ──> text
 ```
 
-## Repository Hygiene
+- Fungsi query dan teks tidak melakukan akses jaringan atau penyimpanan file.
+- Koleksi dan preprocessing menggunakan pembacaan keyword yang sama.
+- Business logic tidak bergantung pada parsing argumen CLI.
+- Subprocess Tweet Harvest hanya dijalankan oleh orkestrator koleksi.
+- Pengujian unit memakai fixture kecil; integrasi memakai file sintetis lokal.
 
-- Keep generated files, caches, virtual environments, datasets, and model
-  artifacts out of Git.
-- Preserve empty required directories using `.gitkeep` only.
-- Do not add placeholder directories for technologies that have no approved
-  implementation plan.
-- Remove merged topic branches; do not keep them artificially synchronized with
-  `main` merely to remove a `behind` indicator.
+## Folder pendukung
+
+| Path | Isi dan aturan |
+| --- | --- |
+| `configs/keywords/` | YAML versi 1 dan dokumentasi keyword; tanpa token |
+| `configs/schemas/` | Rancangan kontrak JSON Schema; validator runtime belum terintegrasi |
+| `data/raw/` | Raw CSV lokal, dipartisi menurut tanggal/program/run; immutable |
+| `data/processed/` | CSV dan laporan kualitas lokal; run lama tidak ditimpa |
+| `scripts/` | Hook browser Node.js yang digunakan kolektor |
+| `docs/archive/` | Riwayat desain yang belum diimplementasikan |
+| `tests/unit/` | Pengujian perilaku fungsi dan konfigurasi |
+| `tests/integration/` | Pengujian alur raw CSV hingga output dan laporan |
+
+`data/raw/.gitkeep` dan `data/processed/.gitkeep` menjaga lokasi output terlihat
+di checkout baru. Isi dataset diabaikan Git. Aturan ignore untuk `data/labeled/`
+dan `models/` tetap disiapkan walaupun foldernya belum ada.
+
+## Penambahan fitur
+
+Buat paket `training`, `inference`, `api`, atau `monitoring` bersama kode,
+kontrak, dokumentasi, dan pengujiannya saat fitur tersebut dikerjakan. Tambahkan
+`dags/` saat ada workflow Airflow dan `notebooks/` saat ada eksplorasi yang
+memerlukan notebook. Lihat [roadmap](roadmap.md).

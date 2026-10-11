@@ -1,277 +1,37 @@
-"""Orchestrate reproducible X data collection with Tweet Harvest."""
+"""Command-line orchestration for reproducible X data collection."""
 
 from __future__ import annotations
 
 import argparse
-import csv
-import os
 import shutil
 import subprocess
 import sys
-from collections.abc import Mapping, Sequence
-from datetime import date, datetime, timedelta
+from collections.abc import Sequence
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
-from zoneinfo import ZoneInfo
 
 import yaml
 
-
-TWEET_HARVEST_VERSION = "2.7.1"
-DEFAULT_CONFIG_PATH = Path("configs/keywords/programs.example.yaml")
-JAKARTA_TIMEZONE = ZoneInfo("Asia/Jakarta")
-BROWSER_EXECUTABLE_ENV = "KUPING_NEGARA_BROWSER_EXECUTABLE"
-BROWSER_HOOK_PATH = Path("scripts/tweet_harvest_browser_hook.cjs")
-
-
-class CollectionError(RuntimeError):
-    """Raised when Tweet Harvest cannot produce a valid raw dataset."""
-
-
-def build_search_query(keywords: Sequence[str]) -> str:
-    """Build an X search query for Indonesian posts from configured keywords."""
-    cleaned_keywords = [keyword.strip() for keyword in keywords if keyword.strip()]
-    if not cleaned_keywords:
-        raise ValueError("at least one keyword is required")
-
-    query_terms = []
-    for keyword in cleaned_keywords:
-        escaped_keyword = keyword.replace(chr(34), chr(92) + chr(34))
-        query_terms.append(
-            f'"{escaped_keyword}"'
-            if any(character.isspace() for character in keyword)
-            else escaped_keyword
-        )
-    return f"({' OR '.join(query_terms)})"
-
-
-def parse_collection_window(from_date: str, to_date: str) -> tuple[date, date]:
-    """Parse Tweet Harvest dates and require an increasing date window."""
-    try:
-        start = datetime.strptime(from_date, "%d-%m-%Y").date()
-        end = datetime.strptime(to_date, "%d-%m-%Y").date()
-    except ValueError as error:
-        raise ValueError("dates must use DD-MM-YYYY format") from error
-
-    if start > end:
-        raise ValueError("from-date must be earlier than or equal to to-date")
-    return start, end
-
-
-def select_programs(
-    programs: Mapping[str, Mapping[str, Any]], requested: Sequence[str]
-) -> dict[str, Mapping[str, Any]]:
-    """Return requested programs while preserving configuration order."""
-    if not requested:
-        return dict(programs)
-
-    unknown_programs = sorted(set(requested) - set(programs))
-    if unknown_programs:
-        choices = ", ".join(programs)
-        unknown = ", ".join(unknown_programs)
-        raise ValueError(f"unknown program: {unknown}. Available programs: {choices}")
-
-    requested_set = set(requested)
-    return {
-        program_id: config
-        for program_id, config in programs.items()
-        if program_id in requested_set
-    }
-
-
-def build_output_name(program_id: str, start: date, end: date) -> str:
-    """Create a deterministic Tweet Harvest staging filename."""
-    return f"{program_id}_{start.isoformat()}_{end.isoformat()}"
-
-
-def build_tweet_harvest_command(
-    *,
-    query: str,
-    from_date: str,
-    to_date: str,
-    limit: int,
-    tab: str,
-    output_name: str,
-) -> list[str]:
-    """Build a token-free Tweet Harvest command for interactive execution."""
-    if limit <= 0:
-        raise ValueError("limit must be greater than zero")
-
-    normalized_tab = tab.upper()
-    if normalized_tab not in {"LATEST", "TOP"}:
-        raise ValueError("tab must be LATEST or TOP")
-
-    inclusive_end = datetime.strptime(to_date, "%d-%m-%Y").date()
-    exclusive_until = (inclusive_end + timedelta(days=1)).strftime("%d-%m-%Y")
-
-    return [
-        "npx",
-        "-y",
-        f"tweet-harvest@{TWEET_HARVEST_VERSION}",
-        "-s",
-        query,
-        "-f",
-        from_date,
-        "--to",
-        exclusive_until,
-        "-l",
-        str(limit),
-        "--tab",
-        normalized_tab,
-        "-o",
-        output_name,
-        "-e",
-        "csv",
-    ]
-
-
-def find_repository_root(starting_points: Sequence[Path]) -> Path:
-    """Find the project root by walking upward from candidate paths."""
-    for starting_point in starting_points:
-        resolved_path = starting_point.resolve()
-        current_directory = (
-            resolved_path if resolved_path.is_dir() else resolved_path.parent
-        )
-        for candidate in (current_directory, *current_directory.parents):
-            if (
-                (candidate / "pyproject.toml").is_file()
-                and (candidate / "src" / "kuping_negara").is_dir()
-            ):
-                return candidate
-
-    raise ValueError("Kuping Negara repository root could not be located")
-
-
-def detect_browser_executable(
-    *,
-    explicit_path: Path | None,
-    environment: Mapping[str, str] | None = None,
-    platform: str | None = None,
-) -> Path | None:
-    """Find a supported system browser for Tweet Harvest's Playwright runtime."""
-    current_environment = os.environ if environment is None else environment
-
-    configured_path = explicit_path
-    if configured_path is None and current_environment.get(BROWSER_EXECUTABLE_ENV):
-        configured_path = Path(current_environment[BROWSER_EXECUTABLE_ENV])
-
-    if configured_path is not None:
-        resolved_path = configured_path.expanduser().resolve()
-        if not resolved_path.is_file():
-            raise ValueError(f"browser executable not found: {resolved_path}")
-        return resolved_path
-
-    current_platform = sys.platform if platform is None else platform
-    candidates: list[Path] = []
-    if current_platform == "win32":
-        locations = [
-            ("PROGRAMFILES", Path("Google/Chrome/Application/chrome.exe")),
-            ("PROGRAMFILES(X86)", Path("Google/Chrome/Application/chrome.exe")),
-            ("LOCALAPPDATA", Path("Google/Chrome/Application/chrome.exe")),
-            ("PROGRAMFILES", Path("Microsoft/Edge/Application/msedge.exe")),
-            ("PROGRAMFILES(X86)", Path("Microsoft/Edge/Application/msedge.exe")),
-        ]
-        for variable, relative_path in locations:
-            base_directory = current_environment.get(variable)
-            if base_directory:
-                candidates.append(Path(base_directory) / relative_path)
-    else:
-        for executable_name in ("google-chrome", "chromium", "chromium-browser"):
-            executable = shutil.which(executable_name)
-            if executable:
-                candidates.append(Path(executable))
-
-    return next(
-        (candidate.resolve() for candidate in candidates if candidate.is_file()),
-        None,
-    )
-
-
-def build_tweet_harvest_environment(
-    *,
-    repository_root: Path,
-    browser_executable: Path | None,
-    base_environment: Mapping[str, str] | None = None,
-) -> dict[str, str]:
-    """Build an isolated child environment with an optional browser fallback."""
-    environment = dict(os.environ if base_environment is None else base_environment)
-    if browser_executable is None:
-        return environment
-
-    hook_path = (repository_root / BROWSER_HOOK_PATH).resolve()
-    if not hook_path.is_file():
-        raise CollectionError(f"Tweet Harvest browser hook not found: {hook_path}")
-
-    require_option = f'--require="{hook_path.as_posix()}"'
-    existing_options = environment.get("NODE_OPTIONS", "").strip()
-    environment["NODE_OPTIONS"] = " ".join(
-        option for option in (existing_options, require_option) if option
-    )
-    environment[BROWSER_EXECUTABLE_ENV] = str(browser_executable.resolve())
-    return environment
-
-
-def load_programs(config_path: Path) -> dict[str, Mapping[str, Any]]:
-    """Load and validate program keyword configuration from YAML."""
-    if not config_path.is_file():
-        raise ValueError(f"keyword configuration not found: {config_path}")
-
-    with config_path.open(encoding="utf-8") as config_file:
-        document = yaml.safe_load(config_file)
-
-    programs = document.get("programs") if isinstance(document, dict) else None
-    if not isinstance(programs, dict) or not programs:
-        raise ValueError("keyword configuration must define non-empty programs")
-
-    for program_id, config in programs.items():
-        keywords = config.get("keywords") if isinstance(config, dict) else None
-        if not isinstance(keywords, list) or not keywords:
-            raise ValueError(f"program {program_id} must define keywords")
-    return programs
-
-
-def finalize_output(
-    *,
-    repository_root: Path,
-    output_name: str,
-    program_id: str,
-    run_id: str,
-    collected_date: date,
-) -> Path:
-    """Move a completed staging CSV into the immutable raw data zone."""
-    source = repository_root / "tweets-data" / f"{output_name}.csv"
-    if not source.is_file() or source.stat().st_size == 0:
-        raise CollectionError(
-            f"Tweet Harvest did not produce a non-empty file: {source}"
-        )
-
-    with source.open(encoding="utf-8-sig", newline="") as source_file:
-        populated_rows = (
-            row
-            for row in csv.reader(source_file)
-            if any(cell.strip() for cell in row)
-        )
-        header = next(populated_rows, None)
-        first_data_row = next(populated_rows, None)
-
-    if header is None or first_data_row is None:
-        raise CollectionError(
-            f"Tweet Harvest produced a CSV with no tweet rows: {source}"
-        )
-
-    destination_directory = (
-        repository_root
-        / "data"
-        / "raw"
-        / "x"
-        / f"collected_date={collected_date.isoformat()}"
-        / f"program={program_id}"
-        / f"run_id={run_id}"
-    )
-    destination_directory.mkdir(parents=True, exist_ok=False)
-    destination = destination_directory / source.name
-    shutil.move(str(source), destination)
-    return destination
+from kuping_negara.configuration import load_programs, select_programs
+from kuping_negara.ingestion.browser import (
+    build_tweet_harvest_environment,
+    detect_browser_executable,
+)
+from kuping_negara.ingestion.queries import (
+    TWEET_HARVEST_VERSION as TWEET_HARVEST_VERSION,
+)
+from kuping_negara.ingestion.queries import (
+    build_output_name,
+    build_search_query,
+    build_tweet_harvest_command,
+    parse_collection_window,
+)
+from kuping_negara.ingestion.storage import CollectionError, finalize_output
+from kuping_negara.paths import (
+    DEFAULT_CONFIG_PATH,
+    JAKARTA_TIMEZONE,
+    find_repository_root,
+)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -315,9 +75,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     arguments = parser.parse_args(argv)
 
     try:
-        repository_root = find_repository_root(
-            [Path.cwd(), Path(__file__).resolve()]
-        )
+        repository_root = find_repository_root([Path.cwd(), Path(__file__).resolve()])
         start, end = parse_collection_window(arguments.from_date, arguments.to_date)
         config_path = (
             arguments.config
@@ -328,7 +86,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         selected_programs = select_programs(programs, arguments.program)
         if arguments.limit <= 0:
             raise ValueError("limit must be greater than zero")
-    except ValueError as error:
+    except (OSError, ValueError, yaml.YAMLError) as error:
         parser.error(str(error))
 
     plans: list[tuple[str, str, str, list[str]]] = []
@@ -348,8 +106,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     exclusive_until = (end + timedelta(days=1)).strftime("%d-%m-%Y")
     print(f"Programs: {len(plans)} | Limit per program: {arguments.limit}")
     print(
-        f"Requested window: {arguments.from_date} through "
-        f"{arguments.to_date} inclusive"
+        f"Requested window: {arguments.from_date} through {arguments.to_date} inclusive"
     )
     print(f"Tweet Harvest until: {exclusive_until} (exclusive)")
     for program_id, display_name, _, command in plans:

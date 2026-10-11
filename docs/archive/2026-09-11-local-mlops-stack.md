@@ -1,6 +1,8 @@
 # Local MLOps Stack Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> Archived proposal. The infrastructure described here is not implemented on main.
+> See [the roadmap](../roadmap.md) for current scope.
+
 
 **Goal:** Add reproducible, opt-in installation and lifecycle code for DVC,
 MLflow, PostgreSQL, and Airflow without installing or starting infrastructure on
@@ -15,7 +17,7 @@ start only through an explicit lifecycle command.
 MLflow 3.15.1, PostgreSQL 16.14, Apache Airflow 3.3.1 with LocalExecutor,
 Bash, GitHub Actions
 
-**Spec:** `docs/superpowers/specs/2026-09-11-local-mlops-stack-design.md`
+**Spec:** `docs/archive/2026-09-11-local-mlops-stack-design.md`
 
 ## Global Constraints
 

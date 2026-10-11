@@ -17,7 +17,7 @@ code, tests, configuration, and documentation.
 - Add development dependencies to the `dev` extra with
   `uv add --optional dev <package>`.
 - Regenerate the compatibility manifest with
-  `uv export --frozen --extra dev --format requirements.txt --no-hashes
+  `uv export --locked --extra dev --format requirements.txt --no-hashes
   --no-emit-project --output-file requirements.txt`.
 - Never edit `uv.lock` or generated dependency pins manually. Explain every new
   runtime dependency in the Pull Request.
@@ -136,10 +136,12 @@ after at least two real consumers exist.
 Minimum local verification:
 
 ```bash
-uv sync --frozen --extra dev
+uv sync --locked --extra dev
 uv pip check
-uv run --frozen --extra dev python -m kuping_negara.healthcheck
-uv run --frozen --extra dev pytest
+uv run --locked --extra dev python -m kuping_negara.healthcheck
+uv run --locked --extra dev ruff check src tests
+uv run --locked --extra dev ruff format --check src tests
+uv run --locked --extra dev pytest
 ```
 
 ## Notebook Standard

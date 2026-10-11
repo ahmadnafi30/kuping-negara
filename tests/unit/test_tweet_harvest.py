@@ -8,17 +8,16 @@ from kuping_negara.ingestion.tweet_harvest import (
     CollectionError,
     build_output_name,
     build_search_query,
-    build_tweet_harvest_environment,
     build_tweet_harvest_command,
+    build_tweet_harvest_environment,
     detect_browser_executable,
-    find_repository_root,
     finalize_output,
+    find_repository_root,
     load_programs,
     main,
     parse_collection_window,
     select_programs,
 )
-
 
 PROGRAMS = {
     "mbg": {
@@ -172,9 +171,7 @@ def test_finalize_output_moves_csv_into_partitioned_raw_zone(tmp_path: Path) -> 
         "data/raw/x/collected_date=2026-09-21/program=mbg/"
         "run_id=20260921T120000+0700/mbg_2026-09-14_2026-09-21.csv"
     )
-    assert destination.read_text(encoding="utf-8") == (
-        "id_str,full_text\n1,contoh\n"
-    )
+    assert destination.read_text(encoding="utf-8") == ("id_str,full_text\n1,contoh\n")
     assert not source.exists()
 
 
@@ -192,9 +189,7 @@ def test_finalize_output_rejects_csv_without_header_or_data_rows(
             output_name="mbg_2026-09-14_2026-09-21",
             program_id="mbg",
             run_id="20260921T120000+0700",
-            collected_date=parse_collection_window("21-09-2026", "22-09-2026")[
-                0
-            ],
+            collected_date=parse_collection_window("21-09-2026", "22-09-2026")[0],
         )
 
     assert source.exists()
@@ -218,6 +213,10 @@ def test_dry_run_lists_every_program_without_creating_data(
             ]
         )
     config_path.write_text("\n".join(lines), encoding="utf-8")
+    (tmp_path / "src" / "kuping_negara").mkdir(parents=True)
+    (tmp_path / "pyproject.toml").write_text(
+        "[project]\nname = 'kuping-negara'\n", encoding="utf-8"
+    )
     monkeypatch.chdir(tmp_path)
 
     exit_code = main(

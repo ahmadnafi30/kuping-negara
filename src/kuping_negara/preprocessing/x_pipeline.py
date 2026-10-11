@@ -7,24 +7,22 @@ import csv
 import hashlib
 import json
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
-from zoneinfo import ZoneInfo
 
 import pandas as pd
 import yaml
 
+from kuping_negara.configuration import load_programs
+from kuping_negara.paths import DEFAULT_CONFIG_PATH, JAKARTA_TIMEZONE
 from kuping_negara.preprocessing.x_posts import (
     PreprocessingError,
     preprocess_tweet_harvest_frame,
 )
 
-
-JAKARTA_TIMEZONE = ZoneInfo("Asia/Jakarta")
-DEFAULT_CONFIG_PATH = Path("configs/keywords/programs.example.yaml")
 DEFAULT_OUTPUT_ROOT = Path("data/processed/x")
 
 
@@ -68,9 +66,7 @@ def parse_raw_partition_path(input_path: Path) -> RawPartitionMetadata:
     ingestion_run_id = _extract_partition_value(resolved_path, "run_id=")
     collected_date_text = _extract_partition_value(resolved_path, "collected_date=")
     try:
-        collected_at = datetime.strptime(
-            ingestion_run_id, "%Y%m%dT%H%M%S%z"
-        )
+        collected_at = datetime.strptime(ingestion_run_id, "%Y%m%dT%H%M%S%z")
         collected_date = date.fromisoformat(collected_date_text)
     except ValueError as error:
         raise PreprocessingPipelineError(
@@ -87,32 +83,16 @@ def parse_raw_partition_path(input_path: Path) -> RawPartitionMetadata:
     )
 
 
-def _load_program_keywords(
-    config_path: Path, program_id: str
-) -> tuple[str, ...]:
-    if not config_path.is_file():
-        raise PreprocessingPipelineError(
-            f"keyword configuration not found: {config_path}"
-        )
-    with config_path.open(encoding="utf-8") as config_file:
-        document = yaml.safe_load(config_file)
-    programs = document.get("programs") if isinstance(document, Mapping) else None
-    program = programs.get(program_id) if isinstance(programs, Mapping) else None
-    keywords = program.get("keywords") if isinstance(program, Mapping) else None
-    if not isinstance(keywords, list) or not keywords:
+def _load_program_keywords(config_path: Path, program_id: str) -> tuple[str, ...]:
+    try:
+        programs = load_programs(config_path)
+    except (OSError, ValueError) as error:
+        raise PreprocessingPipelineError(str(error)) from error
+    if program_id not in programs:
         raise PreprocessingPipelineError(
             f"keyword configuration does not define program: {program_id}"
         )
-    normalized_keywords = tuple(
-        keyword.strip()
-        for keyword in keywords
-        if isinstance(keyword, str) and keyword.strip()
-    )
-    if not normalized_keywords:
-        raise PreprocessingPipelineError(
-            f"program {program_id} does not contain usable keywords"
-        )
-    return normalized_keywords
+    return tuple(programs[program_id]["keywords"])
 
 
 def _sha256(path: Path) -> str:

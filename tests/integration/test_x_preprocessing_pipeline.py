@@ -16,7 +16,6 @@ from kuping_negara.preprocessing.x_pipeline import (
     run_preprocessing,
 )
 
-
 JAKARTA_TIMEZONE = ZoneInfo("Asia/Jakarta")
 
 
@@ -95,9 +94,7 @@ def test_run_preprocessing_writes_private_safe_output_and_quality_report(
         input_path=raw_path,
         output_root=tmp_path / "data" / "processed" / "x",
         config_path=config_path,
-        processed_at=datetime(
-            2026, 9, 21, 19, 0, 0, tzinfo=JAKARTA_TIMEZONE
-        ),
+        processed_at=datetime(2026, 9, 21, 19, 0, 0, tzinfo=JAKARTA_TIMEZONE),
     )
 
     assert artifacts.records_path.relative_to(tmp_path).as_posix() == (
@@ -129,9 +126,7 @@ def test_run_preprocessing_refuses_to_overwrite_existing_run(
         "input_path": raw_path,
         "output_root": tmp_path / "data" / "processed" / "x",
         "config_path": config_path,
-        "processed_at": datetime(
-            2026, 9, 21, 19, 0, 0, tzinfo=JAKARTA_TIMEZONE
-        ),
+        "processed_at": datetime(2026, 9, 21, 19, 0, 0, tzinfo=JAKARTA_TIMEZONE),
     }
     run_preprocessing(**parameters)
 

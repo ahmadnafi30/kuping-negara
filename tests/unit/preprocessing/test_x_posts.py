@@ -12,7 +12,6 @@ from kuping_negara.preprocessing.x_posts import (
     preprocess_tweet_harvest_frame,
 )
 
-
 JAKARTA_TIMEZONE = ZoneInfo("Asia/Jakarta")
 
 
@@ -112,9 +111,7 @@ def test_preprocess_rejects_missing_required_source_columns() -> None:
             source,
             program_id="mbg",
             ingestion_run_id="20260921T182524+0700",
-            collected_at=datetime(
-                2026, 9, 21, 18, 25, 24, tzinfo=JAKARTA_TIMEZONE
-            ),
+            collected_at=datetime(2026, 9, 21, 18, 25, 24, tzinfo=JAKARTA_TIMEZONE),
             keywords=["mbg"],
         )
 
@@ -128,9 +125,7 @@ def test_preprocess_rejects_negative_engagement_counts() -> None:
             source,
             program_id="mbg",
             ingestion_run_id="20260921T182524+0700",
-            collected_at=datetime(
-                2026, 9, 21, 18, 25, 24, tzinfo=JAKARTA_TIMEZONE
-            ),
+            collected_at=datetime(2026, 9, 21, 18, 25, 24, tzinfo=JAKARTA_TIMEZONE),
             keywords=["mbg"],
         )
 
@@ -144,8 +139,17 @@ def test_preprocess_rejects_unicode_replacement_characters() -> None:
             source,
             program_id="mbg",
             ingestion_run_id="20260921T182524+0700",
-            collected_at=datetime(
-                2026, 9, 21, 18, 25, 24, tzinfo=JAKARTA_TIMEZONE
-            ),
+            collected_at=datetime(2026, 9, 21, 18, 25, 24, tzinfo=JAKARTA_TIMEZONE),
+            keywords=["mbg"],
+        )
+
+
+def test_preprocess_rejects_header_only_dataset() -> None:
+    with pytest.raises(PreprocessingError, match="at least one row"):
+        preprocess_tweet_harvest_frame(
+            _source_frame().iloc[:0],
+            program_id="mbg",
+            ingestion_run_id="20260921T182524+0700",
+            collected_at=datetime(2026, 9, 21, 18, 25, 24, tzinfo=JAKARTA_TIMEZONE),
             keywords=["mbg"],
         )
