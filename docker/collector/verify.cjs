@@ -40,6 +40,11 @@ async function main() {
   process.env.KUPING_NEGARA_WINDOW_START = "2026-10-03T17:00:00Z";
   process.env.KUPING_NEGARA_WINDOW_END = "2026-10-10T17:00:00Z";
   try {
+    const exactQuery = integrity.exactWindowQuery('mbg OR "makan bergizi gratis"');
+    assert.equal(exactQuery, 'mbg OR "makan bergizi gratis" since_time:1791046800 until_time:1791651600');
+    let scopedQuery;
+    await integrity.inputKeywordsInWindow(async (_page, parameters) => { scopedQuery = parameters.MODIFIED_SEARCH_KEYWORDS; }, {}, {MODIFIED_SEARCH_KEYWORDS:"mbg"});
+    assert.equal(scopedQuery, integrity.exactWindowQuery("mbg"));
     const candidates = ["2026-10-03T16:59:59Z", "2026-10-03T17:00:00Z", "2026-10-10T16:59:59Z", "2026-10-10T17:00:00Z"]
       .map(created_at => ({tweet:{created_at}}));
     assert.equal(integrity.selectTweets(candidates, 50).length, 2);

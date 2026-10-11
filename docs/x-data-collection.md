@@ -203,3 +203,16 @@ After a raw CSV passes ingestion checks, run the preprocessing workflow in
 [`x-data-preprocessing.md`](x-data-preprocessing.md). Preprocessing reads the
 partition metadata, preserves the raw file, removes user identifiers from the
 processed contract, and creates a quality report for labeling readiness.
+
+## Exact Jakarta search bounds
+
+The pinned collector adapter adds `since_time` and `until_time` Unix timestamp
+constraints for the requested Jakarta midnight boundaries, alongside the CLI's
+outer UTC date search. A date-only search can otherwise page through thousands
+of posts from the following day's first seven WIB hours before finding valid
+records. The exact timestamp constraints reduce that unnecessary pagination;
+the independent publication-time validation and hard row limit remain required.
+
+A `429` response means X has temporarily limited the session. Respect the
+reported reset time rather than issuing repeated manual triggers. A failed
+collection must remain failed and must not be published as an empty dataset.
