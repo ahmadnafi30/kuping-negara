@@ -5,6 +5,24 @@ LocalExecutor. Airflow serta pipeline memiliki lingkungan Python terpisah.
 Node.js dan Chromium dipasang dalam image; host tidak perlu memasang browser
 tambahan untuk pengumpulan terjadwal.
 
+## Dua container
+
+| Container | Peran |
+| --- | --- |
+| `airflow` | UI/API, scheduler, DAG processor, triggerer, dan eksekusi task |
+| `postgres` | Database metadata dan riwayat Airflow |
+
+Container Airflow menggunakan perintah resmi `airflow standalone`. Persiapan
+direktori, login, migrasi database, dan pool berjalan otomatis saat startup;
+tidak ada container init terpisah. Startup hanya memakai root untuk menyiapkan
+izin mount, lalu proses Airflow/browser berjalan sebagai UID 50000.
+
+Seluruh komponen Airflow memiliki satu siklus hidup: restart container akan
+memulai ulang semuanya. Jumlah container berkurang, tetapi komponen internal
+tetap berupa beberapa proses. Health check menilai database serta heartbeat
+scheduler, DAG processor, dan triggerer; HTTP UI yang hidup saja belum cukup.
+Jika ada komponen gagal, periksa log lalu restart `airflow`.
+
 ## Jadwal dan alur
 
 | Program | Hari | Jam WIB | DAG |
@@ -33,7 +51,7 @@ untuk Docker; 8 GB lebih nyaman. Dari root repo:
 ```bash
 uv run --locked python docker/airflow/bootstrap.py
 docker compose config --quiet
-docker compose build airflow-api
+docker compose build airflow
 docker compose up -d --wait
 ```
 
@@ -52,7 +70,7 @@ Sebelum menjalankan pengumpulan:
    akun X milik Anda, tanpa tanda kutip. File awal kosong, sehingga tidak ada
    akun yang digunakan tanpa konfigurasi.
 2. Jika secret diubah setelah container dibuat, jalankan
-   `docker compose up -d --force-recreate airflow-scheduler` untuk memasangnya ulang.
+   `docker compose up -d --force-recreate airflow` untuk memasangnya ulang.
 3. Aktifkan DAG yang diinginkan melalui UI. Semua DAG dibuat dalam keadaan pause.
 4. Gunakan **Trigger** untuk satu run manual atau tunggu jadwal berikutnya.
 
@@ -85,14 +103,14 @@ waktu untuk mengurangi beban akun. Penjadwalan mengikuti cron pada DAG; metadata
 
 Konfigurasi ini untuk pengembangan lokal. UI hanya terikat ke `127.0.0.1`,
 PostgreSQL tidak membuka port host, dan container task memakai user non-root
-tanpa akses Docker socket. Token dipasang sebagai Docker Compose secret hanya
-ke scheduler yang menjalankan task. Adapter menyuplai prompt dalam memori;
+tanpa akses Docker socket. Token dipasang sebagai Docker Compose secret ke
+container Airflow yang menjalankan task. Adapter menyuplai prompt dalam memori;
 token tidak masuk argumen proses, nilai environment, XCom, atau output log.
 Output dan screenshot kolektor eksternal dibuang; error task diringkas.
 
 Docker Compose secrets tetap berupa file di host, bukan vault terenkripsi.
 Lindungi akses Windows/Linux ke folder tersebut. Administrator host dan kode
-task yang berjalan dalam scheduler tetap bisa mengakses token. Jalankan hanya
+task yang berjalan dalam Airflow tetap bisa mengakses token. Jalankan hanya
 kode DAG/dependensi yang dipercaya. SimpleAuthManager dipakai untuk login lokal;
 untuk server bersama/produksi perlu auth manager yang sesuai, TLS, pengelolaan
 secret, backup, dan review deployment tersendiri.
@@ -109,10 +127,11 @@ memverifikasi pipeline tanpa membuktikan keberhasilan pengambilan akun nyata.
 
 ```bash
 docker compose ps
-docker compose exec airflow-api airflow dags list-import-errors
-docker compose exec airflow-api python /opt/airflow/verify_dags.py
-docker compose exec airflow-api node /opt/collector/verify.cjs
-docker compose logs --tail 100 airflow-scheduler airflow-dag-processor
+docker compose exec --user 50000:0 airflow airflow dags list-import-errors
+docker compose exec --user 50000:0 airflow python /opt/airflow/verify_dags.py
+docker compose exec --user 50000:0 airflow node /opt/collector/verify.cjs
+docker compose logs --tail 100 airflow
+docker compose restart airflow
 docker compose stop
 docker compose start
 ```
@@ -130,5 +149,6 @@ Untuk rotasi password DB/login, perubahan file secret saja tidak memperbarui
 akun yang sudah dibuat; lakukan perubahan akun melalui mekanisme layanan.
 
 Rujukan: [panduan Docker Airflow](https://airflow.apache.org/docs/apache-airflow/3.3.2/howto/docker-compose/index.html),
+[Airflow standalone](https://airflow.apache.org/docs/apache-airflow/3.3.2/start.html),
 [SimpleAuthManager](https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/auth-manager/simple/index.html),
 dan [Tweet Harvest](https://github.com/helmisatria/tweet-harvest).

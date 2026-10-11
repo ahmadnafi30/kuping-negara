@@ -16,7 +16,7 @@ Training model, API prediksi, dashboard, MLflow, dan DVC masih direncanakan.
 | Preprocessing | Normalisasi teks, pemetaan kolom, flag kualitas, CSV dan laporan JSON |
 | Lineage | Run ID, timestamp, SHA-256 sumber dan output |
 | Lingkungan pengembangan | Python 3.12, uv lockfile, Dev Container, pytest, Ruff, CI |
-| Airflow Docker | Pengambilan mingguan pukul 23.59 WIB, preprocessing berurutan, retry tanpa overwrite |
+| Airflow Docker | Dua container (Airflow + PostgreSQL), jadwal 23.59 WIB, preprocessing berurutan, retry tanpa overwrite |
 
 Hasil analisis dirancang sebagai bahan riset. Percakapan pengguna X tidak
 mewakili seluruh penduduk Indonesia.

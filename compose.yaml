@@ -1,48 +1,5 @@
 name: kuping-negara-scheduler
 
-x-airflow: &airflow
-  build:
-    context: .
-    dockerfile: docker/airflow/Dockerfile
-  image: kuping-negara-airflow:3.3.2
-  user: "50000:0"
-  environment: &airflow-env
-    AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    AIRFLOW__CORE__AUTH_MANAGER: airflow.api_fastapi.auth.managers.simple.simple_auth_manager.SimpleAuthManager
-    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
-    AIRFLOW__CORE__DEFAULT_TIMEZONE: Asia/Jakarta
-    AIRFLOW__CORE__PARALLELISM: "2"
-    AIRFLOW__CORE__FERNET_KEY_CMD: cat /run/secrets/fernet_key
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN_CMD: >-
-      bash -c 'printf "postgresql+psycopg2://airflow:%s@postgres/airflow" "$$(cat /run/secrets/postgres_password)"'
-    AIRFLOW__API_AUTH__JWT_SECRET_CMD: cat /run/secrets/jwt_secret
-    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-api:8080/execution/
-    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: admin:admin
-    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /opt/airflow/auth/passwords.json
-    AIRFLOW__API__WORKERS: "1"
-    AIRFLOW__WEBSERVER__DEFAULT_UI_TIMEZONE: Asia/Jakarta
-    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
-    AIRFLOW__SCHEDULER__CATCHUP_BY_DEFAULT: "false"
-    AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: "30"
-    TZ: Asia/Jakarta
-  volumes:
-    - ./data:/opt/kuping-negara/data
-    - airflow-logs:/opt/airflow/logs
-    - airflow-auth:/opt/airflow/auth
-  secrets:
-    - postgres_password
-    - fernet_key
-    - jwt_secret
-  depends_on: &ready
-    postgres:
-      condition: service_healthy
-    airflow-init:
-      condition: service_completed_successfully
-  restart: unless-stopped
-  security_opt:
-    - no-new-privileges:true
-
 services:
   postgres:
     image: postgres:16.13-bookworm
@@ -61,66 +18,61 @@ services:
       retries: 10
     restart: unless-stopped
 
-  airflow-init:
-    <<: *airflow
+  airflow:
+    build:
+      context: .
+      dockerfile: docker/airflow/Dockerfile
+    image: kuping-negara-airflow:3.3.2
+    # Root only prepares mounts; start.py drops to UID 50000 before Airflow starts.
     user: "0:0"
-    entrypoint: /bin/bash
-    command:
-      - -c
-      - >-
-        python /opt/airflow/init.py &&
-        exec /entrypoint bash -c 'airflow db migrate && airflow pools set x_collection 1 "One X collection at a time"'
+    entrypoint: ["/usr/bin/dumb-init", "--", "python", "/opt/airflow/start.py"]
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.api_fastapi.auth.managers.simple.simple_auth_manager.SimpleAuthManager
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: Asia/Jakarta
+      AIRFLOW__CORE__PARALLELISM: "2"
+      AIRFLOW__CORE__FERNET_KEY_CMD: cat /run/secrets/fernet_key
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN_CMD: >-
+        bash -c 'printf "postgresql+psycopg2://airflow:%s@postgres/airflow" "$$(cat /run/secrets/postgres_password)"'
+      AIRFLOW__API_AUTH__JWT_SECRET_CMD: cat /run/secrets/jwt_secret
+      AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://localhost:8080/execution/
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: admin:admin
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /opt/airflow/auth/passwords.json
+      AIRFLOW__API__WORKERS: "1"
+      AIRFLOW__WEBSERVER__DEFAULT_UI_TIMEZONE: Asia/Jakarta
+      AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+      AIRFLOW__SCHEDULER__CATCHUP_BY_DEFAULT: "false"
+      AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: "30"
+      TZ: Asia/Jakarta
+    ports:
+      - "127.0.0.1:8080:8080"
+    shm_size: 1gb
+    volumes:
+      - ./data:/opt/kuping-negara/data
+      - airflow-logs:/opt/airflow/logs
+      - airflow-auth:/opt/airflow/auth
     secrets:
       - postgres_password
       - fernet_key
       - jwt_secret
       - admin_password
+      - x_auth_token
     depends_on:
       postgres:
         condition: service_healthy
-    restart: "no"
-
-  airflow-api:
-    <<: *airflow
-    command: api-server
-    ports:
-      - "127.0.0.1:8080:8080"
     healthcheck:
-      test: [CMD, curl, --fail, http://localhost:8080/api/v2/monitor/health]
+      # Require component heartbeats, rather than just an open UI HTTP port.
+      test: [CMD, python, /opt/airflow/healthcheck.py]
       interval: 20s
       timeout: 10s
       retries: 10
       start_period: 60s
-
-  airflow-scheduler:
-    <<: *airflow
-    command: scheduler
-    shm_size: 1gb
-    secrets:
-      - postgres_password
-      - fernet_key
-      - jwt_secret
-      - x_auth_token
-    depends_on:
-      <<: *ready
-      airflow-api:
-        condition: service_healthy
-    healthcheck:
-      test: [CMD, curl, --fail, http://localhost:8974/health]
-      interval: 20s
-      timeout: 10s
-      retries: 10
-      start_period: 60s
-
-  airflow-dag-processor:
-    <<: *airflow
-    command: dag-processor
-    healthcheck:
-      test: [CMD-SHELL, 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
-      interval: 30s
-      timeout: 15s
-      retries: 10
-      start_period: 60s
+    stop_grace_period: 60s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
 
 secrets:
   postgres_password:

@@ -21,7 +21,8 @@ RUN UV_PROJECT_ENVIRONMENT=/opt/kuping-negara/.venv UV_PYTHON_DOWNLOADS=never \
     uv sync --locked --no-dev --no-editable --python /usr/local/bin/python \
     && chmod -R a+rX /opt/kuping-negara /opt/collector
 COPY dags /opt/airflow/dags
-COPY docker/airflow/init.py docker/airflow/verify_dags.py /opt/airflow/
+COPY docker/airflow/init.py docker/airflow/verify_dags.py \
+    docker/airflow/start.py docker/airflow/healthcheck.py /opt/airflow/
 ENV KUPING_NEGARA_BROWSER_EXECUTABLE=/usr/bin/chromium \
     UV_CACHE_DIR=/home/airflow/.cache/uv \
     KUPING_NEGARA_COLLECTOR=/opt/collector/node_modules/tweet-harvest/dist/bin.js \

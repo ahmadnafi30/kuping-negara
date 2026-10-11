@@ -71,14 +71,14 @@ jobs:
       - name: Validate Compose and build image
         run: |
           docker compose config --quiet
-          docker compose build airflow-api
+          docker compose build airflow
       - name: Start local stack with paused DAGs
         run: docker compose up -d --wait --wait-timeout 180
       - name: Verify DAGs and isolated application environment
         run: |
-          docker compose exec -T airflow-api python /opt/airflow/verify_dags.py
-          docker compose exec -T airflow-api uv pip check --python /opt/kuping-negara/.venv/bin/python
-          docker compose exec -T airflow-api node /opt/collector/verify.cjs
+          docker compose exec -T --user 50000:0 airflow python /opt/airflow/verify_dags.py
+          docker compose exec -T --user 50000:0 airflow uv pip check --python /opt/kuping-negara/.venv/bin/python
+          docker compose exec -T --user 50000:0 airflow node /opt/collector/verify.cjs
       - name: Stop containers
         if: always()
         run: docker compose down
