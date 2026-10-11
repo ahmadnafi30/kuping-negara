@@ -25,9 +25,7 @@ def _run_pipeline(action: str, *arguments: str) -> dict[str, str]:
     # their actual trigger timestamp, avoiding the previous cron's window.
     run = context["dag_run"]
     timestamp = (
-        context["data_interval_end"]
-        if str(run.run_type) == "scheduled"
-        else run.run_after
+        context["data_interval_end"] if run.run_type == "scheduled" else run.run_after
     )
     result = subprocess.run(
         [
