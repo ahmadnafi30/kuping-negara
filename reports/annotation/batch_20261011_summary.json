@@ -1,0 +1,141 @@
+{
+  "batch_id": "20261011T143700+0700",
+  "run_id": "manual__review_batch_20261011T143700+0700",
+  "requested_period": [
+    "2026-10-04",
+    "2026-10-10"
+  ],
+  "requested_limit_per_program": 50,
+  "annotation_source": "ai",
+  "annotation_status": "ai_review_completed",
+  "guideline_version": "0.1.0",
+  "total_manual_rows_reviewed": 200,
+  "relevance_counts": {
+    "irrelevant": 59,
+    "uncertain": 32,
+    "relevant": 109
+  },
+  "sentiment_counts": {
+    "not_labeled_irrelevant": 59,
+    "uncertain": 45,
+    "neutral": 45,
+    "positive": 8,
+    "negative": 43
+  },
+  "ai_training_candidates": 92,
+  "independent_human_validation_completed": false,
+  "training_approved_rows": 0,
+  "completed_at": "2026-10-11T09:31:09.299417+00:00",
+  "programs": [
+    {
+      "target_program": "ckg",
+      "total_rows": 50,
+      "relevance_counts": {
+        "irrelevant": 41,
+        "uncertain": 6,
+        "relevant": 3
+      },
+      "sentiment_counts": {
+        "not_labeled_irrelevant": 41,
+        "uncertain": 7,
+        "neutral": 1,
+        "positive": 1
+      },
+      "language_review_counts": {
+        "non_indonesian": 46,
+        "indonesian": 3,
+        "uncertain": 1
+      },
+      "ai_training_candidates": 0,
+      "training_approved_rows": 0,
+      "source_sha256": "0104914f4ffdf4cbaef2ff499f059127228514c8b52281dcc01ce1a8e0736dc9",
+      "labeled_sha256": "97168cfd994596ae4fcb0ec5f3f76b9353f87d4ab5385027765b724a46ea862a",
+      "decisions_sha256": "9468eb5b49ba3f74c810e8e10c3139ea1f9d1b43a4ca2be5c5807f2619d99816"
+    },
+    {
+      "target_program": "kopdes_merah_putih",
+      "total_rows": 50,
+      "relevance_counts": {
+        "relevant": 31,
+        "uncertain": 17,
+        "irrelevant": 2
+      },
+      "sentiment_counts": {
+        "neutral": 6,
+        "uncertain": 21,
+        "negative": 20,
+        "not_labeled_irrelevant": 2,
+        "positive": 1
+      },
+      "language_review_counts": {
+        "indonesian": 44,
+        "mixed": 3,
+        "uncertain": 1,
+        "non_indonesian": 2
+      },
+      "ai_training_candidates": 27,
+      "training_approved_rows": 0,
+      "source_sha256": "30ce2fdf20fc15ba36c03d8ffdee7a4228a14b2747d3cbcfff89e0f1ee7f93d6",
+      "labeled_sha256": "9be449aeea5c672a1519bdfbbc0d3e6e27291662977e8b2cbfad51d5759ddacc",
+      "decisions_sha256": "571d1dd00ca7775995012706fdb3dfc24c20bf6ca1f0b15c1dc0b18082da2bed"
+    },
+    {
+      "target_program": "mbg",
+      "total_rows": 50,
+      "relevance_counts": {
+        "relevant": 30,
+        "uncertain": 7,
+        "irrelevant": 13
+      },
+      "sentiment_counts": {
+        "negative": 16,
+        "neutral": 6,
+        "uncertain": 14,
+        "not_labeled_irrelevant": 13,
+        "positive": 1
+      },
+      "language_review_counts": {
+        "indonesian": 36,
+        "non_indonesian": 8,
+        "mixed": 3,
+        "uncertain": 3
+      },
+      "ai_training_candidates": 22,
+      "training_approved_rows": 0,
+      "source_sha256": "b54327f3ca71f8a597fb49c0fa74efba848ce28ca3bf6fafd98d33413d85de4b",
+      "labeled_sha256": "8a1a81d7ec5fb77e0f853c5b31194ecf7bcfa8bc49fc0ac1bd63349c41bbb712",
+      "decisions_sha256": "0995df8d2025036695e7abfc1e3d77ac66ecb8d178fc782dd76fd892e27d1f6e"
+    },
+    {
+      "target_program": "sekolah_rakyat",
+      "total_rows": 50,
+      "relevance_counts": {
+        "relevant": 45,
+        "uncertain": 2,
+        "irrelevant": 3
+      },
+      "sentiment_counts": {
+        "neutral": 32,
+        "uncertain": 3,
+        "negative": 7,
+        "not_labeled_irrelevant": 3,
+        "positive": 5
+      },
+      "language_review_counts": {
+        "indonesian": 48,
+        "uncertain": 2
+      },
+      "ai_training_candidates": 43,
+      "training_approved_rows": 0,
+      "source_sha256": "36f42dfea6a1f1cd5a328de68372f5616067b331bdc542681601b96e9735f87b",
+      "labeled_sha256": "e5a33ae011b54ab1cf3592c58aa6aa18794fb2c0526a5a6adafcf894cd00e305",
+      "decisions_sha256": "5f34088909e08c3c33a1c360af6049001c5941d67322e619ce8953df4e567fa4"
+    }
+  ],
+  "limitations": [
+    "AI labels are provisional; no independent human validation or model training performed.",
+    "No media, thread or linked-page context retrieved.",
+    "Duplicate and similarity flags remain in the data; candidate counts are not approved training data.",
+    "Sample is limited to 50 posts per query/program and is not representative of the population."
+  ]
+}

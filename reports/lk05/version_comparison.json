@@ -1,0 +1,28 @@
+{
+  "dataset": "data/raw/lk05_dataset.csv",
+  "v1": {
+    "tag": "lk05-data-v1",
+    "rows": 50,
+    "sha256": "ac67cdb1afc80099646ea3ad5d7c953b02c25703843ab2e475f0fb4ef4caa83f",
+    "md5": "644e1e4e9d4db18c31dd42510b60452e",
+    "bytes": 18950
+  },
+  "v2": {
+    "tag": "lk05-data-v2",
+    "rows": 200,
+    "sha256": "fb3b832aae197fead349a5d045d5ae2b05329b233c2bceaec9b67e1c04500bc6",
+    "md5": "4c49742a13ec88c81119bd00dfa26652",
+    "bytes": 69661
+  },
+  "new_unique_program_post_pairs": 150,
+  "ckg_duplicates_skipped": 50,
+  "raw_ingestions_modified": false,
+  "old_rows_preserved": true,
+  "git_tracks_csv": false,
+  "training_performed": false,
+  "remote_scope": "Machine-local directory; not an off-device backup",
+  "observed_period_wib": [
+    "2026-10-04",
+    "2026-10-10"
+  ]
+}

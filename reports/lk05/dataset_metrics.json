@@ -1,24 +1,48 @@
 {
   "dataset": "data/raw/lk05_dataset.csv",
-  "rows": 50,
-  "previous_rows": 0,
-  "new_unique_rows": 50,
+  "rows": 200,
+  "previous_rows": 50,
+  "new_unique_rows": 150,
   "program_counts": {
-    "ckg": 50
+    "ckg": 50,
+    "mbg": 50,
+    "kopdes_merah_putih": 50,
+    "sekolah_rakyat": 50
   },
-  "previous_sha256": null,
-  "sha256": "ac67cdb1afc80099646ea3ad5d7c953b02c25703843ab2e475f0fb4ef4caa83f",
-  "append": false,
+  "previous_sha256": "ac67cdb1afc80099646ea3ad5d7c953b02c25703843ab2e475f0fb4ef4caa83f",
+  "sha256": "fb3b832aae197fead349a5d045d5ae2b05329b233c2bceaec9b67e1c04500bc6",
+  "append": true,
   "sources": [
     {
-      "path": "data/raw/x/execution=31dedb67c98dcb85ff011ace/collected_date=2026-10-11/program=ckg/run_id=20261011T140019+0700/ckg_2026-10-04_2026-10-10.csv",
-      "sha256": "a1e7f7fe71cd07da3da72b794034683721464ebda88f908703f6a99915c135ae",
+      "path": "data/raw/x/execution=3819ea0636efb8a2ff2445b4/collected_date=2026-10-11/program=mbg/run_id=20261011T143645+0700/mbg_2026-10-04_2026-10-10.csv",
+      "sha256": "a8f821a8de7fa426d2ed091ca8d0e56874a54fa8a144354da19eb30e8f511a97",
+      "rows_read": 50,
+      "rows_added": 50,
+      "duplicate_keys_skipped": 0
+    },
+    {
+      "path": "data/raw/x/execution=ce428e23c3e3db93a0ac900b/collected_date=2026-10-11/program=ckg/run_id=20261011T143649+0700/ckg_2026-10-04_2026-10-10.csv",
+      "sha256": "5f1245d2462d99f29123d059963679337735412d19eb15c7987c05efddf415ce",
+      "rows_read": 50,
+      "rows_added": 0,
+      "duplicate_keys_skipped": 50
+    },
+    {
+      "path": "data/raw/x/execution=12d57ca5736533f5de98b999/collected_date=2026-10-11/program=kopdes_merah_putih/run_id=20261011T143653+0700/kopdes_merah_putih_2026-10-04_2026-10-10.csv",
+      "sha256": "a33e64c339ca69f5c2d7c35ec605a180a012840a0b4ae458e2b77876c339cea4",
+      "rows_read": 50,
+      "rows_added": 50,
+      "duplicate_keys_skipped": 0
+    },
+    {
+      "path": "data/raw/x/execution=f3036f5a22cbb8d70ec4ce41/collected_date=2026-10-11/program=sekolah_rakyat/run_id=20261011T143659+0700/sekolah_rakyat_2026-10-04_2026-10-10.csv",
+      "sha256": "50f4d94868823e356908df8d3c6d73bbbdd525d44998fdc52628b4c61fba6381",
       "rows_read": 50,
       "rows_added": 50,
       "duplicate_keys_skipped": 0
     }
   ],
-  "created_at": "2026-10-11T08:08:48.851645+00:00",
+  "created_at": "2026-10-11T09:36:36.762557+00:00",
   "training_performed": false,
   "note": "Data versioning simulation using real completed ingestions; no labels or model weights are changed."
 }

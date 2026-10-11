@@ -10,7 +10,7 @@ hanya melalui mode append yang eksplisit.
 | Versi | Tag Git | Baris | Program | MD5 DVC |
 | --- | --- | ---: | --- | --- |
 | Awal | `lk05-data-v1` | 50 | CKG | `644e1e4e9d4db18c31dd42510b60452e` |
-| Tambahan | `lk05-data-v2` | 200 | MBG, CKG, Kopdes, Sekolah Rakyat: 50 masing-masing | Lihat penunjuk `.dvc` pada tag v2 |
+| Tambahan | `lk05-data-v2` | 200 | MBG, CKG, Kopdes, Sekolah Rakyat: 50 masing-masing | `4c49742a13ec88c81119bd00dfa26652` |
 
 Versi awal berasal dari koleksi CKG yang tervalidasi. Koleksi manual berikutnya
 berhasil untuk empat program dalam periode 4-10 Oktober 2026 WIB. Append
