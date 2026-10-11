@@ -6,9 +6,11 @@ import os
 import shutil
 import sys
 from collections.abc import Mapping
+from datetime import date
 from pathlib import Path
 
 from kuping_negara.ingestion.storage import CollectionError
+from kuping_negara.ingestion.validation import collection_bounds
 
 BROWSER_EXECUTABLE_ENV = "KUPING_NEGARA_BROWSER_EXECUTABLE"
 BROWSER_HOOK_PATH = Path("scripts/tweet_harvest_browser_hook.cjs")
@@ -64,11 +66,17 @@ def build_tweet_harvest_environment(
     repository_root: Path,
     browser_executable: Path | None,
     base_environment: Mapping[str, str] | None = None,
+    collection_start: date | None = None,
+    collection_end: date | None = None,
 ) -> dict[str, str]:
     """Build an isolated child environment with an optional browser fallback."""
     environment = dict(os.environ if base_environment is None else base_environment)
-    if browser_executable is None:
-        return environment
+    if (collection_start is None) != (collection_end is None):
+        raise ValueError("Both collection dates are required")
+    if collection_start is not None:
+        start, end = collection_bounds(collection_start, collection_end)
+        environment["KUPING_NEGARA_WINDOW_START"] = start.isoformat()
+        environment["KUPING_NEGARA_WINDOW_END"] = end.isoformat()
 
     hook_path = (repository_root / BROWSER_HOOK_PATH).resolve()
     if not hook_path.is_file():
@@ -79,5 +87,6 @@ def build_tweet_harvest_environment(
     environment["NODE_OPTIONS"] = " ".join(
         option for option in (existing_options, require_option) if option
     )
-    environment[BROWSER_EXECUTABLE_ENV] = str(browser_executable.resolve())
+    if browser_executable is not None:
+        environment[BROWSER_EXECUTABLE_ENV] = str(browser_executable.resolve())
     return environment

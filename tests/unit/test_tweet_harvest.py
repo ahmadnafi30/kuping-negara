@@ -101,7 +101,7 @@ def test_build_command_contains_collection_options_without_a_token() -> None:
         "-s",
         '("sekolah rakyat")',
         "-f",
-        "14-09-2026",
+        "13-09-2026",
         "--to",
         "22-09-2026",
         "-l",

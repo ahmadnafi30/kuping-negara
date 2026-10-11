@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
 import pandas as pd
@@ -153,3 +153,51 @@ def test_preprocess_rejects_header_only_dataset() -> None:
             collected_at=datetime(2026, 9, 21, 18, 25, 24, tzinfo=JAKARTA_TIMEZONE),
             keywords=["mbg"],
         )
+
+
+@pytest.mark.parametrize(
+    "text", ["@mbg https://example.test", "https://example.test/mbg", "@mbg"]
+)
+def test_empty_cleaned_text_is_never_eligible(text):
+    source = _source_frame().iloc[[0]].copy()
+    source.loc[0, "full_text"] = text
+    result = preprocess_tweet_harvest_frame(
+        source,
+        program_id="mbg",
+        ingestion_run_id="run",
+        collected_at=datetime(2026, 9, 21, tzinfo=JAKARTA_TIMEZONE),
+        keywords=["mbg"],
+    )
+    assert result.records.iloc[0]["cleaned_text"] == ""
+    assert result.records.iloc[0]["quality_status"] == "empty_cleaned_text"
+    assert not result.records.iloc[0]["is_eligible_for_labeling"]
+    assert result.report["empty_cleaned_text_rows"] == 1
+
+
+def test_mentions_and_links_are_not_keyword_evidence():
+    source = _source_frame().iloc[[0]].copy()
+    source.loc[0, "full_text"] = "@mbg berita https://example.test/mbg"
+    result = preprocess_tweet_harvest_frame(
+        source,
+        program_id="mbg",
+        ingestion_run_id="run",
+        collected_at=datetime(2026, 9, 21, tzinfo=JAKARTA_TIMEZONE),
+        keywords=["mbg"],
+    )
+    assert result.records.iloc[0]["quality_status"] == "review_relevance"
+    assert not result.records.iloc[0]["is_relevant"]
+
+
+@pytest.mark.parametrize("collection_timezone", [JAKARTA_TIMEZONE, UTC])
+def test_temporal_groups_follow_jakarta_calendar(collection_timezone):
+    source = _source_frame().iloc[[0]].copy()
+    source.loc[0, "created_at"] = "2026-09-30T18:00:00Z"
+    result = preprocess_tweet_harvest_frame(
+        source,
+        program_id="mbg",
+        ingestion_run_id="run",
+        collected_at=datetime(2026, 10, 1, tzinfo=collection_timezone),
+        keywords=["mbg"],
+    )
+    assert result.records.iloc[0]["year_month"] == "2026-10"
+    assert result.records.iloc[0]["published_at"] == "2026-09-30T18:00:00Z"

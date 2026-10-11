@@ -6,18 +6,26 @@ import argparse
 import csv
 import hashlib
 import json
+import re
 import sys
+import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any
 
 import pandas as pd
 import yaml
 
 from kuping_negara.configuration import load_programs
+from kuping_negara.ingestion.storage import CollectionError
+from kuping_negara.ingestion.validation import validate_collection_manifest
 from kuping_negara.paths import DEFAULT_CONFIG_PATH, JAKARTA_TIMEZONE
+from kuping_negara.preprocessing.history import (
+    PREPROCESSING_VERSION,
+    eligible_tweet_ids,
+    preprocessing_lock,
+)
 from kuping_negara.preprocessing.x_posts import (
     PreprocessingError,
     preprocess_tweet_harvest_frame,
@@ -115,83 +123,121 @@ def run_preprocessing(
     output_root: Path,
     config_path: Path,
     processed_at: datetime | None = None,
+    namespace: str | None = None,
+    reuse_existing: bool = False,
+    require_manifest: bool = False,
 ) -> PreprocessingArtifacts:
-    """Preprocess one immutable raw CSV and persist records plus a report."""
-
+    """Validate, deduplicate against completed runs, and atomically publish."""
     resolved_input = input_path.resolve()
+    output_root = output_root.resolve()
+    config_path = config_path.resolve()
     if not resolved_input.is_file():
         raise PreprocessingPipelineError(f"raw CSV not found: {resolved_input}")
+    if namespace is not None and not re.fullmatch(r"execution=[a-f0-9]{24}", namespace):
+        raise PreprocessingPipelineError("Invalid execution namespace")
     metadata = parse_raw_partition_path(resolved_input)
-    keywords = _load_program_keywords(config_path.resolve(), metadata.program_id)
+    keywords = _load_program_keywords(config_path, metadata.program_id)
     execution_time = _validate_processed_at(
         processed_at or datetime.now(JAKARTA_TIMEZONE)
     )
     input_sha256 = _sha256(resolved_input)
-
-    source = pd.read_csv(
-        resolved_input,
-        encoding="utf-8-sig",
-        dtype=str,
-        keep_default_na=False,
-    )
-    result = preprocess_tweet_harvest_frame(
-        source,
-        program_id=metadata.program_id,
-        ingestion_run_id=metadata.ingestion_run_id,
-        collected_at=metadata.collected_at,
-        keywords=keywords,
-    )
-    records = result.records.copy()
-    records["data_version"] = f"sha256:{input_sha256}"
-    records["processed_at"] = execution_time.isoformat()
-
+    config_sha256 = _sha256(config_path)
+    try:
+        collection_validation = validate_collection_manifest(
+            resolved_input,
+            required=require_manifest,
+            config_path=config_path,
+        )
+    except CollectionError as error:
+        raise PreprocessingPipelineError(str(error)) from error
+    destination_directory = output_root
+    if namespace:
+        destination_directory /= namespace
     destination_directory = (
-        output_root.resolve()
+        destination_directory
         / f"processed_date={execution_time.date().isoformat()}"
         / f"program={metadata.program_id}"
         / f"run_id={metadata.ingestion_run_id}"
     )
-    try:
-        destination_directory.mkdir(parents=True, exist_ok=False)
-    except FileExistsError as error:
-        raise PreprocessingPipelineError(
-            f"processed run already exists: {destination_directory}"
-        ) from error
-
     records_path = destination_directory / f"{resolved_input.stem}_processed.csv"
     report_path = destination_directory / "quality_report.json"
-    records.to_csv(
-        records_path,
-        index=False,
-        encoding="utf-8-sig",
-        quoting=csv.QUOTE_ALL,
-        lineterminator="\n",
-    )
-    output_sha256 = _sha256(records_path)
-
-    report: dict[str, Any] = {
-        **result.report,
-        "program_id": metadata.program_id,
-        "ingestion_run_id": metadata.ingestion_run_id,
-        "processed_at": execution_time.isoformat(),
-        "input_file": resolved_input.name,
-        "input_sha256": input_sha256,
-        "output_file": records_path.name,
-        "output_sha256": output_sha256,
-        "data_version": f"sha256:{input_sha256}",
-        "output_columns": list(records.columns),
-    }
-    report_path.write_text(
-        json.dumps(report, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-
-    if _sha256(resolved_input) != input_sha256:
-        raise PreprocessingPipelineError("raw CSV changed during preprocessing")
-    return PreprocessingArtifacts(
-        records_path=records_path,
-        report_path=report_path,
-    )
+    try:
+        with preprocessing_lock(output_root):
+            if destination_directory.exists():
+                if not reuse_existing:
+                    raise PreprocessingPipelineError(
+                        f"processed run already exists: {destination_directory}"
+                    )
+                report = json.loads(report_path.read_text(encoding="utf-8"))
+                if (
+                    report.get("preprocessing_version") != PREPROCESSING_VERSION
+                    or report["input_sha256"] != input_sha256
+                    or report["output_sha256"] != _sha256(records_path)
+                    or report["config_sha256"] != config_sha256
+                ):
+                    raise PreprocessingPipelineError(
+                        "Existing processed run has changed or uses outdated rules"
+                    )
+                return PreprocessingArtifacts(records_path, report_path)
+            previous_ids = eligible_tweet_ids(output_root)
+            source = pd.read_csv(
+                resolved_input, encoding="utf-8-sig", dtype=str, keep_default_na=False
+            )
+            result = preprocess_tweet_harvest_frame(
+                source,
+                program_id=metadata.program_id,
+                ingestion_run_id=metadata.ingestion_run_id,
+                collected_at=metadata.collected_at,
+                keywords=keywords,
+                previous_tweet_ids=previous_ids,
+            )
+            records = result.records.copy()
+            records["data_version"] = f"sha256:{input_sha256}"
+            records["processed_at"] = execution_time.isoformat()
+            with tempfile.TemporaryDirectory(
+                prefix=".preprocess-", dir=output_root
+            ) as temporary:
+                staging = Path(temporary)
+                staged_records = staging / records_path.name
+                records.to_csv(
+                    staged_records,
+                    index=False,
+                    encoding="utf-8-sig",
+                    quoting=csv.QUOTE_ALL,
+                    lineterminator="\n",
+                )
+                report = {
+                    **result.report,
+                    "program_id": metadata.program_id,
+                    "ingestion_run_id": metadata.ingestion_run_id,
+                    "processed_at": execution_time.isoformat(),
+                    "input_file": resolved_input.name,
+                    "input_sha256": input_sha256,
+                    "output_file": records_path.name,
+                    "output_sha256": _sha256(staged_records),
+                    "config_sha256": config_sha256,
+                    "preprocessing_version": PREPROCESSING_VERSION,
+                    "collection_validation": collection_validation,
+                    "deduplication_history_ids": len(previous_ids),
+                    "data_version": f"sha256:{input_sha256}",
+                    "output_columns": list(records.columns),
+                }
+                (staging / "quality_report.json").write_text(
+                    json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8",
+                )
+                if (
+                    _sha256(resolved_input) != input_sha256
+                    or _sha256(config_path) != config_sha256
+                ):
+                    raise PreprocessingPipelineError(
+                        "Raw CSV or configuration changed during preprocessing"
+                    )
+                destination_directory.parent.mkdir(parents=True, exist_ok=True)
+                staging.rename(destination_directory)
+    except (ValueError, KeyError, TimeoutError) as error:
+        raise PreprocessingPipelineError(str(error)) from error
+    return PreprocessingArtifacts(records_path=records_path, report_path=report_path)
 
 
 def _build_parser() -> argparse.ArgumentParser:

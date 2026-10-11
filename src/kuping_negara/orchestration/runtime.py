@@ -8,6 +8,7 @@ import json
 import os
 import signal
 import subprocess
+import sys
 import tempfile
 from collections.abc import Callable
 from datetime import date, datetime, timedelta
@@ -21,12 +22,16 @@ from kuping_negara.ingestion.queries import (
     build_tweet_harvest_command,
 )
 from kuping_negara.ingestion.storage import CollectionError, finalize_output
+from kuping_negara.ingestion.validation import (
+    validate_collection,
+    validate_collection_manifest,
+)
 from kuping_negara.paths import DEFAULT_CONFIG_PATH, JAKARTA_TIMEZONE
 from kuping_negara.preprocessing.x_pipeline import (
     PreprocessingPipelineError,
-    parse_raw_partition_path,
     run_preprocessing,
 )
+from kuping_negara.preprocessing.x_posts import PreprocessingError
 
 CollectorRunner = Callable[[list[str], Path, dict[str, str]], None]
 
@@ -126,8 +131,12 @@ def collect_scheduled(
     }
     if destination.exists():
         manifest = json.loads((destination / "collection.json").read_text())
-        if manifest != {**metadata, "input_sha256": sha256(csv_path)}:
+        existing = {
+            key: value for key, value in manifest.items() if key != "validation"
+        }
+        if existing != {**metadata, "input_sha256": sha256(csv_path)}:
             raise CollectionError("Existing raw run has changed; refusing to overwrite")
+        validate_collection_manifest(csv_path, config_path=config_path)
         return csv_path
 
     token_file = Path(os.environ.get("KUPING_NEGARA_TOKEN_FILE", ""))
@@ -151,6 +160,8 @@ def collect_scheduled(
         repository_root=root,
         browser_executable=browser,
         base_environment=os.environ,
+        collection_start=start,
+        collection_end=end,
     )
     environment["NODE_OPTIONS"] += (
         f' --require="{root / "scripts/tweet_harvest_secret_hook.cjs"}"'
@@ -161,6 +172,10 @@ def collect_scheduled(
     with tempfile.TemporaryDirectory(prefix=".collect-", dir=raw_root) as temporary:
         staging = Path(temporary)
         runner(command, staging, environment)
+        candidate = staging / "tweets-data" / f"{output_name}.csv"
+        if not candidate.is_file():
+            raise CollectionError("Collector did not produce a CSV")
+        validation = validate_collection(candidate, start=start, end=end, limit=limit)
         collected = finalize_output(
             repository_root=staging,
             output_name=output_name,
@@ -169,7 +184,14 @@ def collect_scheduled(
             collected_date=timestamp.date(),
         )
         (collected.parent / "collection.json").write_text(
-            json.dumps({**metadata, "input_sha256": sha256(collected)}, indent=2)
+            json.dumps(
+                {
+                    **metadata,
+                    "input_sha256": sha256(collected),
+                    "validation": validation,
+                },
+                indent=2,
+            )
             + "\n",
             encoding="utf-8",
         )
@@ -191,45 +213,19 @@ def preprocess_scheduled(
     raw_path = raw_path.resolve()
     if not raw_path.is_relative_to(root / "data/raw/x"):
         raise ValueError("Scheduled preprocessing input must be in data/raw/x")
-    metadata = parse_raw_partition_path(raw_path)
-    timestamp = scheduled_at.astimezone(JAKARTA_TIMEZONE)
-    output_root = root / "data/processed/x"
-    destination = (
-        output_root
-        / f"execution={execution_key(execution_id)}"
-        / f"processed_date={timestamp.date().isoformat()}"
-        / f"program={metadata.program_id}"
-        / f"run_id={metadata.ingestion_run_id}"
+    artifacts = run_preprocessing(
+        input_path=raw_path,
+        output_root=root / "data/processed/x",
+        config_path=root / DEFAULT_CONFIG_PATH,
+        processed_at=scheduled_at.astimezone(JAKARTA_TIMEZONE),
+        namespace=f"execution={execution_key(execution_id)}",
+        reuse_existing=True,
+        require_manifest=True,
     )
-    records_path = destination / f"{raw_path.stem}_processed.csv"
-    report_path = destination / "quality_report.json"
-    config_path = root / DEFAULT_CONFIG_PATH
-    if destination.exists():
-        report = json.loads(report_path.read_text(encoding="utf-8"))
-        if (
-            report["input_sha256"] != sha256(raw_path)
-            or report["output_sha256"] != sha256(records_path)
-            or report["config_sha256"] != sha256(config_path)
-        ):
-            raise PreprocessingPipelineError("Existing processed run has changed")
-    else:
-        output_root.mkdir(parents=True, exist_ok=True)
-        with tempfile.TemporaryDirectory(prefix=".preprocess-", dir=output_root) as tmp:
-            artifacts = run_preprocessing(
-                input_path=raw_path,
-                output_root=Path(tmp),
-                config_path=config_path,
-                processed_at=timestamp,
-            )
-            report = json.loads(artifacts.report_path.read_text(encoding="utf-8"))
-            report["config_sha256"] = sha256(config_path)
-            artifacts.report_path.write_text(
-                json.dumps(report, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
-            )
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            artifacts.report_path.parent.rename(destination)
-    return {"records_path": str(records_path), "report_path": str(report_path)}
+    return {
+        "records_path": str(artifacts.records_path),
+        "report_path": str(artifacts.report_path),
+    }
 
 
 def main() -> None:
@@ -269,4 +265,13 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (
+        CollectionError,
+        PreprocessingError,
+        PreprocessingPipelineError,
+        ValueError,
+    ) as error:
+        print(json.dumps({"error": str(error)}), file=sys.stderr)
+        raise SystemExit(1) from None

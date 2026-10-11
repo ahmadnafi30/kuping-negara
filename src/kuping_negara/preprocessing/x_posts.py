@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
 import pandas as pd
 
+from kuping_negara.paths import JAKARTA_TIMEZONE
 from kuping_negara.preprocessing.text import clean_text, match_keyword
 
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = "2"
 SOURCE_PLATFORM = "x"
 REQUIRED_SOURCE_COLUMNS = {
     "conversation_id_str",
@@ -66,10 +67,12 @@ def _isoformat_utc(timestamp: pd.Timestamp) -> str:
 
 
 def _quality_status(
-    *, is_duplicate: bool, is_indonesian: bool, is_relevant: bool
+    *, is_duplicate: bool, is_indonesian: bool, is_relevant: bool, is_empty: bool
 ) -> str:
     if is_duplicate:
         return "duplicate"
+    if is_empty:
+        return "empty_cleaned_text"
     if not is_indonesian and not is_relevant:
         return "review_language_and_relevance"
     if not is_indonesian:
@@ -86,6 +89,7 @@ def preprocess_tweet_harvest_frame(
     ingestion_run_id: str,
     collected_at: datetime,
     keywords: Sequence[str],
+    previous_tweet_ids: Collection[str] = (),
 ) -> PreprocessingResult:
     """Map Tweet Harvest fields to the canonical processed-data contract.
 
@@ -119,7 +123,8 @@ def preprocess_tweet_harvest_frame(
     tweet_ids = source["id_str"].fillna("").astype(str).str.strip()
     if tweet_ids.eq("").any():
         raise PreprocessingError("id_str must not be empty")
-    duplicate_flags = tweet_ids.duplicated(keep="first")
+    across_run_flags = tweet_ids.isin(previous_tweet_ids)
+    duplicate_flags = tweet_ids.duplicated(keep="first") | across_run_flags
 
     published_at = pd.to_datetime(
         source["created_at"], errors="coerce", utc=True, format="mixed"
@@ -136,28 +141,32 @@ def preprocess_tweet_harvest_frame(
     }
     cleaned_text = raw_text.map(clean_text)
     matched_keywords = pd.Series(
-        [match_keyword(value, keywords) for value in raw_text],
+        [match_keyword(value, keywords) for value in cleaned_text],
         index=source.index,
         dtype=object,
     )
     languages = _to_optional_string(source["lang"])
     indonesian_flags = languages.eq("in")
     relevance_flags = matched_keywords.notna()
+    empty_cleaned_flags = cleaned_text.str.strip().eq("")
     quality_statuses = [
         _quality_status(
             is_duplicate=bool(is_duplicate),
             is_indonesian=bool(is_indonesian),
             is_relevant=bool(is_relevant),
+            is_empty=bool(is_empty),
         )
-        for is_duplicate, is_indonesian, is_relevant in zip(
+        for is_duplicate, is_indonesian, is_relevant, is_empty in zip(
             duplicate_flags,
             indonesian_flags,
             relevance_flags,
+            empty_cleaned_flags,
             strict=True,
         )
     ]
     eligible_flags = [status == "accepted" for status in quality_statuses]
-    iso_calendar = published_at.dt.isocalendar()
+    local_published = published_at.dt.tz_convert(JAKARTA_TIMEZONE)
+    iso_calendar = local_published.dt.isocalendar()
 
     records = pd.DataFrame(
         {
@@ -177,12 +186,14 @@ def preprocess_tweet_harvest_frame(
                     iso_calendar["year"], iso_calendar["week"], strict=True
                 )
             ],
-            "year_month": published_at.dt.strftime("%Y-%m"),
+            "year_month": local_published.dt.strftime("%Y-%m"),
             **engagement,
             "ingestion_run_id": ingestion_run_id,
             "schema_version": SCHEMA_VERSION,
             "source_platform": SOURCE_PLATFORM,
             "is_duplicate": duplicate_flags,
+            "is_duplicate_across_runs": across_run_flags,
+            "is_empty_cleaned_text": empty_cleaned_flags,
             "is_indonesian": indonesian_flags,
             "is_relevant": relevance_flags,
             "is_eligible_for_labeling": eligible_flags,
@@ -195,6 +206,9 @@ def preprocess_tweet_harvest_frame(
         "source_rows": int(len(source)),
         "processed_rows": int(len(records)),
         "duplicate_tweet_ids": int(duplicate_flags.sum()),
+        "duplicate_tweet_ids_across_runs": int(across_run_flags.sum()),
+        "empty_cleaned_text_rows": int(empty_cleaned_flags.sum()),
+        "deduplication_scope": "global_tweet_id",
         "eligible_for_labeling": int(sum(eligible_flags)),
         "quality_status_counts": {
             str(status): int(count) for status, count in status_counts.items()

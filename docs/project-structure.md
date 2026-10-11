@@ -14,10 +14,13 @@ dibuat ketika pekerjaan dimulai, bukan sebagai placeholder.
 | `ingestion/queries.py` | Membentuk query, rentang tanggal, dan argumen Tweet Harvest |
 | `ingestion/browser.py` | Menemukan browser dan menyiapkan environment proses anak |
 | `ingestion/storage.py` | Memvalidasi staging CSV dan memindahkannya ke raw zone |
+| `ingestion/validation.py` | Memeriksa CSV, batas tanggal WIB/jumlah, checksum, dan manifest |
 | `ingestion/tweet_harvest.py` | CLI dan orkestrasi koleksi; entry point `collect-x-data` |
 | `preprocessing/text.py` | Normalisasi Unicode, cleaning, dan pencocokan keyword |
 | `preprocessing/x_posts.py` | Transformasi DataFrame dan ringkasan flag kualitas |
+| `preprocessing/history.py` | Lock publikasi dan riwayat ID eligible lintas run/program |
 | `preprocessing/x_pipeline.py` | Lineage file, checksum, persistensi, dan CLI `preprocess-x-data` |
+| `orchestration/audit.py` | Mengarantina processed lama/invalid tanpa mengubah raw |
 | `orchestration/runtime.py` | Koleksi tanpa prompt, isolasi run, publish atomik, dan validasi retry |
 
 CLI tetap menggunakan entry point yang sama. Import fungsi lama di
@@ -44,8 +47,9 @@ preprocessing pipeline ──> configuration / paths / x_posts ──> text
 | `configs/keywords/` | YAML versi 1 dan dokumentasi keyword; tanpa token |
 | `configs/schemas/` | Rancangan kontrak JSON Schema; validator runtime belum terintegrasi |
 | `data/raw/` | Raw CSV lokal, dipartisi menurut tanggal/program/run; immutable |
+| `data/quarantine/` | Output processed lama/invalid; dikecualikan dari labeling/training |
 | `data/processed/` | CSV dan laporan kualitas lokal; run lama tidak ditimpa |
-| `scripts/` | Hook browser Node.js yang digunakan kolektor |
+| `scripts/` | Hook browser, perbaikan integritas collector, dan adapter secret Node.js |
 | `dags/` | Empat jadwal Airflow yang memanggil runtime dalam virtual environment terpisah |
 | `docker/` dan `compose.yaml` | Stack Airflow/PostgreSQL, image, lock Node, dan setup secrets lokal |
 | `docs/archive/` | Riwayat desain yang belum diimplementasikan |

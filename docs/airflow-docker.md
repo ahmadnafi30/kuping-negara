@@ -36,7 +36,7 @@ Setiap DAG menjalankan `collect → preprocess`. Rentang pengambilan adalah
 tujuh hari kalender penuh sebelum hari jadwal, dengan timezone `Asia/Jakarta`.
 Contoh: Senin 12 Oktober 2026 pukul 23.59 mengambil 5–11 Oktober inklusif.
 Hari pengambilan tidak disertakan karena belum selesai. Batas awal 50 tweet
-per run; ini batas permintaan kolektor, bukan jaminan jumlah hasil.
+per run; hasil boleh kurang dari 50, tetapi tidak boleh melebihi batas ini.
 
 Pengulangan tugas menggunakan timestamp dan ID run yang sama. Run manual memakai
 waktu pemicuannya. Bukan waktu worker mulai berjalan: keterlambatan task tidak
@@ -89,15 +89,31 @@ menampilkan jam yang sama dengan tabel.
 
 File diproses di direktori sementara lalu dipublikasikan sekaligus. Kegagalan
 kolektor, termasuk saat CSV parsial sudah ditulis, tidak menghasilkan raw run
-yang dianggap berhasil. CSV kosong/gagal tidak dilanjutkan ke preprocessing.
+yang dianggap berhasil. CSV kosong/gagal, tanggal di luar periode WIB, timestamp invalid, atau jumlah
+melebihi batas tidak dilanjutkan ke preprocessing.
 Hasil sukses dipakai ulang pada retry setelah checksum diverifikasi; hasil yang
 berubah atau konfigurasi yang berbeda ditolak, bukan ditimpa. Run manual baru
-mendapat namespace berbeda.
+mendapat namespace berbeda. Preprocessing memakai satu lock bersama dan
+riwayat ID lintas run/program, sehingga tweet yang sudah eligible tidak
+lolos ulang. Teks kosong setelah cleaning selalu diblokir dari pelabelan.
 
 Tugas memiliki satu retry setelah lima menit, timeout, dan batas satu run aktif
 per DAG. Pool `x_collection` membatasi pengumpulan menjadi satu tugas pada satu
 waktu untuk mengurangi beban akun. Penjadwalan mengikuti cron pada DAG; metadata
 `collection_day` dalam YAML harus dijaga konsisten saat hari jadwal diubah.
+
+## Validasi collector dan output lama
+
+Adapter memeriksa source Tweet Harvest 2.7.1 sebelum menerapkan perbaikan dalam
+memori: menunggu pencarian selesai diisi, menerima respons pencarian bertanggal,
+memfilter timestamp dengan batas tepat Asia/Jakarta, dan memotong batch sesuai
+sisa limit. Batch kosong tidak ditulis agar header CSV tetap utuh. Versi/source yang berbeda ditolak agar perubahan upstream tidak
+melewati pemeriksaan. Python memvalidasi ulang CSV sebelum publikasi dan pada
+retry/preprocessing, lalu merekam buktinya dalam `collection.json`.
+
+Output aturan lama harus diaudit sebelum dipakai. Ikuti prosedur karantina pada
+[panduan preprocessing](x-data-preprocessing.md#integrity-gates-and-cross-run-history).
+Raw tetap disimpan; hasil karantina tidak boleh masuk labeling/training.
 
 ## Batas keamanan
 

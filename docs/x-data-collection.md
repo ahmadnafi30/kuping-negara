@@ -93,8 +93,13 @@ uv run --locked collect-x-data `
 ```
 
 `--from-date` and `--to-date` are inclusive. The example covers 14 September
-through 21 September 2026. Internally, the collector passes 22 September to
-Tweet Harvest because X treats `until` as an exclusive boundary.
+through 21 September 2026 in Asia/Jakarta. X searches use UTC calendar dates,
+so the adapter passes 13 September as the broad `since` boundary and
+22 September as exclusive `until`. It then filters each timestamp against the
+exact Jakarta interval (13 September 17:00 UTC through 21 September 17:00 UTC,
+end exclusive) before counting toward the limit. A checked in-memory fix also
+awaits the search form before consuming responses; unknown collector source
+versions fail instead of collecting unfiltered initial results.
 
 Keyword queries prioritize recall. Acronyms remain unquoted, multi-word names
 use exact-phrase quotes, and ingestion does not apply `lang:id`. Language and
@@ -104,19 +109,22 @@ discarded before the raw zone.
 ## Raw Output Layout
 
 Tweet Harvest first writes a staging CSV under `tweets-data/`. After a
-successful run, the collector requires a non-empty file and moves it to:
+successful run, the collector validates a non-empty CSV, every publication
+timestamp in the requested Jakarta period, and a hard row limit, then moves it to:
 
 ```text
 data/raw/x/
 └── collected_date=YYYY-MM-DD/
     └── program=<program_id>/
         └── run_id=<Asia-Jakarta-timestamp>/
-            └── <program_id>_<from-date>_<to-date>.csv
+            ├── <program_id>_<from-date>_<to-date>.csv
+            └── collection.json
 ```
 
 The unique `run_id` prevents a later ingestion run from overwriting an earlier
 raw dataset. Both `tweets-data/` and raw dataset contents are ignored by Git.
-DVC versioning can track the raw zone in a later implementation phase.
+The manifest records requested dates/limit, input/configuration hashes, and
+validation evidence. DVC versioning can track the raw zone in a later phase.
 
 ## CLI Options
 

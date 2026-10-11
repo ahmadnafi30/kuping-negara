@@ -9,6 +9,8 @@ arsitektur lengkap ada dalam [proposal](project-proposal.md).
 - Konfigurasi keyword bersama dengan validasi input.
 - Pengumpulan X interaktif menggunakan Tweet Harvest, dry run, dan raw partition.
 - Preprocessing deterministik, pemetaan field, flag review, dan lineage SHA-256.
+- Validasi periode WIB dan batas hasil; teks kosong diblokir, duplikat lintas run,
+  dan audit karantina output lama.
 - Pedoman anotasi manual serta rancangan JSON Schema.
 - Pengujian unit/integrasi, pemeriksaan format dan lint, serta CI.
 - Airflow Docker lokal: empat jadwal mingguan 23.59 WIB, collect → preprocess,
@@ -18,7 +20,7 @@ arsitektur lengkap ada dalam [proposal](project-proposal.md).
 
 | Tahap | Pekerjaan | Bukti selesai |
 | --- | --- | --- |
-| Kualitas data | Integrasikan JSON Schema dan tentukan penanganan invalid/empty cleaned text | Tes kontrak, laporan kualitas, dan aturan review |
+| Kualitas data | Integrasikan JSON Schema dan perluas deteksi perubahan bahasa/relevansi | Tes kontrak, laporan kualitas, dan aturan review |
 | Dataset berlabel | Anotasi, adjudication, dan split berbasis waktu/conversation | Dataset version dan laporan agreement |
 | Baseline model | Training/evaluation scikit-learn | Macro-F1 dan recall per kelas dengan split terdokumentasi |
 | Eksperimen model | Bandingkan kandidat model Bahasa Indonesia | Metrik, biaya inference, calibration, dan lineage |

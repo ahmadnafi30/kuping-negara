@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import subprocess
 import sys
@@ -27,6 +28,7 @@ from kuping_negara.ingestion.queries import (
     parse_collection_window,
 )
 from kuping_negara.ingestion.storage import CollectionError, finalize_output
+from kuping_negara.ingestion.validation import sha256_file, validate_collection
 from kuping_negara.paths import (
     DEFAULT_CONFIG_PATH,
     JAKARTA_TIMEZONE,
@@ -129,6 +131,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         execution_environment = build_tweet_harvest_environment(
             repository_root=repository_root,
             browser_executable=browser_executable,
+            collection_start=start,
+            collection_end=end,
         )
     except (ValueError, CollectionError) as error:
         print(f"Error: {error}", file=sys.stderr)
@@ -164,6 +168,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             return completed_process.returncode
 
         try:
+            candidate = repository_root / "tweets-data" / f"{output_name}.csv"
+            validation = validate_collection(
+                candidate, start=start, end=end, limit=arguments.limit
+            )
             destination = finalize_output(
                 repository_root=repository_root,
                 output_name=output_name,
@@ -174,6 +182,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         except CollectionError as error:
             print(f"Error: {error}", file=sys.stderr)
             return 1
+        (destination.parent / "collection.json").write_text(
+            json.dumps(
+                {
+                    "query": build_search_query(
+                        selected_programs[program_id]["keywords"]
+                    ),
+                    "from_date": start.isoformat(),
+                    "to_date": end.isoformat(),
+                    "limit": arguments.limit,
+                    "config_sha256": sha256_file(config_path),
+                    "input_sha256": sha256_file(destination),
+                    "validation": validation,
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
         collected_paths.append(destination)
         print(f"Saved: {destination.relative_to(repository_root)}")
 

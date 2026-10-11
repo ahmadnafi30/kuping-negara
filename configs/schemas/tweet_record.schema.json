@@ -48,7 +48,22 @@
     "ingestion_run_id": { "type": "string", "minLength": 1 },
     "data_version": { "type": ["string", "null"] },
     "model_version": { "type": ["string", "null"] },
-    "schema_version": { "type": "string", "minLength": 1 }
+    "schema_version": { "type": "string", "minLength": 1 },
+    "source_platform": { "const": "x" },
+    "processed_at": { "type": "string", "format": "date-time" },
+    "is_duplicate": { "type": "boolean" },
+    "is_duplicate_across_runs": { "type": "boolean" },
+    "is_empty_cleaned_text": { "type": "boolean" },
+    "is_indonesian": { "type": "boolean" },
+    "is_relevant": { "type": "boolean" },
+    "is_eligible_for_labeling": { "type": "boolean" },
+    "quality_status": {
+      "type": "string",
+      "enum": [
+        "accepted", "duplicate", "empty_cleaned_text", "review_language",
+        "review_relevance", "review_language_and_relevance"
+      ]
+    }
   },
   "additionalProperties": true
 }

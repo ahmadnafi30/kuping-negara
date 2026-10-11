@@ -5,6 +5,7 @@
 // preload hook keeps Tweet Harvest unchanged while directing Playwright to a
 // current system Chrome or Edge executable selected by the Python collector.
 const Module = require("module");
+require("./tweet_harvest_integrity_hook.cjs").install();
 
 const browserExecutable = process.env.KUPING_NEGARA_BROWSER_EXECUTABLE;
 

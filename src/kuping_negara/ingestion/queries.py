@@ -60,7 +60,9 @@ def build_tweet_harvest_command(
     if normalized_tab not in {"LATEST", "TOP"}:
         raise ValueError("tab must be LATEST or TOP")
 
-    inclusive_end = datetime.strptime(to_date, "%d-%m-%Y").date()
+    start, inclusive_end = parse_collection_window(from_date, to_date)
+    # UTC date search is an outer window; the adapter keeps exact Jakarta bounds.
+    outer_from = (start - timedelta(days=1)).strftime("%d-%m-%Y")
     exclusive_until = (inclusive_end + timedelta(days=1)).strftime("%d-%m-%Y")
 
     return [
@@ -70,7 +72,7 @@ def build_tweet_harvest_command(
         "-s",
         query,
         "-f",
-        from_date,
+        outer_from,
         "--to",
         exclusive_until,
         "-l",

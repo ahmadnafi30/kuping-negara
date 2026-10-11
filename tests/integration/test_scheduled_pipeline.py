@@ -185,9 +185,7 @@ def test_config_change_refuses_collection_retry(repository):
 def test_preprocessing_failure_never_publishes_a_run(repository):
     raw = collect(repository)
     raw.write_text("id_str,full_text\n1,invalid schema\n")
-    from kuping_negara.preprocessing.x_posts import PreprocessingError
-
-    with pytest.raises(PreprocessingError, match="missing required columns"):
+    with pytest.raises(PreprocessingPipelineError, match="changed"):
         preprocess_scheduled(
             repository_root=repository,
             raw_path=raw,
@@ -196,3 +194,171 @@ def test_preprocessing_failure_never_publishes_a_run(repository):
         )
     assert not list((repository / "data/processed/x").rglob("*.csv"))
     assert not list((repository / "data/processed/x").glob(".preprocess-*"))
+
+
+@pytest.mark.parametrize("timestamp", ["2026-10-04T16:59:59Z", "2026-10-11T17:00:00Z"])
+def test_out_of_window_collection_never_publishes(repository, timestamp):
+    def wrong_date(command, cwd, environment):
+        write_collection(command, cwd, environment)
+        target = next((cwd / "tweets-data").glob("*.csv"))
+        target.write_text(target.read_text().replace("2026-10-11T12:00:00Z", timestamp))
+
+    with pytest.raises(CollectionError, match="outside requested Jakarta window"):
+        collect(repository, wrong_date)
+    assert not list((repository / "data/raw/x").rglob("*.csv"))
+
+
+def test_over_limit_collection_never_publishes(repository):
+    def too_many(command, cwd, environment):
+        write_collection(command, cwd, environment)
+        target = next((cwd / "tweets-data").glob("*.csv"))
+        lines = target.read_text().splitlines()
+        target.write_text(lines[0] + "\n" + (lines[1] + "\n") * 60)
+
+    with pytest.raises(CollectionError, match="exceeds requested limit"):
+        collect(repository, too_many)
+    assert not list((repository / "data/raw/x").rglob("*.csv"))
+
+
+def test_legacy_raw_retry_cannot_bypass_new_quality_gates(repository):
+    import json
+
+    from kuping_negara.ingestion.validation import sha256_file
+
+    raw = collect(repository)
+    raw.write_text(
+        raw.read_text().replace("2026-10-11T12:00:00Z", "2026-10-12T12:00:00Z")
+    )
+    manifest_path = raw.parent / "collection.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["input_sha256"] = sha256_file(raw)
+    manifest.pop("validation")
+    manifest_path.write_text(json.dumps(manifest))
+    with pytest.raises(CollectionError, match="outside requested Jakarta window"):
+        collect(repository)
+    with pytest.raises(
+        PreprocessingPipelineError, match="outside requested Jakarta window"
+    ):
+        preprocess_scheduled(
+            repository_root=repository,
+            raw_path=raw,
+            scheduled_at=SCHEDULE,
+            execution_id="scheduled__example",
+        )
+    assert not list((repository / "data/processed/x").rglob("*.csv"))
+
+
+def test_cross_run_duplicate_keeps_rows_but_blocks_second_labeling(repository):
+    import json
+
+    import pandas as pd
+
+    first = collect(repository)
+    second = collect(repository, execution_id="manual__second")
+
+    def process(raw, execution):
+        return preprocess_scheduled(
+            repository_root=repository,
+            raw_path=raw,
+            scheduled_at=SCHEDULE,
+            execution_id=execution,
+        )
+
+    first_result = process(first, "scheduled__example")
+    second_result = process(second, "manual__second")
+    second_frame = pd.read_csv(second_result["records_path"], dtype=str)
+    assert second_frame["quality_status"].tolist() == ["duplicate"]
+    assert second_frame["is_eligible_for_labeling"].tolist() == ["False"]
+    report = json.loads(Path(second_result["report_path"]).read_text())
+    assert report["duplicate_tweet_ids_across_runs"] == 1
+    assert report["eligible_for_labeling"] == 0
+    assert process(first, "scheduled__example") == first_result
+    assert (
+        pd.read_csv(first_result["records_path"]).iloc[0]["quality_status"]
+        == "accepted"
+    )
+
+
+def test_concurrent_preprocessing_publishes_one_eligible_copy(repository):
+    import json
+    from concurrent.futures import ThreadPoolExecutor
+
+    inputs = [collect(repository, execution_id=name) for name in ("run_a", "run_b")]
+
+    def process(pair):
+        raw, name = pair
+        return preprocess_scheduled(
+            repository_root=repository,
+            raw_path=raw,
+            scheduled_at=SCHEDULE,
+            execution_id=name,
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(process, zip(inputs, ("run_a", "run_b"), strict=True)))
+    eligible = [
+        json.loads(Path(result["report_path"]).read_text())["eligible_for_labeling"]
+        for result in results
+    ]
+    assert sorted(eligible) == [0, 1]
+
+
+def test_unusable_previous_row_does_not_poison_future_labeling(repository):
+    import pandas as pd
+
+    def irrelevant(command, cwd, environment):
+        write_collection(command, cwd, environment)
+        target = next((cwd / "tweets-data").glob("*.csv"))
+        target.write_text(
+            target.read_text().replace("Program MBG membantu siswa", "Berita lain")
+        )
+
+    first = collect(repository, irrelevant)
+    first_result = preprocess_scheduled(
+        repository_root=repository,
+        raw_path=first,
+        scheduled_at=SCHEDULE,
+        execution_id="scheduled__example",
+    )
+    second = collect(repository, execution_id="new_run")
+    second_result = preprocess_scheduled(
+        repository_root=repository,
+        raw_path=second,
+        scheduled_at=SCHEDULE,
+        execution_id="new_run",
+    )
+    assert (
+        pd.read_csv(first_result["records_path"]).iloc[0]["quality_status"]
+        == "review_relevance"
+    )
+    assert (
+        pd.read_csv(second_result["records_path"]).iloc[0]["quality_status"]
+        == "accepted"
+    )
+
+
+def test_quarantine_preserves_raw_and_old_output(repository):
+    import json
+
+    from kuping_negara.orchestration.audit import audit_existing_outputs
+
+    raw = collect(repository)
+    original = raw.read_bytes()
+    result = preprocess_scheduled(
+        repository_root=repository,
+        raw_path=raw,
+        scheduled_at=SCHEDULE,
+        execution_id="scheduled__example",
+    )
+    output = Path(result["records_path"]).read_bytes()
+    report_path = Path(result["report_path"])
+    report = json.loads(report_path.read_text())
+    report.pop("preprocessing_version")
+    report_path.write_text(json.dumps(report))
+    audit = audit_existing_outputs(repository)
+    assert audit["quarantined_runs"] == 1
+    assert raw.read_bytes() == original
+    assert not Path(result["records_path"]).exists()
+    saved = next((repository / "data/quarantine/x/processed").rglob("*_processed.csv"))
+    assert saved.read_bytes() == output
+    assert audit_existing_outputs(repository)["quarantined_runs"] == 0

@@ -28,6 +28,7 @@ htmlcov/
 tweets-data/
 data/raw/*
 !data/raw/.gitkeep
+data/quarantine/
 data/processed/*
 !data/processed/.gitkeep
 data/labeled/*

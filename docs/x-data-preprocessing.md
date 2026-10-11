@@ -78,14 +78,14 @@ has been selected.
 | `conversation_id` | Conversation identifier stored as text |
 | `tweet_url` | Source permalink |
 | `target_program` | Program ID from the raw partition |
-| `matched_keyword` | First configured keyword found in the raw text |
+| `matched_keyword` | First configured keyword found in cleaned text |
 | `raw_text` | Original text retained for traceability |
 | `cleaned_text` | Normalized text for labeling and model preparation |
 | `language` | Language label supplied by X |
 | `published_at` | UTC ISO 8601 timestamp |
 | `collected_at` | Time encoded by the ingestion run ID |
-| `year_week` | ISO year and week for temporal grouping |
-| `year_month` | Calendar month for reporting |
+| `year_week` | ISO year and week in Asia/Jakarta |
+| `year_month` | Calendar month in Asia/Jakarta |
 | `reply_count` | Non-negative reply count |
 | `retweet_count` | Non-negative repost count |
 | `like_count` | Canonical form of `favorite_count` |
@@ -94,7 +94,9 @@ has been selected.
 | `data_version` | SHA-256 identity of the raw CSV |
 | `schema_version` | Canonical data-contract version |
 | `source_platform` | Source identifier, currently `x` |
-| `is_duplicate` | True for repeated `tweet_id` values after the first row |
+| `is_duplicate` | Repeated ID within this CSV or previously eligible ID across runs |
+| `is_duplicate_across_runs` | ID already eligible in a completed run, across programs |
+| `is_empty_cleaned_text` | No text remains after removing URLs and mentions |
 | `is_indonesian` | True when the source language label is `in` |
 | `is_relevant` | True when a configured program keyword is present |
 | `is_eligible_for_labeling` | True only when status is `accepted` |
@@ -105,8 +107,9 @@ has been selected.
 
 | Status | Meaning | Action |
 | --- | --- | --- |
-| `accepted` | Indonesian, relevant, and not a repeated ID | Ready for annotation |
-| `duplicate` | Repeated `tweet_id` after its first occurrence | Exclude from labeling sample |
+| `accepted` | Indonesian, relevant, non-empty cleaned text, and not a repeated ID | Ready for annotation |
+| `duplicate` | Repeated ID within this CSV or a previous eligible run | Exclude from labeling sample |
+| `empty_cleaned_text` | Only links/mentions or whitespace remain | Exclude from labeling and training |
 | `review_language` | Relevant keyword found, but language is not `in` | Review text manually |
 | `review_relevance` | Language is `in`, but no configured keyword was found | Review query relevance |
 | `review_language_and_relevance` | Both checks need review | Review before use |
@@ -114,6 +117,45 @@ has been selected.
 Rows that need review remain visible. The pipeline does not silently drop them.
 This preserves evidence for later rule improvements and prevents loss caused by
 imperfect platform language labels.
+
+## Integrity Gates and Cross-Run History
+
+The current processed contract is schema version `2` and preprocessing version
+`2`. Keyword relevance uses cleaned text: a program acronym occurring only in
+a URL or account mention cannot make a record eligible. Empty cleaned text
+receives an explicit flag, even if another quality status takes precedence.
+
+New collector runs write `collection.json` beside the CSV. Preprocessing
+rechecks the raw/configuration hashes, exact inclusive Jakarta date range, and
+hard requested row limit. Airflow requires this manifest; the standalone CLI
+can read legacy CSVs without one, with `collection_validation: null` in its
+report. Such legacy output has no verified collection window or limit.
+
+All publishers share one file lock under `data/processed/x`. While holding it,
+the pipeline verifies completed report/CSV hashes, loads previously eligible
+IDs, transforms the new run, and publishes its CSV/report atomically. IDs are
+global across programs to prevent the same post entering multiple labeling
+samples. Previous review/empty records do not block a later eligible record.
+Duplicate rows remain in the output but are ineligible. An Airflow retry reuses
+its unchanged output without counting itself as a new duplicate.
+
+Keep the complete processed history and lock in one output root. Separate
+output roots have separate histories. This local file lock is intended for one
+Docker host; distributed workers need shared transactional coordination.
+
+Before reusing outputs generated under older rules, stop Airflow and audit:
+
+```powershell
+docker compose stop airflow
+.\.venv\Scripts\python.exe -m kuping_negara.orchestration.audit --repository-root .
+docker compose up -d --build --wait
+```
+
+The audit moves legacy/invalid processed run folders to
+`data/quarantine/x/processed/` and adds `quarantine.json`. It does not edit or
+remove raw CSVs. Quarantined outputs must be excluded from labeling/training.
+A raw CSV that passes the current manifest checks can be regenerated through
+preprocessing; out-of-window or over-limit inputs must be recollected.
 
 ## Historical MBG Pilot Audit
 
@@ -145,7 +187,7 @@ retains the source content for traceability.
 
 ## Privacy and Repository Rules
 
-- Never commit files under `data/raw/` or `data/processed/`.
+- Never commit files under `data/raw/`, `data/processed/`, or `data/quarantine/`.
 - Processed records still contain `raw_text` and source permalinks. They are
   not fully anonymized even though explicit account columns are removed.
 - Never publish raw usernames or post text without an approved privacy review.

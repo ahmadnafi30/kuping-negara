@@ -54,6 +54,7 @@ for kind, expected_time in [
         ),
         patch("subprocess.run") as runner,
     ):
+        runner.return_value.returncode = 0
         runner.return_value.stdout = '{"raw_path": "example.csv"}'
         assert invoke("collect", "--program", "mbg") == {"raw_path": "example.csv"}
         command = runner.call_args.args[0]
@@ -61,3 +62,26 @@ for kind, expected_time in [
 print(
     "SDK context verified: delayed tasks preserve dates; manual runs use trigger time."
 )
+
+# Surface our sanitized integrity failures, never upstream stderr.
+with (
+    patch.dict(invoke.__globals__, {"get_current_context": lambda: context}),
+    patch("subprocess.run") as runner,
+):
+    runner.return_value.returncode = 1
+    for stderr, expected_error in [
+        (
+            '{"error": "Collection rejected: outside requested Jakarta window"}',
+            "outside requested Jakarta window",
+        ),
+        ("unexpected upstream output", "Pipeline failed"),
+    ]:
+        runner.return_value.stderr = stderr
+        try:
+            invoke("collect", "--program", "mbg")
+        except RuntimeError as error:
+            assert expected_error in str(error)
+            assert "unexpected upstream output" not in str(error)
+        else:
+            raise AssertionError("Invalid collection must fail the DAG task")
+print("Integrity failures verified: safe errors and no forwarded upstream output.")

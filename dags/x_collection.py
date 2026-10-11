@@ -39,11 +39,21 @@ def _run_pipeline(action: str, *arguments: str) -> dict[str, str]:
             f"{context['dag'].dag_id}:{run.run_id}",
             *arguments,
         ],
-        check=True,
+        check=False,
         text=True,
         capture_output=True,
         timeout=1100,
     )
+    if result.returncode:
+        try:
+            message = json.loads(result.stderr).get("error")
+        except (ValueError, AttributeError):
+            message = None
+        raise RuntimeError(
+            message
+            if isinstance(message, str)
+            else "Pipeline failed; inspect the local data-quality audit"
+        )
     return json.loads(result.stdout)
 
 
