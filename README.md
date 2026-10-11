@@ -6,9 +6,9 @@ Gratis, Koperasi Desa Merah Putih, dan Sekolah Rakyat.
 
 ## Status
 
-Branch `main` menyediakan pengumpulan data interaktif dan preprocessing CSV
-yang dapat diuji secara lokal. Training model, API prediksi, dashboard,
-penjadwalan Airflow, MLflow, dan DVC masih direncanakan.
+Branch `main` menyediakan pengumpulan data interaktif, preprocessing CSV,
+dan penjadwalan melalui Airflow di Docker untuk pengembangan lokal.
+Training model, API prediksi, dashboard, MLflow, dan DVC masih direncanakan.
 
 | Tersedia | Hasil |
 | --- | --- |
@@ -16,6 +16,7 @@ penjadwalan Airflow, MLflow, dan DVC masih direncanakan.
 | Preprocessing | Normalisasi teks, pemetaan kolom, flag kualitas, CSV dan laporan JSON |
 | Lineage | Run ID, timestamp, SHA-256 sumber dan output |
 | Lingkungan pengembangan | Python 3.12, uv lockfile, Dev Container, pytest, Ruff, CI |
+| Airflow Docker | Pengambilan mingguan pukul 23.59 WIB, preprocessing berurutan, retry tanpa overwrite |
 
 Hasil analisis dirancang sebagai bahan riset. Percakapan pengguna X tidak
 mewakili seluruh penduduk Indonesia.
@@ -59,11 +60,18 @@ menolak menimpa run yang sudah ada. Detail ada di
 
 ## Struktur
 
+Untuk pengambilan terjadwal, ikuti [panduan Airflow Docker](docs/airflow-docker.md).
+Jadwal: MBG Senin, CKG Selasa, Kopdes Rabu, Sekolah Rakyat Kamis, pukul 23.59 WIB,
+mengambil tujuh hari penuh sebelumnya. Token dipasang melalui file secret lokal.
+
 ```text
 kuping-negara/
 ├── .devcontainer/          # Lingkungan Codespaces
 ├── .github/                # CI dan template Pull Request
 ├── configs/                # Keyword program dan rancangan kontrak data
+├── dags/                   # Workflow Airflow: collect kemudian preprocess
+├── docker/                 # Image, dependensi Node, dan bootstrap secret lokal
+├── compose.yaml            # Airflow dan PostgreSQL lokal
 ├── data/
 │   ├── raw/                # Output pengumpulan lokal; isi diabaikan Git
 │   └── processed/          # Output preprocessing lokal; isi diabaikan Git
@@ -74,7 +82,8 @@ kuping-negara/
 │   ├── paths.py            # Root repositori dan default pipeline
 │   ├── healthcheck.py      # Pemeriksaan lingkungan pengembangan
 │   ├── ingestion/          # Query, browser, raw storage, dan CLI koleksi
-│   └── preprocessing/      # Normalisasi teks, transformasi, dan pipeline file
+│   ├── preprocessing/      # Normalisasi teks, transformasi, dan pipeline file
+│   └── orchestration/      # Adapter terjadwal, publikasi atomik, dan retry
 ├── tests/                  # Pengujian unit dan integrasi tanpa layanan eksternal
 ├── pyproject.toml          # Metadata, dependensi, dan aturan kualitas
 ├── uv.lock                 # Resolusi dependensi yang digunakan CI
@@ -87,8 +96,8 @@ Panduan batas modul tersedia di [Project Structure](docs/project-structure.md).
 ## Pemeriksaan kualitas
 
 ```bash
-uv run --locked --extra dev ruff check src tests
-uv run --locked --extra dev ruff format --check src tests
+uv run --locked --extra dev ruff check src tests dags docker/airflow
+uv run --locked --extra dev ruff format --check src tests dags docker/airflow
 uv run --locked --extra dev pytest
 ```
 

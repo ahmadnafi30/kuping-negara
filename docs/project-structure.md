@@ -18,6 +18,7 @@ dibuat ketika pekerjaan dimulai, bukan sebagai placeholder.
 | `preprocessing/text.py` | Normalisasi Unicode, cleaning, dan pencocokan keyword |
 | `preprocessing/x_posts.py` | Transformasi DataFrame dan ringkasan flag kualitas |
 | `preprocessing/x_pipeline.py` | Lineage file, checksum, persistensi, dan CLI `preprocess-x-data` |
+| `orchestration/runtime.py` | Koleksi tanpa prompt, isolasi run, publish atomik, dan validasi retry |
 
 CLI tetap menggunakan entry point yang sama. Import fungsi lama di
 `ingestion.tweet_harvest` dan `preprocessing.x_posts.clean_text` tetap tersedia
@@ -45,6 +46,8 @@ preprocessing pipeline ──> configuration / paths / x_posts ──> text
 | `data/raw/` | Raw CSV lokal, dipartisi menurut tanggal/program/run; immutable |
 | `data/processed/` | CSV dan laporan kualitas lokal; run lama tidak ditimpa |
 | `scripts/` | Hook browser Node.js yang digunakan kolektor |
+| `dags/` | Empat jadwal Airflow yang memanggil runtime dalam virtual environment terpisah |
+| `docker/` dan `compose.yaml` | Stack Airflow/PostgreSQL, image, lock Node, dan setup secrets lokal |
 | `docs/archive/` | Riwayat desain yang belum diimplementasikan |
 | `tests/unit/` | Pengujian perilaku fungsi dan konfigurasi |
 | `tests/integration/` | Pengujian alur raw CSV hingga output dan laporan |
@@ -57,5 +60,5 @@ dan `models/` tetap disiapkan walaupun foldernya belum ada.
 
 Buat paket `training`, `inference`, `api`, atau `monitoring` bersama kode,
 kontrak, dokumentasi, dan pengujiannya saat fitur tersebut dikerjakan. Tambahkan
-`dags/` saat ada workflow Airflow dan `notebooks/` saat ada eksplorasi yang
-memerlukan notebook. Lihat [roadmap](roadmap.md).
+`notebooks/` saat ada eksplorasi yang memerlukan notebook. Workflow Airflow
+sudah ada di `dags/`; cara menjalankannya ada di [Airflow Docker](airflow-docker.md).

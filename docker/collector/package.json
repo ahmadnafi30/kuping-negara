@@ -1,0 +1,10 @@
+{
+  "name": "kuping-negara-collector",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": { "tweet-harvest": "2.7.1" },
+  "overrides": {
+    "@playwright/test": "1.64.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  }
+}

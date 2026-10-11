@@ -139,8 +139,8 @@ Minimum local verification:
 uv sync --locked --extra dev
 uv pip check
 uv run --locked --extra dev python -m kuping_negara.healthcheck
-uv run --locked --extra dev ruff check src tests
-uv run --locked --extra dev ruff format --check src tests
+uv run --locked --extra dev ruff check src tests dags docker/airflow
+uv run --locked --extra dev ruff format --check src tests dags docker/airflow
 uv run --locked --extra dev pytest
 ```
 

@@ -19,7 +19,8 @@ programs:
 - ID program memakai lower-case snake_case, dimulai huruf, tanpa pemisah path.
 - `display_name` wajib berupa string tidak kosong.
 - `keywords` wajib berupa daftar string tidak kosong; spasi tepi dibersihkan.
-- `collection_day` opsional: `monday` sampai `sunday`. Nilai ini belum memicu scheduler.
+- `collection_day` opsional: `monday` sampai `sunday`. Scheduler menggunakan cron
+  di `dags/x_collection.py`; jaga metadata ini konsisten dengan hari pada DAG.
 - Urutan program dan keyword dipertahankan: kolektor mengikuti urutan program,
   sedangkan preprocessing merekam keyword pertama yang cocok.
 

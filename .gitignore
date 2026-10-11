@@ -42,6 +42,8 @@ airflow.cfg
 airflow.db
 logs/
 *.log
+docker/airflow/secrets/
+docker/collector/node_modules/
 
 # Editors and operating systems
 .vscode/

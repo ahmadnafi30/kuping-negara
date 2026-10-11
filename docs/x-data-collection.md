@@ -33,6 +33,10 @@ The interactive collector never reads a token from source code or `.env` and
 never adds a token to the generated command. Tweet Harvest asks for the token
 through its hidden prompt for every selected program.
 
+For unattended collection, use the [Airflow Docker guide](airflow-docker.md).
+That adapter reads a local Docker secret into the prompt in memory and runs
+headlessly; the interactive CLI behavior described here is unchanged.
+
 - Paste the token only into `What's your Twitter auth token?`.
 - Never send the token through chat, email, an issue, or a Pull Request.
 - Never place it in a notebook, script, command argument, screenshot, or Git.
