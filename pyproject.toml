@@ -31,6 +31,13 @@ dev = [
 data-versioning = [
     "dvc>=3,<4",
 ]
+google-drive = [
+    "dvc[gdrive]>=3,<4",
+    # PyDrive2 1.21.3 caps cryptography; older releases break OAuth imports.
+    "pydrive2>=1.21.3,<2",
+    # Match PyDrive2's cryptography range; PyOpenSSL 22 fails at import.
+    "pyopenssl>=24.2.1,<25",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

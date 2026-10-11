@@ -1,0 +1,30 @@
+{
+  "verified_at_wib": "2026-10-11T17:31:07.459158+07:00",
+  "remote": "gdrive",
+  "folder_name": "kuping-negara-dvc",
+  "versions": [
+    {
+      "tag": "lk05-data-v1",
+      "rows": 50,
+      "bytes": 18950,
+      "md5": "644e1e4e9d4db18c31dd42510b60452e",
+      "sha256": "ac67cdb1afc80099646ea3ad5d7c953b02c25703843ab2e475f0fb4ef4caa83f",
+      "fresh_cache_before_pull": true,
+      "restored_from": "google-drive",
+      "hash_verified": true
+    },
+    {
+      "tag": "lk05-data-v2",
+      "rows": 200,
+      "bytes": 69661,
+      "md5": "4c49742a13ec88c81119bd00dfa26652",
+      "sha256": "fb3b832aae197fead349a5d045d5ae2b05329b233c2bceaec9b67e1c04500bc6",
+      "fresh_cache_before_pull": true,
+      "restored_from": "google-drive",
+      "hash_verified": true
+    }
+  ],
+  "total_bytes": 88611,
+  "live_snapshot_modified": false,
+  "credentials_tracked_in_git": false
+}

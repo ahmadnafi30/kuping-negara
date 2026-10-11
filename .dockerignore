@@ -18,3 +18,4 @@
 !dags/
 !dags/**
 docker/airflow/secrets/
+.dvc/
