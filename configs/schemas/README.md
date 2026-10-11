@@ -2,6 +2,8 @@
 
 `tweet_record.schema.json` adalah rancangan kontrak rekaman Kuping Negara,
 mencakup identitas, program, teks, waktu, engagement, label, prediksi, dan lineage.
+Kontrak processed saat ini versi `3`, dengan `model_text`, fingerprint,
+petunjuk grup dataset, normalisasi kode bahasa, dan flag kemiripan teks.
 Field prediksi merupakan rencana untuk fase modeling/serving.
 
 Pipeline saat ini memvalidasi kolom sumber, timestamp, teks, dan engagement

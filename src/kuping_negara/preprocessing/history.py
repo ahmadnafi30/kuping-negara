@@ -11,8 +11,9 @@ from pathlib import Path
 import pandas as pd
 
 from kuping_negara.ingestion.validation import sha256_file
+from kuping_negara.preprocessing.duplicates import TextReference
 
-PREPROCESSING_VERSION = 2
+PREPROCESSING_VERSION = 3
 
 
 @contextmanager
@@ -56,8 +57,8 @@ def preprocessing_lock(root: Path, timeout: float = 120):
                 fcntl.flock(handle, fcntl.LOCK_UN)
 
 
-def eligible_tweet_ids(root: Path) -> set[str]:
-    seen: set[str] = set()
+def labeling_history(root: Path) -> list[TextReference]:
+    seen: list[TextReference] = []
     for report_path in sorted(root.rglob("quality_report.json")):
         if any(part.startswith(".") for part in report_path.relative_to(root).parts):
             continue
@@ -79,5 +80,15 @@ def eligible_tweet_ids(root: Path) -> set[str]:
         eligible &= frame["quality_status"].eq("accepted") & frame[
             "cleaned_text"
         ].str.strip().ne("")
-        seen.update(frame.loc[eligible, "tweet_id"])
+        for index, row in frame.iterrows():
+            if row["cleaned_text"].strip():
+                seen.append(
+                    TextReference(
+                        tweet_id=row["tweet_id"],
+                        program_id=row["target_program"],
+                        text=row["model_text"],
+                        eligible=bool(eligible.loc[index]),
+                        split_group_id=row["split_group_id"],
+                    )
+                )
     return seen

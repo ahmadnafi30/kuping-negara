@@ -23,7 +23,7 @@ from kuping_negara.ingestion.validation import validate_collection_manifest
 from kuping_negara.paths import DEFAULT_CONFIG_PATH, JAKARTA_TIMEZONE
 from kuping_negara.preprocessing.history import (
     PREPROCESSING_VERSION,
-    eligible_tweet_ids,
+    labeling_history,
     preprocessing_lock,
 )
 from kuping_negara.preprocessing.x_posts import (
@@ -179,7 +179,7 @@ def run_preprocessing(
                         "Existing processed run has changed or uses outdated rules"
                     )
                 return PreprocessingArtifacts(records_path, report_path)
-            previous_ids = eligible_tweet_ids(output_root)
+            history = labeling_history(output_root)
             source = pd.read_csv(
                 resolved_input, encoding="utf-8-sig", dtype=str, keep_default_na=False
             )
@@ -189,7 +189,7 @@ def run_preprocessing(
                 ingestion_run_id=metadata.ingestion_run_id,
                 collected_at=metadata.collected_at,
                 keywords=keywords,
-                previous_tweet_ids=previous_ids,
+                history=history,
             )
             records = result.records.copy()
             records["data_version"] = f"sha256:{input_sha256}"
@@ -218,7 +218,7 @@ def run_preprocessing(
                     "config_sha256": config_sha256,
                     "preprocessing_version": PREPROCESSING_VERSION,
                     "collection_validation": collection_validation,
-                    "deduplication_history_ids": len(previous_ids),
+                    "deduplication_history_records": len(history),
                     "data_version": f"sha256:{input_sha256}",
                     "output_columns": list(records.columns),
                 }

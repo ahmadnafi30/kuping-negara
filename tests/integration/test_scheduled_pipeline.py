@@ -362,3 +362,116 @@ def test_quarantine_preserves_raw_and_old_output(repository):
     saved = next((repository / "data/quarantine/x/processed").rglob("*_processed.csv"))
     assert saved.read_bytes() == output
     assert audit_existing_outputs(repository)["quarantined_runs"] == 0
+
+
+def test_same_tweet_can_be_labeled_for_two_programs_with_shared_group(repository):
+    import pandas as pd
+
+    def both_programs(command, cwd, environment):
+        write_collection(command, cwd, environment)
+        target = next((cwd / "tweets-data").glob("*.csv"))
+        frame = pd.read_csv(target, dtype=str, keep_default_na=False)
+        frame.loc[0, "full_text"] = "MBG membantu siswa, CKG belum merata"
+        frame.to_csv(target, index=False, encoding="utf-8")
+
+    first = collect(repository, both_programs)
+    second = collect_scheduled(
+        repository_root=repository,
+        program_id="ckg",
+        scheduled_at=SCHEDULE,
+        execution_id="ckg_run",
+        runner=both_programs,
+    )
+    frames = []
+    for raw, name in [(first, "scheduled__example"), (second, "ckg_run")]:
+        result = preprocess_scheduled(
+            repository_root=repository,
+            raw_path=raw,
+            scheduled_at=SCHEDULE,
+            execution_id=name,
+        )
+        frames.append(pd.read_csv(result["records_path"], dtype=str))
+    assert [frame.iloc[0]["quality_status"] for frame in frames] == [
+        "accepted",
+        "accepted",
+    ]
+    assert frames[0].iloc[0]["split_group_id"] == frames[1].iloc[0]["split_group_id"]
+
+
+def test_same_text_new_id_across_runs_cannot_enter_second_labeling_sample(repository):
+    import pandas as pd
+
+    first = collect(repository)
+    first_result = preprocess_scheduled(
+        repository_root=repository,
+        raw_path=first,
+        scheduled_at=SCHEDULE,
+        execution_id="scheduled__example",
+    )
+
+    def different_id(command, cwd, environment):
+        write_collection(command, cwd, environment)
+        target = next((cwd / "tweets-data").glob("*.csv"))
+        target.write_text(
+            target.read_text().replace("1234567890123456789", "2234567890123456789")
+        )
+
+    second = collect(repository, different_id, execution_id="second_id")
+    result = preprocess_scheduled(
+        repository_root=repository,
+        raw_path=second,
+        scheduled_at=SCHEDULE,
+        execution_id="second_id",
+    )
+    frame = pd.read_csv(result["records_path"], dtype=str)
+    assert frame.iloc[0]["quality_status"] == "duplicate_text"
+    assert frame.iloc[0]["is_eligible_for_labeling"] == "False"
+    assert (
+        frame.iloc[0]["split_group_id"]
+        == pd.read_csv(first_result["records_path"], dtype=str).iloc[0][
+            "split_group_id"
+        ]
+    )
+
+
+def test_modified_opinion_across_runs_is_retained_for_review(repository):
+    import pandas as pd
+
+    positive = "Program MBG sangat membantu siswa mendapatkan makanan sehat setiap hari"
+    negative = (
+        "Program MBG tidak sangat membantu siswa mendapatkan makanan sehat setiap hari"
+    )
+
+    def runner(text, identity):
+        def write(command, cwd, environment):
+            write_collection(command, cwd, environment)
+            target = next((cwd / "tweets-data").glob("*.csv"))
+            target.write_text(
+                target.read_text()
+                .replace("Program MBG membantu siswa", text)
+                .replace("1234567890123456789", identity)
+            )
+
+        return write
+
+    first = collect(repository, runner(positive, "1234567890123456789"))
+    preprocess_scheduled(
+        repository_root=repository,
+        raw_path=first,
+        scheduled_at=SCHEDULE,
+        execution_id="scheduled__example",
+    )
+    second = collect(
+        repository, runner(negative, "2234567890123456789"), execution_id="negative_run"
+    )
+    result = preprocess_scheduled(
+        repository_root=repository,
+        raw_path=second,
+        scheduled_at=SCHEDULE,
+        execution_id="negative_run",
+    )
+    frame = pd.read_csv(result["records_path"], dtype=str)
+    assert frame.iloc[0]["quality_status"] == "review_similar_text"
+    assert "tidak" in frame.iloc[0]["model_text"]
+    assert frame.iloc[0]["is_eligible_for_labeling"] == "False"
+    assert frame.iloc[0]["is_duplicate_text"] == "False"

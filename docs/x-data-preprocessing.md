@@ -78,10 +78,16 @@ has been selected.
 | `conversation_id` | Conversation identifier stored as text |
 | `tweet_url` | Source permalink |
 | `target_program` | Program ID from the raw partition |
-| `matched_keyword` | First configured keyword found in cleaned text |
+| `matched_keyword` | First configured keyword found in sanitized model text or a program hashtag |
 | `raw_text` | Original text retained for traceability |
 | `cleaned_text` | Normalized text for labeling and model preparation |
-| `language` | Language label supplied by X |
+| `model_text` | Case-preserving text; keeps hashtags, negation, emoji and punctuation |
+| `text_fingerprint` | SHA-256 of normalized text for duplicate checks |
+| `split_group_id` | Global hint for grouping copies/similar text before dataset splitting |
+| `similar_to_tweet_id` | Previous eligible ID that triggered a text duplicate/review flag |
+| `language` | Original language label supplied by X |
+| `language_normalized` | Source label casefolded; `in` maps to `id` |
+| `language_needs_review` | Source language does not confirm Indonesian |
 | `published_at` | UTC ISO 8601 timestamp |
 | `collected_at` | Time encoded by the ingestion run ID |
 | `year_week` | ISO year and week in Asia/Jakarta |
@@ -94,10 +100,12 @@ has been selected.
 | `data_version` | SHA-256 identity of the raw CSV |
 | `schema_version` | Canonical data-contract version |
 | `source_platform` | Source identifier, currently `x` |
-| `is_duplicate` | Repeated ID within this CSV or previously eligible ID across runs |
-| `is_duplicate_across_runs` | ID already eligible in a completed run, across programs |
+| `is_duplicate` | Repeated ID within this CSV or previously eligible ID for this program |
+| `is_duplicate_across_runs` | ID already eligible in a completed run for this program |
+| `is_duplicate_text` | Normalized text already eligible for this program, even with another ID |
+| `is_near_duplicate` | Long text similar to a previously eligible text; requires review |
 | `is_empty_cleaned_text` | No text remains after removing URLs and mentions |
-| `is_indonesian` | True when the source language label is `in` |
+| `is_indonesian` | True when the source language label is `in` or `id` (case-insensitive) |
 | `is_relevant` | True when a configured program keyword is present |
 | `is_eligible_for_labeling` | True only when status is `accepted` |
 | `quality_status` | Review decision described below |
@@ -108,10 +116,12 @@ has been selected.
 | Status | Meaning | Action |
 | --- | --- | --- |
 | `accepted` | Indonesian, relevant, non-empty cleaned text, and not a repeated ID | Ready for annotation |
-| `duplicate` | Repeated ID within this CSV or a previous eligible run | Exclude from labeling sample |
+| `duplicate` | Repeated ID within this CSV or a previous eligible run for this program | Exclude from labeling sample |
+| `duplicate_text` | Identical normalized text already eligible for this program | Exclude from repeated labeling |
+| `review_similar_text` | Text similarity needs a human decision | Review; no automatic sentiment label |
 | `empty_cleaned_text` | Only links/mentions or whitespace remain | Exclude from labeling and training |
-| `review_language` | Relevant keyword found, but language is not `in` | Review text manually |
-| `review_relevance` | Language is `in`, but no configured keyword was found | Review query relevance |
+| `review_language` | Relevant keyword found, but language is not `in`/`id` | Review text manually |
+| `review_relevance` | Language is `in`/`id`, but no configured keyword was found | Review query relevance |
 | `review_language_and_relevance` | Both checks need review | Review before use |
 
 Rows that need review remain visible. The pipeline does not silently drop them.
@@ -120,8 +130,8 @@ imperfect platform language labels.
 
 ## Integrity Gates and Cross-Run History
 
-The current processed contract is schema version `2` and preprocessing version
-`2`. Keyword relevance uses cleaned text: a program acronym occurring only in
+The current processed contract is schema version `3` and preprocessing version
+`3`. Keyword relevance uses sanitized, case-preserving model text and hashtags: a program acronym occurring only in
 a URL or account mention cannot make a record eligible. Empty cleaned text
 receives an explicit flag, even if another quality status takes precedence.
 
@@ -133,9 +143,11 @@ report. Such legacy output has no verified collection window or limit.
 
 All publishers share one file lock under `data/processed/x`. While holding it,
 the pipeline verifies completed report/CSV hashes, loads previously eligible
-IDs, transforms the new run, and publishes its CSV/report atomically. IDs are
-global across programs to prevent the same post entering multiple labeling
-samples. Previous review/empty records do not block a later eligible record.
+IDs, transforms the new run, and publishes its CSV/report atomically. Duplicate decisions are
+scoped to the target program: one post can have a different sentiment toward
+MBG and CKG. Such copies keep a shared global group hint and must stay in the
+same dataset split. Previous review/empty records do not block a later eligible
+record.
 Duplicate rows remain in the output but are ineligible. An Airflow retry reuses
 its unchanged output without counting itself as a new duplicate.
 
@@ -152,10 +164,50 @@ docker compose up -d --build --wait
 ```
 
 The audit moves legacy/invalid processed run folders to
-`data/quarantine/x/processed/` and adds `quarantine.json`. It does not edit or
+`data/quarantine/x/processed/preprocessing_version=<old>/` and adds `quarantine.json`. It does not edit or
 remove raw CSVs. Quarantined outputs must be excluded from labeling/training.
 A raw CSV that passes the current manifest checks can be regenerated through
 preprocessing; out-of-window or over-limit inputs must be recollected.
+
+## Sentiment Preparation (Version 3)
+
+`raw_text` remains unchanged. `model_text` removes direct account mentions and
+URL values, normalizes HTML/Unicode/whitespace, and retains capitalization,
+hashtags, negation, informal spelling, repeated letters, emoji sequences, and
+punctuation. `cleaned_text` remains the lowercase view without hashtag markers.
+Neither view is a sentiment label or a guarantee of readiness for training.
+
+ZWJ/ZWNJ and emoji tag sequences are preserved; unrelated control characters
+are removed. URL removal preserves attached terminal punctuation and emoji.
+Hashtag relevance recognizes CamelCase words, compact program phrases and a
+limited set of stance prefixes (`tolak`, `dukung`, `stop`, `evaluasi`, `anti`,
+`pro`, `kontra`). For example, `#TolakMBG` matches `mbg`, but `#mbgossip` does not.
+A hashtag match never assigns positive/negative sentiment.
+
+Duplicate fingerprints remove identity noise, lowercase text and strip a
+leading retweet marker; they retain negation, emoji and punctuation. Different
+IDs with the same normalized text cannot create repeated eligible examples
+for one program. Similarity uses character SequenceMatcher with threshold
+`0.92`, at least 40 characters per text and length ratio at least `0.85`. These
+heuristics flag `review_similar_text`; they do not equate sentiments, delete
+rows, or automatically accept a label. Small negation edits can require review.
+
+`split_group_id` is a grouping hint, not a finished train/test split. Before
+training, reconcile connected similarity groups and conversation IDs across
+the entire labeled dataset, then keep related examples together. Never split
+per target program independently when the same post occurs in multiple targets.
+Similarity scanning currently compares against local history; large datasets
+will need an indexed candidate search.
+
+`language_validation: source_label_only` explicitly records the limitation of
+X language labels. `in`, `id` and uppercase equivalents map to Indonesian;
+other/unknown labels require review and remain visible. This stage does not
+claim to identify code-switching or fix incorrectly labeled Indonesian posts.
+Those cases need manual review or a separately evaluated language detector.
+
+Downstream tokenization must follow the selected model's requirements. Do not
+automatically remove negation/stopwords or apply stemming/slang replacement.
+Keep human-approved labels separate from quality flags and suggested labels.
 
 ## Historical MBG Pilot Audit
 

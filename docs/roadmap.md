@@ -11,6 +11,8 @@ arsitektur lengkap ada dalam [proposal](project-proposal.md).
 - Preprocessing deterministik, pemetaan field, flag review, dan lineage SHA-256.
 - Validasi periode WIB dan batas hasil; teks kosong diblokir, duplikat lintas run,
   dan audit karantina output lama.
+- Teks model yang mempertahankan makna sentimen, relevansi hashtag, duplikat
+  per target program, serta flag kemiripan dan petunjuk grup dataset.
 - Pedoman anotasi manual serta rancangan JSON Schema.
 - Pengujian unit/integrasi, pemeriksaan format dan lint, serta CI.
 - Airflow Docker lokal: empat jadwal mingguan 23.59 WIB, collect → preprocess,

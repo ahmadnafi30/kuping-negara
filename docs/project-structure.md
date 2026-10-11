@@ -16,9 +16,10 @@ dibuat ketika pekerjaan dimulai, bukan sebagai placeholder.
 | `ingestion/storage.py` | Memvalidasi staging CSV dan memindahkannya ke raw zone |
 | `ingestion/validation.py` | Memeriksa CSV, batas tanggal WIB/jumlah, checksum, dan manifest |
 | `ingestion/tweet_harvest.py` | CLI dan orkestrasi koleksi; entry point `collect-x-data` |
-| `preprocessing/text.py` | Normalisasi Unicode, cleaning, dan pencocokan keyword |
+| `preprocessing/text.py` | Teks model konservatif, Unicode/emoji, fingerprint, dan relevansi hashtag |
 | `preprocessing/x_posts.py` | Transformasi DataFrame dan ringkasan flag kualitas |
-| `preprocessing/history.py` | Lock publikasi dan riwayat ID eligible lintas run/program |
+| `preprocessing/duplicates.py` | Duplikat ID/teks per program dan flag kemiripan teks |
+| `preprocessing/history.py` | Lock publikasi dan riwayat contoh/grup lintas run/program |
 | `preprocessing/x_pipeline.py` | Lineage file, checksum, persistensi, dan CLI `preprocess-x-data` |
 | `orchestration/audit.py` | Mengarantina processed lama/invalid tanpa mengubah raw |
 | `orchestration/runtime.py` | Koleksi tanpa prompt, isolasi run, publish atomik, dan validasi retry |

@@ -201,3 +201,53 @@ def test_temporal_groups_follow_jakarta_calendar(collection_timezone):
     )
     assert result.records.iloc[0]["year_month"] == "2026-10"
     assert result.records.iloc[0]["published_at"] == "2026-09-30T18:00:00Z"
+
+
+@pytest.mark.parametrize("language", ["in", "id", "ID"])
+def test_indonesian_language_aliases_keep_source_label(language):
+    source = _source_frame().iloc[[0]].copy()
+    source.loc[0, "lang"] = language
+    result = preprocess_tweet_harvest_frame(
+        source,
+        program_id="mbg",
+        ingestion_run_id="run",
+        collected_at=datetime(2026, 10, 1, tzinfo=UTC),
+        keywords=["mbg"],
+    )
+    assert result.records.iloc[0]["language"] == language
+    assert result.records.iloc[0]["language_normalized"] == "id"
+    assert result.records.iloc[0]["is_eligible_for_labeling"]
+    assert result.report["language_validation"] == "source_label_only"
+
+
+@pytest.mark.parametrize("language", ["en", "und", ""])
+def test_non_indonesian_source_label_requires_review(language):
+    source = _source_frame().iloc[[0]].copy()
+    source.loc[0, "lang"] = language
+    result = preprocess_tweet_harvest_frame(
+        source,
+        program_id="mbg",
+        ingestion_run_id="run",
+        collected_at=datetime(2026, 10, 1, tzinfo=UTC),
+        keywords=["mbg"],
+    )
+    assert result.records.iloc[0]["language_needs_review"]
+    assert not result.records.iloc[0]["is_eligible_for_labeling"]
+
+
+def test_same_text_different_ids_retained_but_not_double_labeled():
+    source = _source_frame().iloc[[0]].copy()
+    second = source.copy()
+    second.loc[0, "id_str"] = "another_id"
+    source = pd.concat([source, second], ignore_index=True)
+    result = preprocess_tweet_harvest_frame(
+        source,
+        program_id="mbg",
+        ingestion_run_id="run",
+        collected_at=datetime(2026, 10, 1, tzinfo=UTC),
+        keywords=["mbg"],
+    )
+    assert len(result.records) == 2
+    assert result.records["quality_status"].tolist() == ["accepted", "duplicate_text"]
+    assert result.records["is_eligible_for_labeling"].tolist() == [True, False]
+    assert result.records["split_group_id"].nunique() == 1

@@ -94,8 +94,10 @@ melebihi batas tidak dilanjutkan ke preprocessing.
 Hasil sukses dipakai ulang pada retry setelah checksum diverifikasi; hasil yang
 berubah atau konfigurasi yang berbeda ditolak, bukan ditimpa. Run manual baru
 mendapat namespace berbeda. Preprocessing memakai satu lock bersama dan
-riwayat ID lintas run/program, sehingga tweet yang sudah eligible tidak
-lolos ulang. Teks kosong setelah cleaning selalu diblokir dari pelabelan.
+riwayat ID/teks lintas run untuk setiap program, sehingga contoh yang sudah
+eligible tidak lolos ulang pada target yang sama. Satu tweet dapat dinilai
+terhadap program berbeda dengan petunjuk grup dataset bersama. Teks yang
+hanya mirip memerlukan review. Teks kosong setelah cleaning selalu diblokir dari pelabelan.
 
 Tugas memiliki satu retry setelah lima menit, timeout, dan batas satu run aktif
 per DAG. Pool `x_collection` membatasi pengumpulan menjadi satu tugas pada satu

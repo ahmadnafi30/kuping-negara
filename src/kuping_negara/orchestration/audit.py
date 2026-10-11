@@ -39,7 +39,14 @@ def audit_existing_outputs(root: Path) -> dict:
             if not reasons:
                 continue
             source = path.parent.resolve()
-            target = (quarantine / source.relative_to(processed)).resolve()
+            version = report.get("preprocessing_version", "legacy")
+            if version != "legacy" and (type(version) is not int or version < 1):
+                raise ValueError("Invalid preprocessing version in audit report")
+            target = (
+                quarantine
+                / f"preprocessing_version={version}"
+                / source.relative_to(processed)
+            ).resolve()
             if not source.is_relative_to(processed) or not target.is_relative_to(
                 quarantine
             ):

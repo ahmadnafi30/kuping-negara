@@ -48,11 +48,19 @@
     "ingestion_run_id": { "type": "string", "minLength": 1 },
     "data_version": { "type": ["string", "null"] },
     "model_version": { "type": ["string", "null"] },
-    "schema_version": { "type": "string", "minLength": 1 },
+    "schema_version": { "const": "3" },
     "source_platform": { "const": "x" },
     "processed_at": { "type": "string", "format": "date-time" },
     "is_duplicate": { "type": "boolean" },
     "is_duplicate_across_runs": { "type": "boolean" },
+    "is_duplicate_text": { "type": "boolean" },
+    "is_near_duplicate": { "type": "boolean" },
+    "model_text": { "type": "string" },
+    "text_fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "split_group_id": { "type": "string", "minLength": 1 },
+    "similar_to_tweet_id": { "type": ["string", "null"] },
+    "language_normalized": { "type": "string" },
+    "language_needs_review": { "type": "boolean" },
     "is_empty_cleaned_text": { "type": "boolean" },
     "is_indonesian": { "type": "boolean" },
     "is_relevant": { "type": "boolean" },
@@ -60,7 +68,8 @@
     "quality_status": {
       "type": "string",
       "enum": [
-        "accepted", "duplicate", "empty_cleaned_text", "review_language",
+        "accepted", "duplicate", "duplicate_text", "review_similar_text",
+        "empty_cleaned_text", "review_language",
         "review_relevance", "review_language_and_relevance"
       ]
     }
