@@ -12,6 +12,7 @@ menjelaskan pekerjaan yang belum tersedia.
 | [X Data Collection](x-data-collection.md) | Pengumpulan interaktif, keyword, browser, dan raw storage |
 | [X Data Preprocessing](x-data-preprocessing.md) | Transformasi CSV, flag kualitas, dan lineage |
 | [Airflow Docker](airflow-docker.md) | Jadwal 23.59 WIB, Docker, token lokal, retry, dan operasi |
+| [DVC Data Versioning](dvc-data-versioning.md) | Versi raw LK-05, append, diff, remote dan pemulihan |
 | [Annotation Guidelines](annotation-guidelines.md) | Definisi sentimen dan prosedur review manual |
 
 ## Pengembangan

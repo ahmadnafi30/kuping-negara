@@ -43,22 +43,22 @@ jobs:
         run: uv python install 3.12
 
       - name: Sync locked environment
-        run: uv sync --locked --extra dev
+        run: uv sync --locked --extra dev --extra data-versioning
 
       - name: Check dependency consistency
         run: uv pip check
 
       - name: Check code quality
-        run: uv run --locked --extra dev ruff check src tests dags docker/airflow
+        run: uv run --locked --extra dev --extra data-versioning ruff check src tests dags docker/airflow
 
       - name: Check code formatting
-        run: uv run --locked --extra dev ruff format --check src tests dags docker/airflow
+        run: uv run --locked --extra dev --extra data-versioning ruff format --check src tests dags docker/airflow
 
       - name: Run environment health check
-        run: uv run --locked --extra dev python -m kuping_negara.healthcheck
+        run: uv run --locked --extra dev --extra data-versioning python -m kuping_negara.healthcheck
 
       - name: Run tests
-        run: uv run --locked --extra dev pytest
+        run: uv run --locked --extra dev --extra data-versioning pytest
 
   airflow:
     runs-on: ubuntu-latest

@@ -8,12 +8,14 @@ Gratis, Koperasi Desa Merah Putih, dan Sekolah Rakyat.
 
 Branch `main` menyediakan pengumpulan data interaktif, preprocessing CSV,
 dan penjadwalan melalui Airflow di Docker untuk pengembangan lokal.
-Training model, API prediksi, dashboard, MLflow, dan DVC masih direncanakan.
+DVC menyediakan versi dataset raw dan pemulihan data. Training model, API
+prediksi, dashboard, dan MLflow masih direncanakan.
 
 | Tersedia | Hasil |
 | --- | --- |
 | Kolektor Tweet Harvest | Query dari YAML, rentang tanggal inklusif, raw CSV per program/run |
 | Preprocessing | Normalisasi teks, pemetaan kolom, flag kualitas, CSV dan laporan JSON |
+| DVC | Snapshot raw tervalidasi, hash metadata, append tanpa duplikat, dan remote lokal |
 | Lineage | Run ID, timestamp, SHA-256 sumber dan output |
 | Lingkungan pengembangan | Python 3.12, uv lockfile, Dev Container, pytest, Ruff, CI |
 | Airflow Docker | Dua container (Airflow + PostgreSQL), jadwal 23.59 WIB, preprocessing berurutan, retry tanpa overwrite |
@@ -30,7 +32,7 @@ git clone https://github.com/ahmadnafi30/kuping-negara.git
 cd kuping-negara
 uv sync --locked --extra dev
 uv pip check
-uv run --locked --extra dev python -m kuping_negara
+uv run --locked --extra dev --extra data-versioning python -m kuping_negara
 ```
 
 Alternatif: buat Codespace dari `main`. Panduan setup dan troubleshooting ada
@@ -58,6 +60,26 @@ Dataset contoh tidak disertakan di Git. Preprocessing menghasilkan CSV dan
 menolak menimpa run yang sudah ada. Detail ada di
 [panduan preprocessing](docs/x-data-preprocessing.md).
 
+## Versi dataset dengan DVC (LK-05)
+
+Git menyimpan penunjuk `data/raw/lk05_dataset.csv.dvc` dan metadata audit;
+isi CSV disimpan melalui cache/remote DVC. Contoh tugas menggunakan dua versi:
+`lk05-data-v1` (50 baris CKG) dan `lk05-data-v2` (200 baris empat program).
+Penambahan 150 baris berasal dari koleksi nyata yang berhasil; 50 ID CKG yang
+sudah ada dilewati. Ini simulasi pertumbuhan dataset, belum retraining model.
+
+```bash
+uv sync --locked --extra dev --extra data-versioning
+uv run --locked --extra data-versioning dvc status
+uv run --locked --extra data-versioning dvc diff --show-hash lk05-data-v1 lk05-data-v2
+```
+
+Untuk menambah versi: jalankan koleksi, buat snapshot dengan `--append`, jalankan
+`dvc add`, lalu commit penunjuk serta metrik dan `dvc push`. Cara konfigurasi
+remote, pengambilan versi lama, dan perintah lengkap ada pada
+[panduan DVC](docs/dvc-data-versioning.md). Checkout baru perlu remote yang
+berisi objek dataset sebelum `dvc pull`; dataset tidak ikut `git clone`.
+
 ## Struktur
 
 Untuk pengambilan terjadwal, ikuti [panduan Airflow Docker](docs/airflow-docker.md).
@@ -82,6 +104,7 @@ kuping-negara/
 │   ├── paths.py            # Root repositori dan default pipeline
 │   ├── healthcheck.py      # Pemeriksaan lingkungan pengembangan
 │   ├── ingestion/          # Query, browser, raw storage, dan CLI koleksi
+│   ├── data_versioning/   # Snapshot raw, append, dan audit metadata DVC
 │   ├── preprocessing/      # Normalisasi teks, transformasi, dan pipeline file
 │   └── orchestration/      # Adapter terjadwal, publikasi atomik, dan retry
 ├── tests/                  # Pengujian unit dan integrasi tanpa layanan eksternal
@@ -96,9 +119,10 @@ Panduan batas modul tersedia di [Project Structure](docs/project-structure.md).
 ## Pemeriksaan kualitas
 
 ```bash
-uv run --locked --extra dev ruff check src tests dags docker/airflow
-uv run --locked --extra dev ruff format --check src tests dags docker/airflow
-uv run --locked --extra dev pytest
+uv sync --locked --extra dev --extra data-versioning
+uv run --locked --extra dev --extra data-versioning ruff check src tests dags docker/airflow
+uv run --locked --extra dev --extra data-versioning ruff format --check src tests dags docker/airflow
+uv run --locked --extra dev --extra data-versioning pytest
 ```
 
 CI menjalankan pemeriksaan ini pada Pull Request dan push ke `main`/`develop`.

@@ -14,6 +14,7 @@ arsitektur lengkap ada dalam [proposal](project-proposal.md).
 - Teks model yang mempertahankan makna sentimen, relevansi hashtag, duplikat
   per target program, serta flag kemiripan dan petunjuk grup dataset.
 - Pedoman anotasi manual serta rancangan JSON Schema.
+- DVC untuk snapshot raw tervalidasi, penambahan versi, dan remote lokal.
 - Pengujian unit/integrasi, pemeriksaan format dan lint, serta CI.
 - Airflow Docker lokal: empat jadwal mingguan 23.59 WIB, collect → preprocess,
   token via secret, publikasi atomik, dan verifikasi checksum pada retry.
@@ -26,11 +27,11 @@ arsitektur lengkap ada dalam [proposal](project-proposal.md).
 | Dataset berlabel | Anotasi, adjudication, dan split berbasis waktu/conversation | Dataset version dan laporan agreement |
 | Baseline model | Training/evaluation scikit-learn | Macro-F1 dan recall per kelas dengan split terdokumentasi |
 | Eksperimen model | Bandingkan kandidat model Bahasa Indonesia | Metrik, biaya inference, calibration, dan lineage |
-| Infrastruktur | Implementasikan DVC/MLflow dan persiapkan deployment Airflow produksi | Backup, autentikasi, secret management, dan runbook produksi |
+| Infrastruktur | Perluas remote DVC dan implementasikan MLflow dan persiapkan deployment Airflow produksi | Backup, autentikasi, secret management, dan runbook produksi |
 | Serving | API prediksi dan dashboard | Tes kontrak dan tampilan uncertainty |
 | Operasi | Monitoring, alerting, retraining, dan rollback | Metrik, prosedur recovery, dan review kesiapan |
 
 Jadwal operasional didefinisikan di `dags/x_collection.py`; `collection_day`
 dalam YAML tetap metadata dan harus konsisten dengan DAG. DAG dibuat pause;
-aktivasi membutuhkan secret akun X lokal. DVC dan model registry belum tersedia.
+aktivasi membutuhkan secret akun X lokal. DVC tersedia untuk versioning raw; model registry belum tersedia.
 Panduan penggunaan serta batas stack lokal ada di [Airflow Docker](airflow-docker.md).

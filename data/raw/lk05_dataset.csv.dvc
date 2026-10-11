@@ -1,0 +1,5 @@
+outs:
+- md5: 644e1e4e9d4db18c31dd42510b60452e
+  size: 18950
+  hash: md5
+  path: lk05_dataset.csv

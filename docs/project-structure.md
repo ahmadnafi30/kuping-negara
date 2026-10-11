@@ -21,6 +21,7 @@ dibuat ketika pekerjaan dimulai, bukan sebagai placeholder.
 | `preprocessing/duplicates.py` | Duplikat ID/teks per program dan flag kemiripan teks |
 | `preprocessing/history.py` | Lock publikasi dan riwayat contoh/grup lintas run/program |
 | `preprocessing/x_pipeline.py` | Lineage file, checksum, persistensi, dan CLI `preprocess-x-data` |
+| `data_versioning/snapshots.py` | Snapshot raw tervalidasi, append ID per program dan metrik audit |
 | `orchestration/audit.py` | Mengarantina processed lama/invalid tanpa mengubah raw |
 | `orchestration/runtime.py` | Koleksi tanpa prompt, isolasi run, publish atomik, dan validasi retry |
 
@@ -58,7 +59,7 @@ preprocessing pipeline ──> configuration / paths / x_posts ──> text
 | `tests/integration/` | Pengujian alur raw CSV hingga output dan laporan |
 
 `data/raw/.gitkeep` dan `data/processed/.gitkeep` menjaga lokasi output terlihat
-di checkout baru. Isi dataset diabaikan Git. Aturan ignore untuk `data/labeled/`
+di checkout baru. Isi dataset diabaikan Git; `.dvc` dan `data/raw/.gitignore` tetap dilacak. Aturan ignore untuk `data/labeled/`
 dan `models/` tetap disiapkan walaupun foldernya belum ada.
 
 ## Penambahan fitur

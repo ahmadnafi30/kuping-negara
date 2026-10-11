@@ -26,8 +26,7 @@ htmlcov/
 
 # Local data and model artifacts
 tweets-data/
-data/raw/*
-!data/raw/.gitkeep
+# The raw zone has its own ignore rules so DVC can discover metadata.
 data/quarantine/
 data/processed/*
 !data/processed/.gitkeep
@@ -51,3 +50,7 @@ docker/collector/node_modules/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Generated assignment artifacts and local audit work
+output/
+tmp/
