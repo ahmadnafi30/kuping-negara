@@ -7,6 +7,10 @@ menggunakan TF-IDF dan Logistic Regression. `train.py` menjadi entry point;
 validasi data, pembagian dataset, dan pencatatan eksperimen berada dalam
 `src/kuping_negara/training/`.
 
+[Peta kode](kode-mlflow.md) menjelaskan fungsi setiap modul serta lokasi
+file aslinya di GitHub. [Bukti screenshot](../img/README.md) menunjukkan tiga
+run terbaru, perbandingan metrik, Registry dan hasil test model terpilih.
+
 ## Pembaruan data 19 Oktober 2026
 
 Eksperimen lanjutan memakai 396 contoh, termasuk CKG. Baca
