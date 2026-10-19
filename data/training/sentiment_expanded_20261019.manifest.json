@@ -1,0 +1,89 @@
+{
+  "raw_revision": "raw-expanded-20261019-v1",
+  "raw_path": "data/raw/expanded_20261019.csv",
+  "raw_md5": "b3384612464c7896f3355e5454c42d7a",
+  "raw_sha256": "aa2962d7f07d8ed6f132f1f2fa7baba6640b310a1973af7a36578a1ab965b8ca",
+  "dataset_sha256": "29d088b126a6462a3ac48af22f08b5608a0ef0bd9626b065bddfc1525a8f369f",
+  "labels_sha256": "caeaff99b911b4e3aee239007a3714100d97b65f6791ab6d9f23ae83164c85a5",
+  "rows": 396,
+  "class_counts": {
+    "negative": 160,
+    "neutral": 148,
+    "positive": 88
+  },
+  "program_counts": {
+    "kopdes_merah_putih": 144,
+    "mbg": 133,
+    "sekolah_rakyat": 97,
+    "ckg": 22
+  },
+  "preprocessing_version": 3,
+  "label_status": "provisional_ai",
+  "deployment_approved": false,
+  "annotation_provenance": {
+    "teachers": [
+      {
+        "model_id": "taufiqdp/indonesian-sentiment",
+        "revision": "7b102f732bbce270807db57cde99c8c202bb2ad7",
+        "weights_sha256": "c5553bc1d09f95a539dc52e6150f0cd9a2a23646b520ca599e3ebc03d8137935",
+        "model_card": "https://huggingface.co/taufiqdp/indonesian-sentiment/tree/7b102f732bbce270807db57cde99c8c202bb2ad7",
+        "confidence_min": 0.8,
+        "margin_min": 0.25,
+        "max_tokens": 256,
+        "score_is_calibrated": false,
+        "inference": "local_cpu"
+      },
+      {
+        "model_id": "taufiqdp/indonesian-sentiment",
+        "revision": "7b102f732bbce270807db57cde99c8c202bb2ad7",
+        "weights_sha256": "c5553bc1d09f95a539dc52e6150f0cd9a2a23646b520ca599e3ebc03d8137935",
+        "model_card": "https://huggingface.co/taufiqdp/indonesian-sentiment/tree/7b102f732bbce270807db57cde99c8c202bb2ad7",
+        "confidence_min": 0.8,
+        "margin_min": 0.25,
+        "max_tokens": 256,
+        "score_is_calibrated": false,
+        "inference": "local_cpu"
+      },
+      {
+        "model_id": "taufiqdp/indonesian-sentiment",
+        "revision": "7b102f732bbce270807db57cde99c8c202bb2ad7",
+        "weights_sha256": "c5553bc1d09f95a539dc52e6150f0cd9a2a23646b520ca599e3ebc03d8137935",
+        "model_card": "https://huggingface.co/taufiqdp/indonesian-sentiment/tree/7b102f732bbce270807db57cde99c8c202bb2ad7",
+        "confidence_min": 0.8,
+        "margin_min": 0.25,
+        "max_tokens": 256,
+        "score_is_calibrated": false,
+        "inference": "local_cpu"
+      }
+    ],
+    "proposal_sources": [
+      {
+        "sha256": "9ab34c880ea80e73482980a0c6fa405daa3c764f55f8f435fad8c7ead5d283de",
+        "rows": 349
+      },
+      {
+        "sha256": "c02ed9634162c6d70a2113668b0a2fec5a902ea6f69c3cad45c8a9501f265e87",
+        "rows": 118
+      },
+      {
+        "sha256": "2e0c79be3f2985de5ff715ae60e157c0e7222d6517d95695ecc520f76306aefc",
+        "rows": 26
+      }
+    ],
+    "context_decisions_sha256": "26af93471cfd4baa7626bdfb4c442de3d1ff25c1facbfd58326fb3f45ff5b1ce",
+    "context_decisions": 413,
+    "reviewer_type": "ai_contextual_review",
+    "original_dataset_sha256": "1c073b14fd28d7dd7302544f7f936e587726076743b3baf708e3ec6327a580a4",
+    "original_development_rows_reused": 72,
+    "original_test_rows_protected": 19,
+    "rows_excluded_for_original_benchmark_overlap": 0,
+    "unreviewed_teacher_proposals_enter_training": false,
+    "mixed_target_text_conflicts_excluded": 0,
+    "human_reviewed": false,
+    "deployment_approved": false
+  },
+  "annotation_method_counts": {
+    "local_teacher_with_ai_context_review": 324,
+    "contextual_text_review": 72
+  }
+}
