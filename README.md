@@ -6,6 +6,10 @@ Pipeline data untuk riset analisis sentimen percakapan publik di X mengenai
 Makan Bergizi Gratis, Cek Kesehatan Gratis, Koperasi Desa Merah Putih, dan
 Sekolah Rakyat.
 
+Untuk membaca implementasi, mulai dari [peta kode dan fungsi file](docs/kode-mlflow.md).
+[Panduan pengumpulan](docs/pengumpulan-mlflow.md) menjelaskan hubungan source,
+metadata, screenshot, dan laporan tugas.
+
 ## Fitur yang tersedia
 
 | Komponen | Fungsi |
