@@ -14,8 +14,11 @@ for relative in [
     "output",
 ]:
     assert not (root / relative).exists(), relative
-assert not list((root / "data/raw").glob("*.csv"))
-assert not list((root / "data/training").glob("*.csv"))
+for path in (root / "data").rglob("*"):
+    if path.is_file():
+        assert path.name in {".gitkeep", ".gitignore"} or path.name.endswith(
+            (".dvc", ".manifest.json")
+        ), str(path.relative_to(root))
 assert (root / "train.py").is_file()
 assert (root / "data/training/sentiment_expanded_20261019.manifest.json").is_file()
 print("Training image verified: source/metadata only; no dataset or local credentials")
