@@ -136,7 +136,7 @@ a URL or account mention cannot make a record eligible. Empty cleaned text
 receives an explicit flag, even if another quality status takes precedence.
 
 New collector runs write `collection.json` beside the CSV. Preprocessing
-rechecks the raw/configuration hashes, exact inclusive Jakarta date range, and
+rechecks the raw/configuration hashes (using the frozen collection YAML), exact inclusive Jakarta date range, and
 hard requested row limit. Airflow requires this manifest; the standalone CLI
 can read legacy CSVs without one, with `collection_validation: null` in its
 report. Such legacy output has no verified collection window or limit.

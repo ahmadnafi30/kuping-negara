@@ -100,6 +100,7 @@ def collect_scheduled(
     execution_id: str,
     lookback_days: int = 7,
     limit: int = 50,
+    window_end: date | None = None,
     runner: CollectorRunner = _run_collector,
 ) -> Path:
     """Publish only successful collection; retries reuse verified raw content."""
@@ -109,10 +110,19 @@ def collect_scheduled(
     if program_id not in programs or limit < 1:
         raise ValueError("Unknown program or invalid collection limit")
     start, end = collection_window(scheduled_at, lookback_days)
+    if window_end is not None:
+        if window_end >= scheduled_at.astimezone(JAKARTA_TIMEZONE).date():
+            raise ValueError("Backfill window must end before the collection day")
+        end = window_end
+        start = end - timedelta(days=lookback_days - 1)
     timestamp = scheduled_at.astimezone(JAKARTA_TIMEZONE)
     run_id = timestamp.strftime("%Y%m%dT%H%M%S%z")
     output_name = build_output_name(program_id, start, end)
-    query = build_search_query(programs[program_id]["keywords"])
+    query = build_search_query(
+        programs[program_id]["keywords"],
+        language=programs[program_id].get("search_language"),
+        context_keywords=programs[program_id].get("search_context_keywords", ()),
+    )
     raw_root = root / "data/raw/x"
     destination = (
         raw_root
@@ -128,6 +138,7 @@ def collect_scheduled(
         "to_date": end.isoformat(),
         "limit": limit,
         "config_sha256": sha256(config_path),
+        "config_snapshot": "collection_config.yaml",
     }
     if destination.exists():
         manifest = json.loads((destination / "collection.json").read_text())
@@ -183,6 +194,11 @@ def collect_scheduled(
             run_id=run_id,
             collected_date=timestamp.date(),
         )
+        (collected.parent / "collection_config.yaml").write_bytes(
+            config_path.read_bytes()
+        )
+        if sha256(config_path) != metadata["config_sha256"]:
+            raise CollectionError("Configuration changed during collection")
         (collected.parent / "collection.json").write_text(
             json.dumps(
                 {
@@ -241,6 +257,7 @@ def main() -> None:
     parser.add_argument("--input", type=Path)
     parser.add_argument("--lookback-days", type=int, default=7)
     parser.add_argument("--limit", type=int, default=50)
+    parser.add_argument("--window-end", type=date.fromisoformat)
     args = parser.parse_args()
     shared = {
         "repository_root": args.repository_root,
@@ -255,6 +272,7 @@ def main() -> None:
             program_id=args.program,
             lookback_days=args.lookback_days,
             limit=args.limit,
+            window_end=args.window_end,
         )
         result = {"raw_path": str(raw)}
     else:

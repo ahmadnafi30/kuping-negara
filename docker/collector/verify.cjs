@@ -30,8 +30,18 @@ async function main() {
   }
   const integrity = require("/opt/kuping-negara/scripts/tweet_harvest_integrity_hook.cjs");
   const collectorSource = fs.readFileSync(process.env.KUPING_NEGARA_COLLECTOR, "utf8");
-  new (require("node:vm").Script)(integrity.patchCollectorSource(collectorSource));
+  new (require("node:vm").Script)(integrity.patchPaginationSource(integrity.patchCollectorSource(collectorSource)));
   assert.throws(() => integrity.patchCollectorSource("unsupported"));
+  const firstPage = {data:{search_by_raw_query:{search_timeline:{timeline:{instructions:[
+    {type:"TimelineReplaceEntry",entry:{entryId:"cursor-top"}},
+    {type:"TimelineAddEntries",entries:[{entryId:"tweet-1"},{entryId:"tweet-2"}]}
+  ]}}}}};
+  assert.deepEqual(integrity.searchTimelineEntries(firstPage).map(x=>x.entryId),
+    ["cursor-top","tweet-1","tweet-2"], "Tweet entries after a cursor instruction must not disappear");
+  assert.equal(integrity.searchTimelineTerminated(firstPage),false);
+  firstPage.data.search_by_raw_query.search_timeline.timeline.instructions.push(
+    {type:"TimelineTerminateTimeline",direction:"Bottom"});
+  assert.equal(integrity.searchTimelineTerminated(firstPage),true);
   const searchResponse = query => ({url: () => "https://x.com/i/api/graphql/id/SearchTimeline?variables=" + encodeURIComponent(JSON.stringify({rawQuery:query}))});
   assert.equal(integrity.matchesSearchResponse(searchResponse("ckg"), "03-10-2026", "11-10-2026"), false);
   assert.equal(integrity.matchesSearchResponse(searchResponse("ckg since:2026-10-03 until:2026-10-11"), "03-10-2026", "11-10-2026"), true);

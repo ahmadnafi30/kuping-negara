@@ -2,24 +2,37 @@ schema_version: 1
 programs:
   mbg:
     display_name: Makan Bergizi Gratis
+    search_language: id
     collection_day: monday
     keywords:
       - "mbg"
       - "makan bergizi gratis"
   ckg:
     display_name: Cek Kesehatan Gratis
+    search_context_keywords:
+      - kesehatan
+      - puskesmas
+      - skrining
+      - kemenkes
+      - pemeriksaan
+    search_language: id
     collection_day: tuesday
     keywords:
       - "ckg"
       - "cek kesehatan gratis"
+      - "pemeriksaan kesehatan gratis"
   kopdes_merah_putih:
     display_name: Koperasi Desa Merah Putih
+    search_language: id
     collection_day: wednesday
     keywords:
       - "kopdes"
       - "koperasi desa merah putih"
+      - "koperasi merah putih"
+      - "kopdes merah putih"
   sekolah_rakyat:
     display_name: Sekolah Rakyat
+    search_language: id
     collection_day: thursday
     keywords:
       - "sekolah rakyat"

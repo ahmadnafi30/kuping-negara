@@ -20,6 +20,29 @@ function patchCollectorSource(source) {
     `          const comingTweets = require(${helper}).selectTweets(tweetContents, TARGET_TWEET_COUNT - allData.tweets.length);\n          if (!comingTweets.length) { cache.set("got_tweets", false); await scrollDown(page); continue; }\n          allData.tweets.push(...comingTweets);`);
 }
 
+function searchTimelineEntries(response) {
+  const instructions = response?.data?.search_by_raw_query?.search_timeline?.timeline?.instructions;
+  if (!Array.isArray(instructions)) throw new Error("SearchTimeline instructions are unavailable");
+  return instructions.flatMap(instruction => Array.isArray(instruction.entries)
+    ? instruction.entries : instruction.entry ? [instruction.entry] : []);
+}
+
+function searchTimelineTerminated(response) {
+  const instructions = response?.data?.search_by_raw_query?.search_timeline?.timeline?.instructions;
+  return Array.isArray(instructions) && instructions.some(instruction =>
+    instruction.type === "TimelineTerminateTimeline" && instruction.direction === "Bottom");
+}
+
+function patchPaginationSource(source) {
+  const helper = JSON.stringify(__filename);
+  source = once(source, "            tweets = _optionalChain([responseJson, 'access', _7 => _7.data, 'optionalAccess', _8 => _8.search_by_raw_query, 'access', _9 => _9.search_timeline, 'access', _10 => _10.timeline, 'optionalAccess', _11 => _11.instructions, 'optionalAccess', _12 => _12[0], 'optionalAccess', _13 => _13.entries]);",
+    `            tweets = require(${helper}).searchTimelineEntries(responseJson);
+            if (require(${helper}).searchTimelineTerminated(responseJson) && !tweets.some(entry => entry.content?.itemContent?.tweet_results?.result)) break;`);
+  return once(source,
+    "selectTweets(tweetContents, TARGET_TWEET_COUNT - allData.tweets.length)",
+    "selectTweets(tweetContents, TARGET_TWEET_COUNT - allData.tweets.length, new Set(allData.tweets.map(item => item.tweet.id_str)))");
+}
+
 function exactWindowQuery(query) {
   const lower = Date.parse(process.env.KUPING_NEGARA_WINDOW_START);
   const upper = Date.parse(process.env.KUPING_NEGARA_WINDOW_END);
@@ -55,7 +78,7 @@ function matchesSearchResponse(response, from, to) {
   } catch { return false; }
 }
 
-function selectTweets(tweets, remaining) {
+function selectTweets(tweets, remaining, seen = new Set()) {
   const lower = Date.parse(process.env.KUPING_NEGARA_WINDOW_START);
   const upper = Date.parse(process.env.KUPING_NEGARA_WINDOW_END);
   if (!Number.isFinite(lower) || !Number.isFinite(upper) || lower >= upper || !Number.isInteger(remaining) || remaining < 0) {
@@ -64,7 +87,11 @@ function selectTweets(tweets, remaining) {
   return tweets.filter(item => {
     const published = Date.parse(item.tweet.created_at);
     if (!Number.isFinite(published)) throw new Error("Collector returned an invalid publication timestamp");
-    return published >= lower && published < upper;
+    if (!(published >= lower && published < upper)) return false;
+    const id = item.tweet.id_str;
+    if (id && seen.has(id)) return false;
+    if (id) seen.add(id);
+    return true;
   }).slice(0, remaining);
 }
 
@@ -74,7 +101,7 @@ function install() {
     if (!filename.replace(/\\/g, "/").endsWith("/tweet-harvest/dist/bin.js")) return original(module, filename);
     const packageFile = path.join(path.dirname(filename), "..", "package.json");
     if (JSON.parse(fs.readFileSync(packageFile, "utf8")).version !== "2.7.1") throw new Error("Unsupported collector version");
-    module._compile(patchCollectorSource(fs.readFileSync(filename, "utf8")), filename);
+    module._compile(patchPaginationSource(patchCollectorSource(fs.readFileSync(filename, "utf8"))), filename);
   };
 }
-module.exports = { install, patchCollectorSource, exactWindowQuery, inputKeywordsInWindow, matchesSearchResponse, selectTweets };
+module.exports = { install, patchCollectorSource, patchPaginationSource, searchTimelineEntries, searchTimelineTerminated, exactWindowQuery, inputKeywordsInWindow, matchesSearchResponse, selectTweets };

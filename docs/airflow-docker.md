@@ -35,8 +35,8 @@ Jika ada komponen gagal, periksa log lalu restart `airflow`.
 Setiap DAG menjalankan `collect → preprocess`. Rentang pengambilan adalah
 tujuh hari kalender penuh sebelum hari jadwal, dengan timezone `Asia/Jakarta`.
 Contoh: Senin 12 Oktober 2026 pukul 23.59 mengambil 5–11 Oktober inklusif.
-Hari pengambilan tidak disertakan karena belum selesai. Batas awal 50 tweet
-per run; hasil boleh kurang dari 50, tetapi tidak boleh melebihi batas ini.
+Hari pengambilan tidak disertakan karena belum selesai. Batas pengambilan terjadwal 200 unggahan
+per run; hasil boleh kurang dari 200, tetapi tidak boleh melebihi batas ini.
 
 Pengulangan tugas menggunakan timestamp dan ID run yang sama. Run manual memakai
 waktu pemicuannya. Bukan waktu worker mulai berjalan: keterlambatan task tidak

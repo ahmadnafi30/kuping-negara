@@ -54,3 +54,6 @@ Thumbs.db
 # Generated assignment artifacts and local audit work
 output/
 tmp/
+
+# Project-local dependency download cache
+.cache/

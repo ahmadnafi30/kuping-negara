@@ -107,7 +107,20 @@ def prepare_dataset(
     selected &= frame.quality_status.eq("accepted") & frame.relevance_review.eq(
         "relevant"
     )
-    frame = frame.loc[selected & frame.sentiment_label.isin(LABELS), COLUMNS].copy()
+    optional = [
+        c
+        for c in (
+            "published_at",
+            "annotation_method",
+            "annotation_status",
+            "teacher_revision",
+            "teacher_score",
+        )
+        if c in frame.columns
+    ]
+    frame = frame.loc[
+        selected & frame.sentiment_label.isin(LABELS), COLUMNS + optional
+    ].copy()
     validate_rows(frame, allow_provisional)
     raw_rows = read_frame(raw).set_index(["target_program", "id_str"])
     if raw_rows.index.has_duplicates:
@@ -143,6 +156,10 @@ def prepare_dataset(
         "preprocessing_version": PREPROCESSING_VERSION,
         "label_status": "provisional_ai" if provisional else "human_approved",
         "deployment_approved": False,
+        "annotation_provenance": batch.get("annotation_provenance", {}),
+        "annotation_method_counts": frame.annotation_method.value_counts().to_dict()
+        if "annotation_method" in frame
+        else {},
     }
     output.with_suffix(".manifest.json").write_text(
         json.dumps(metadata, indent=2) + "\n", encoding="utf-8"

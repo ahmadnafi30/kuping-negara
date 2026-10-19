@@ -63,3 +63,49 @@ def test_invalid_publication_time_is_rejected(tmp_path):
             end=date(2026, 10, 10),
             limit=50,
         )
+
+
+def test_frozen_config_survives_current_config_change_and_rejects_tampering(tmp_path):
+    import json
+
+    from kuping_negara.ingestion.validation import (
+        collection_config,
+        sha256_file,
+        validate_collection_manifest,
+    )
+
+    path = write_csv(tmp_path, ["2026-10-10T12:00:00Z"])
+    frozen = tmp_path / "collection_config.yaml"
+    frozen.write_text("original configuration")
+    current = tmp_path / "current.yaml"
+    current.write_text("new configuration")
+    (tmp_path / "collection.json").write_text(
+        json.dumps(
+            {
+                "from_date": "2026-10-04",
+                "to_date": "2026-10-10",
+                "limit": 50,
+                "input_sha256": sha256_file(path),
+                "config_sha256": sha256_file(frozen),
+                "config_snapshot": frozen.name,
+            }
+        )
+    )
+    assert collection_config(path, current) == frozen.resolve()
+    assert validate_collection_manifest(path, config_path=current)["rows"] == 1
+    frozen.write_text("tampered")
+    with pytest.raises(CollectionError, match="configuration has changed"):
+        validate_collection_manifest(path, config_path=current)
+
+
+def test_config_snapshot_cannot_escape_run(tmp_path):
+    import json
+
+    from kuping_negara.ingestion.validation import collection_config
+
+    path = tmp_path / "posts.csv"
+    (tmp_path / "collection.json").write_text(
+        json.dumps({"config_snapshot": "../outside.yaml"})
+    )
+    with pytest.raises(CollectionError, match="snapshot path"):
+        collection_config(path, tmp_path / "current.yaml")

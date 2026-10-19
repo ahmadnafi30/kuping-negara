@@ -29,6 +29,19 @@ const adapter = require(process.argv[1]);
   assert.throws(() => adapter.exactWindowQuery("mbg"));
   delete process.env.KUPING_NEGARA_WINDOW_START;
   assert.throws(() => adapter.exactWindowQuery("mbg"));
+  const response = {data:{search_by_raw_query:{search_timeline:{timeline:{instructions:[
+    {type:"TimelineReplaceEntry",entry:{entryId:"cursor"}},
+    {type:"TimelineAddEntries",entries:[{entryId:"tweet-1"}]},
+    {type:"TimelineTerminateTimeline",direction:"Bottom"}
+  ]}}}}};
+  assert.equal(adapter.searchTimelineEntries(response).length, 2);
+  assert.equal(adapter.searchTimelineTerminated(response), true);
+  assert.throws(() => adapter.searchTimelineEntries({}));
+  process.env.KUPING_NEGARA_WINDOW_START = "2026-10-03T17:00:00Z";
+  process.env.KUPING_NEGARA_WINDOW_END = "2026-10-10T17:00:00Z";
+  const seen = new Set(["old"]);
+  const tweets = ["old", "new", "new"].map(id_str => ({tweet:{id_str,created_at:"2026-10-05T00:00:00Z"}}));
+  assert.equal(adapter.selectTweets(tweets, 100, seen).length, 1);
   console.log(JSON.stringify({awaited:true, precise_midnight:true}));
 })().catch(() => process.exit(1));
 """

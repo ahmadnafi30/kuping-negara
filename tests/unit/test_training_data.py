@@ -86,3 +86,16 @@ def test_splits_keep_related_posts_together_and_cover_classes():
             groups[dev[i]] for i in validation
         }
         assert frame.iloc[dev[validation]].sentiment_label.nunique() == 3
+
+
+def test_word_character_features_preserve_emoji_negation_and_slang():
+    from kuping_negara.training.evaluation import make_pipeline
+
+    frame = sample_frame()
+    frame.loc[0, "model_text"] = "Program nggak bagus 😡 #TolakMBG"
+    model = make_pipeline({"C": 1, "ngram_max": 2, "feature_mode": "word_char"}, 42)
+    model.fit(frame[["model_text", "target_program"]], frame.sentiment_label)
+    features = model.named_steps["features"].named_transformers_
+    assert {"nggak", "nggak bagus", "😡"} <= set(features["text"].vocabulary_)
+    assert "gak" in features["characters"].vocabulary_
+    assert "program" not in features

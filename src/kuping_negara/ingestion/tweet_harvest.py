@@ -84,6 +84,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             if arguments.config.is_absolute()
             else repository_root / arguments.config
         )
+        config_hash = sha256_file(config_path)
+        config_snapshot = config_path.read_bytes()
         programs = load_programs(config_path)
         selected_programs = select_programs(programs, arguments.program)
         if arguments.limit <= 0:
@@ -93,7 +95,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     plans: list[tuple[str, str, str, list[str]]] = []
     for program_id, config in selected_programs.items():
-        query = build_search_query(config["keywords"])
+        query = build_search_query(
+            config["keywords"],
+            language=config.get("search_language"),
+            context_keywords=config.get("search_context_keywords", ()),
+        )
         output_name = build_output_name(program_id, start, end)
         command = build_tweet_harvest_command(
             query=query,
@@ -172,6 +178,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             validation = validate_collection(
                 candidate, start=start, end=end, limit=arguments.limit
             )
+            if sha256_file(config_path) != config_hash:
+                raise CollectionError("Configuration changed during collection")
             destination = finalize_output(
                 repository_root=repository_root,
                 output_name=output_name,
@@ -182,16 +190,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         except CollectionError as error:
             print(f"Error: {error}", file=sys.stderr)
             return 1
+        (destination.parent / "collection_config.yaml").write_bytes(config_snapshot)
         (destination.parent / "collection.json").write_text(
             json.dumps(
                 {
                     "query": build_search_query(
-                        selected_programs[program_id]["keywords"]
+                        selected_programs[program_id]["keywords"],
+                        language=selected_programs[program_id].get("search_language"),
+                        context_keywords=selected_programs[program_id].get(
+                            "search_context_keywords", ()
+                        ),
                     ),
                     "from_date": start.isoformat(),
                     "to_date": end.isoformat(),
                     "limit": arguments.limit,
-                    "config_sha256": sha256_file(config_path),
+                    "config_sha256": config_hash,
+                    "config_snapshot": "collection_config.yaml",
                     "input_sha256": sha256_file(destination),
                     "validation": validation,
                 },

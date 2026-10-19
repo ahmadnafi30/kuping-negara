@@ -51,13 +51,31 @@ def run_experiments(
     frame, lineage = load_dataset(root, dataset, allow_provisional)
     settings = json.loads(config.read_text(encoding="utf-8"))
     trials = settings["trials"]
-    if len(trials) < 3 or len({(t["C"], t["ngram_max"]) for t in trials}) < 3:
+    if (
+        len(trials) < 3
+        or len(
+            {
+                (t["C"], t["ngram_max"], t.get("feature_mode", "word_program"))
+                for t in trials
+            }
+        )
+        < 3
+    ):
         raise ValueError("Configure at least three distinct hyperparameter trials")
     if any(
         not np.isfinite(t["C"]) or t["C"] <= 0 or t["ngram_max"] not in (1, 2)
         for t in trials
     ):
         raise ValueError("C must be positive and ngram_max must be 1 or 2")
+    provisional = lineage["label_status"] == "provisional_ai"
+    name = (
+        "kuping-negara-sentiment-pilot"
+        if provisional
+        else "kuping-negara-sentiment-candidate"
+    )
+    name = settings.get("registered_model_name", name)
+    if provisional and not name.endswith("-pilot"):
+        raise ValueError("Provisional data requires a registry name ending in -pilot")
     development, test, folds = make_splits(frame, settings["random_seed"])
     x = frame[FEATURES]
     y = frame.sentiment_label
@@ -80,6 +98,9 @@ def run_experiments(
     }
     if split["group_overlap"]:
         raise ValueError("A leakage group crossed the holdout boundary")
+    # Validate feature modes before creating any experiment runs.
+    for trial in trials:
+        make_pipeline(trial, settings["random_seed"])
     mlflow.set_tracking_uri(tracking_uri or tracking_store(root))
     mlflow.set_registry_uri(mlflow.get_tracking_uri())
     experiment = mlflow.get_experiment_by_name(settings["experiment_name"])
@@ -117,6 +138,7 @@ def run_experiments(
             },
         ) as run:
             for key, value in {
+                "feature_mode": trial.get("feature_mode", "word_program"),
                 "C": trial["C"],
                 "ngram_max": trial["ngram_max"],
                 "class_weight": "balanced",
@@ -227,12 +249,6 @@ def run_experiments(
         )
         mlflow.log_artifact(str(matrix_path))
         mlflow.log_artifact(str(comparison_path))
-    provisional = lineage["label_status"] == "provisional_ai"
-    name = (
-        "kuping-negara-sentiment-pilot"
-        if provisional
-        else "kuping-negara-sentiment-candidate"
-    )
     registered = mlflow.register_model(best["model_uri"], name)
     client = MlflowClient()
     for key, value in {
@@ -243,6 +259,17 @@ def run_experiments(
     }.items():
         client.set_model_version_tag(name, registered.version, key, value)
     client.set_registered_model_alias(name, "experimental", registered.version)
+    slice_metrics = {}
+    for program in sorted(frame.target_program.unique()):
+        positions = np.flatnonzero(
+            frame.iloc[test].target_program.to_numpy() == program
+        )
+        if len(positions):
+            slice_metrics[program] = {
+                "rows": len(positions),
+                "class_counts": y.iloc[test[positions]].value_counts().to_dict(),
+                **metrics(y.iloc[test[positions]], predicted[positions], "test"),
+            }
     summary = {
         "experiment_name": settings["experiment_name"],
         "batch_id": batch_id,
@@ -256,6 +283,7 @@ def run_experiments(
         "best_parameters": best["parameters"],
         "selection_metric": "cv_macro_f1",
         "test_metrics": test_metrics,
+        "test_program_slices": slice_metrics,
         "dummy_metrics": dummy_metrics,
         "registry": {
             "name": name,
@@ -267,9 +295,9 @@ def run_experiments(
             "AI labels are provisional; metrics measure agreement with AI labels, not human ground truth."
             if provisional
             else "Human-approved labels still require independent deployment review.",
-            "Only one seven-day collection period; no future-time generalization claim.",
+            "Grouped holdout is not a future-time benchmark; no temporal generalization claim.",
             "Small, imbalanced sample and few positive examples; CV estimates are unstable.",
-            "Program features may capture program imbalance; require slice evaluation before deployment.",
+            "Selection is affected by search coverage and teacher label bias; require independent human and program-slice evaluation.",
         ],
     }
     summary_path = output / "experiment_summary.json"

@@ -383,7 +383,7 @@ python-json-logger==4.2.0
     # via jupyter-events
 pywin32==312 ; sys_platform == 'win32'
     # via docker
-pywinpty==3.0.5 ; os_name == 'nt'
+pywinpty==3.0.5 ; os_name == 'nt' and sys_platform != 'darwin'
     # via
     #   jupyter-server
     #   jupyter-server-terminals

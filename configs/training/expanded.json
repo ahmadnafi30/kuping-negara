@@ -1,0 +1,10 @@
+{
+  "experiment_name": "kuping-negara-sentiment-expanded",
+  "registered_model_name": "kuping-negara-sentiment-expanded-pilot",
+  "random_seed": 42,
+  "trials": [
+    {"name": "word-char-c05", "C": 0.5, "ngram_max": 2, "feature_mode": "word_char"},
+    {"name": "word-char-c2", "C": 2.0, "ngram_max": 2, "feature_mode": "word_char"},
+    {"name": "word-char-c10", "C": 10.0, "ngram_max": 2, "feature_mode": "word_char"}
+  ]
+}

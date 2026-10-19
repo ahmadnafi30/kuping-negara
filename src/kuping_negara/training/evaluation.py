@@ -18,20 +18,45 @@ FEATURES = ["model_text", "target_program"]
 
 
 def make_pipeline(parameters: dict, seed: int) -> Pipeline:
-    features = ColumnTransformer(
-        [
+    mode = parameters.get("feature_mode", "word_program")
+    if mode not in {"word_program", "word_char", "word_char_program"}:
+        raise ValueError("Unknown feature_mode")
+    text_options = {}
+    if mode != "word_program":
+        # Keep negation, emoji and punctuation as model features.
+        text_options["token_pattern"] = r"(?u)\b\w+\b|[^\w\s]"
+    transformers = [
+        (
+            "text",
+            TfidfVectorizer(
+                ngram_range=(1, parameters["ngram_max"]),
+                sublinear_tf=True,
+                max_features=10000,
+                **text_options,
+            ),
+            "model_text",
+        )
+    ]
+    if mode in {"word_char", "word_char_program"}:
+        transformers.append(
             (
-                "text",
+                "characters",
                 TfidfVectorizer(
-                    ngram_range=(1, parameters["ngram_max"]),
+                    analyzer="char_wb",
+                    ngram_range=(3, 5),
                     sublinear_tf=True,
-                    max_features=10000,
+                    min_df=1,
+                    max_features=20000,
                 ),
                 "model_text",
-            ),
-            ("program", OneHotEncoder(handle_unknown="ignore"), ["target_program"]),
-        ]
-    )
+            )
+        )
+    if mode in {"word_program", "word_char_program"}:
+        transformers.append(
+            ("program", OneHotEncoder(handle_unknown="ignore"), ["target_program"])
+        )
+    features = ColumnTransformer(transformers)
+
     return Pipeline(
         [
             ("features", features),

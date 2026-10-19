@@ -19,7 +19,10 @@ import yaml
 
 from kuping_negara.configuration import load_programs
 from kuping_negara.ingestion.storage import CollectionError
-from kuping_negara.ingestion.validation import validate_collection_manifest
+from kuping_negara.ingestion.validation import (
+    collection_config,
+    validate_collection_manifest,
+)
 from kuping_negara.paths import DEFAULT_CONFIG_PATH, JAKARTA_TIMEZONE
 from kuping_negara.preprocessing.history import (
     PREPROCESSING_VERSION,
@@ -136,6 +139,10 @@ def run_preprocessing(
     if namespace is not None and not re.fullmatch(r"execution=[a-f0-9]{24}", namespace):
         raise PreprocessingPipelineError("Invalid execution namespace")
     metadata = parse_raw_partition_path(resolved_input)
+    try:
+        config_path = collection_config(resolved_input, config_path)
+    except (CollectionError, ValueError) as error:
+        raise PreprocessingPipelineError(str(error)) from error
     keywords = _load_program_keywords(config_path, metadata.program_id)
     execution_time = _validate_processed_at(
         processed_at or datetime.now(JAKARTA_TIMEZONE)

@@ -310,3 +310,12 @@ def test_build_environment_preloads_browser_hook_without_losing_node_options(
     assert f'--require="{hook.resolve().as_posix()}"' in environment["NODE_OPTIONS"]
     assert environment["KEEP_ME"] == "yes"
     assert environment is not base_environment
+
+
+def test_context_and_language_are_applied_to_acronym_query():
+    query = build_search_query(
+        ["ckg", "cek kesehatan gratis"],
+        language="id",
+        context_keywords=["kesehatan", "puskesmas"],
+    )
+    assert query == '(ckg OR "cek kesehatan gratis") (kesehatan OR puskesmas) lang:id'

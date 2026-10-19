@@ -18,6 +18,9 @@ PROGRAM_SCHEDULES = {
 }
 
 
+COLLECTION_LIMIT = 200
+
+
 def _run_pipeline(action: str, *arguments: str) -> dict[str, str]:
     context = get_current_context()
     # For scheduled cron runs this is the current scheduled firing time, rather
@@ -76,7 +79,7 @@ def build_program_dag(program_id: str, schedule: str):
         tags=["x", "collection", "preprocessing"],
         doc_md=(
             f"Collect **{program_id}** at 23:59 Asia/Jakarta. "
-            "Uses the preceding 7 complete days, at most 50 tweets initially. "
+            f"Uses the preceding 7 complete days, at most {COLLECTION_LIMIT} posts. "
             "Configure the Docker X secret before unpausing. "
             "Preprocessing runs only after successful collection."
         ),
@@ -84,7 +87,9 @@ def build_program_dag(program_id: str, schedule: str):
     def pipeline():
         @task(pool="x_collection", do_xcom_push=True)
         def collect() -> dict[str, str]:
-            return _run_pipeline("collect", "--program", program_id)
+            return _run_pipeline(
+                "collect", "--program", program_id, "--limit", str(COLLECTION_LIMIT)
+            )
 
         @task
         def preprocess(raw: dict[str, str]) -> dict[str, str]:

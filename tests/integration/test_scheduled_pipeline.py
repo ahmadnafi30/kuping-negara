@@ -475,3 +475,41 @@ def test_modified_opinion_across_runs_is_retained_for_review(repository):
     assert "tidak" in frame.iloc[0]["model_text"]
     assert frame.iloc[0]["is_eligible_for_labeling"] == "False"
     assert frame.iloc[0]["is_duplicate_text"] == "False"
+
+
+def test_backfill_uses_explicit_dates_but_real_collection_timestamp(repository):
+    import json
+
+    def historical(command, cwd, environment):
+        # Fixture writer expects the normal end; assert the backfill independently.
+        assert command[command.index("--to") + 1] == "05-10-2026"
+        adjusted = command.copy()
+        adjusted[adjusted.index("--to") + 1] = "12-10-2026"
+        write_collection(adjusted, cwd, environment)
+        target = next((cwd / "tweets-data").glob("*.csv"))
+        target.write_text(
+            target.read_text().replace("2026-10-11T12:00:00Z", "2026-10-04T12:00:00Z")
+        )
+
+    raw = collect_scheduled(
+        repository_root=repository,
+        program_id="mbg",
+        scheduled_at=SCHEDULE,
+        execution_id="backfill",
+        window_end=date(2026, 10, 4),
+        runner=historical,
+    )
+    manifest = json.loads(raw.with_name("collection.json").read_text())
+    assert manifest["from_date"] == "2026-09-28"
+    assert manifest["to_date"] == "2026-10-04"
+    assert "collected_date=2026-10-12" in str(raw)
+    assert raw.with_name("collection_config.yaml").is_file()
+    with pytest.raises(ValueError, match="before the collection day"):
+        collect_scheduled(
+            repository_root=repository,
+            program_id="mbg",
+            scheduled_at=SCHEDULE,
+            execution_id="invalid-future",
+            window_end=date(2026, 10, 12),
+            runner=historical,
+        )

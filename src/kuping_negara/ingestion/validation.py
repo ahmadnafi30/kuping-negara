@@ -80,6 +80,33 @@ def validate_collection(path: Path, *, start: date, end: date, limit: int) -> di
     }
 
 
+def collection_config(path: Path, current: Path) -> Path:
+    """Resolve the immutable run config, including archived legacy configs."""
+    manifest = path.parent / "collection.json"
+    if not manifest.is_file():
+        return current
+    document = json.loads(manifest.read_text(encoding="utf-8"))
+    expected = document.get("config_sha256")
+    if "config_snapshot" in document:
+        name = document["config_snapshot"]
+        if not isinstance(name, str) or Path(name).name != name:
+            raise CollectionError("Invalid collection config snapshot path")
+        candidate = (path.parent / name).resolve()
+        if not candidate.is_relative_to(path.parent.resolve()):
+            raise CollectionError("Collection config snapshot escapes its run")
+    elif current.is_file() and sha256_file(current) == expected:
+        candidate = current
+    else:
+        import re
+
+        if not isinstance(expected, str) or not re.fullmatch(r"[a-f0-9]{64}", expected):
+            raise CollectionError("Invalid collection configuration checksum")
+        candidate = current.parent / "history" / (expected + ".yaml")
+    if not candidate.is_file() or sha256_file(candidate) != expected:
+        raise CollectionError("Collection keyword configuration has changed")
+    return candidate
+
+
 def validate_collection_manifest(
     path: Path, *, required: bool = True, config_path: Path | None = None
 ) -> dict | None:
@@ -97,8 +124,8 @@ def validate_collection_manifest(
         limit = manifest["limit"]
         if manifest["input_sha256"] != sha256_file(path):
             raise CollectionError("Raw collection hash has changed")
-        if config_path and manifest["config_sha256"] != sha256_file(config_path):
-            raise CollectionError("Collection keyword configuration has changed")
+        if config_path:
+            collection_config(path, config_path)
     except (KeyError, ValueError, TypeError) as error:
         raise CollectionError("Collection manifest is invalid") from error
     return validate_collection(path, start=start, end=end, limit=limit)

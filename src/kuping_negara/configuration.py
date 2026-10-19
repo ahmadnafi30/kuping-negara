@@ -18,6 +18,8 @@ class ProgramConfig(TypedDict):
     display_name: str
     keywords: list[str]
     collection_day: NotRequired[str]
+    search_language: NotRequired[str]
+    search_context_keywords: NotRequired[list[str]]
 
 
 def load_programs(config_path: Path) -> dict[str, ProgramConfig]:
@@ -78,6 +80,22 @@ def load_programs(config_path: Path) -> dict[str, ProgramConfig]:
             ):
                 raise ValueError(f"program {program_id} has an invalid collection_day")
             program["collection_day"] = day
+        if "search_language" in config:
+            language = config["search_language"]
+            if not isinstance(language, str) or not re.fullmatch(r"[a-z]{2}", language):
+                raise ValueError(f"program {program_id} has invalid search_language")
+            program["search_language"] = language
+        if "search_context_keywords" in config:
+            context = config["search_context_keywords"]
+            if (
+                not isinstance(context, list)
+                or not context
+                or any(not isinstance(v, str) or not v.strip() for v in context)
+            ):
+                raise ValueError(
+                    f"program {program_id} has invalid search_context_keywords"
+                )
+            program["search_context_keywords"] = [v.strip() for v in context]
         validated[program_id] = program
     return validated
 

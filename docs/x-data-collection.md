@@ -101,10 +101,12 @@ end exclusive) before counting toward the limit. A checked in-memory fix also
 awaits the search form before consuming responses; unknown collector source
 versions fail instead of collecting unfiltered initial results.
 
-Keyword queries prioritize recall. Acronyms remain unquoted, multi-word names
-use exact-phrase quotes, and ingestion does not apply `lang:id`. Language and
-program relevance belong in preprocessing so potentially useful posts are not
-discarded before the raw zone.
+Current queries use `lang:id` to reduce unrelated foreign-language acronym
+matches. CKG also requires health context (for example kesehatan, puskesmas or
+skrining); full program names are quoted. Both options are versioned per program
+and can be omitted in a separate configuration for a broader recall audit.
+Search filters can miss useful code-switched posts and are not a language or
+relevance ground truth. Preprocessing still checks both signals independently.
 
 ## Raw Output Layout
 
@@ -118,13 +120,17 @@ data/raw/x/
     └── program=<program_id>/
         └── run_id=<Asia-Jakarta-timestamp>/
             ├── <program_id>_<from-date>_<to-date>.csv
-            └── collection.json
+            ├── collection.json
+            └── collection_config.yaml
 ```
 
 The unique `run_id` prevents a later ingestion run from overwriting an earlier
 raw dataset. Both `tweets-data/` and raw dataset contents are ignored by Git.
 The manifest records requested dates/limit, input/configuration hashes, and
-validation evidence. [DVC versioning](dvc.md) tracks a validated combined raw
+validation evidence. New runs retain the exact keyword YAML beside their CSV.
+Historical runs without this copy resolve their original configuration by SHA-256
+from `configs/keywords/history/`; a later keyword edit does not invalidate a
+valid historical collection. [DVC versioning](dvc.md) tracks a validated combined raw
 snapshot while retaining the original per-run files.
 
 ## CLI Options
@@ -217,3 +223,24 @@ the independent publication-time validation and hard row limit remain required.
 A `429` response means X has temporarily limited the session. Respect the
 reported reset time rather than issuing repeated manual triggers. A failed
 collection must remain failed and must not be published as an empty dataset.
+
+## Pagination and larger batches
+
+The checked Tweet Harvest adapter reads entries across all SearchTimeline
+instructions, including pages that begin with a cursor replacement. It removes
+repeated post IDs before applying the hard limit and recognizes an explicit
+end-of-timeline response. Source changes outside the pinned version fail closed.
+Upstream timeouts or network failures still fail the collection; partial staging
+CSVs are not silently accepted.
+
+Weekly Airflow collection requests at most 200 posts per program. Schedules
+remain Monday through Thursday at 23:59 WIB. The interactive CLI retains its
+50-post default; use `--limit 125` or another explicit cap for research batches.
+Actual results can be fewer than the cap, especially for CKG.
+
+For a historical week inside the Docker environment, use the runtime CLI's
+`--window-end YYYY-MM-DD` together with `--lookback-days 7`. This selects the
+publication interval while retaining the real current `--scheduled-at` timestamp
+for provenance. The window must end before the collection day. Collect serially,
+retain successful checkpoints, and stop on an authentication or rate-limit
+response. Do not replay a completed week merely to increase row counts.
