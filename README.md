@@ -1,5 +1,7 @@
 # Kuping Negara
 
+Untuk training dan dashboard menggunakan container, ikuti [panduan MLflow Docker](docs/mlflow-docker.md).
+
 Pipeline data untuk riset analisis sentimen percakapan publik di X mengenai
 Makan Bergizi Gratis, Cek Kesehatan Gratis, Koperasi Desa Merah Putih, dan
 Sekolah Rakyat.
@@ -21,6 +23,10 @@ Panduan [eksperimen MLflow](docs/mlflow.md) menjelaskan baseline klasifikasi
 dan batas evaluasinya. API prediksi serta dashboard publik tercantum dalam
 [roadmap](docs/roadmap.md). Percakapan di X digunakan sebagai bahan riset dan
 tidak mewakili seluruh penduduk Indonesia.
+
+Pembaruan data: snapshot raw **666 baris** dan snapshot eksperimen **396 baris**
+dari empat program sudah di-versioning. Label masih hasil AI; lihat
+[perluasan data, hasil baru, dan batasnya](docs/sentiment-data.md).
 
 ## Mulai cepat
 

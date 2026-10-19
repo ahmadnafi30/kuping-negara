@@ -1,0 +1,27 @@
+{
+  "platform": "Windows",
+  "python": "3.12.13",
+  "container_runtime": false,
+  "tracking_transport": "local_sqlite",
+  "run_ids": [
+    "614b584bbb0b4b868afafd976a1ae5c3",
+    "c3d8580906c442ddb7c68e51766cc51d",
+    "2a32d8a89e6f49b5b63b9e30d08ec4b4"
+  ],
+  "all_three_runs_finished": true,
+  "model_reloaded_from_registry": true,
+  "predictions_match_reported_test_accuracy": true,
+  "source_commit": "bac2d24d9c05920bede514eb4304453802b3b0cc",
+  "source_dirty_at_training": false,
+  "original_test_rows_protected": 19,
+  "original_test_group_overlap": 0,
+  "new_development_test_group_overlap": 0,
+  "human_reviewed": false,
+  "deployment_approved": false,
+  "model_features": [
+    "text",
+    "characters"
+  ],
+  "program_one_hot": false,
+  "dataset_sha256": "29d088b126a6462a3ac48af22f08b5608a0ef0bd9626b065bddfc1525a8f369f"
+}

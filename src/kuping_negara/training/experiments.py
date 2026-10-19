@@ -7,6 +7,7 @@ import subprocess
 import uuid
 from importlib.metadata import version
 from pathlib import Path
+from urllib.parse import urlparse
 
 import matplotlib
 
@@ -113,9 +114,15 @@ def run_experiments(
     mlflow.set_registry_uri(mlflow.get_tracking_uri())
     experiment = mlflow.get_experiment_by_name(settings["experiment_name"])
     if experiment is None:
+        # HTTP servers own artifact storage; local file URIs are not portable
+        # between trainer and server containers.
+        artifact_options = {}
+        if urlparse(mlflow.get_tracking_uri()).scheme not in {"http", "https"}:
+            artifact_options["artifact_location"] = (
+                root.resolve() / "mlruns/artifacts"
+            ).as_uri()
         experiment_id = mlflow.create_experiment(
-            settings["experiment_name"],
-            artifact_location=(root.resolve() / "mlruns/artifacts").as_uri(),
+            settings["experiment_name"], **artifact_options
         )
     else:
         experiment_id = experiment.experiment_id

@@ -52,10 +52,10 @@ jobs:
         run: uv run --locked --extra dev --extra data-versioning --extra google-drive --extra training python -c "from pydrive2.auth import GoogleAuth; from pydrive2.fs import GDriveFileSystem"
 
       - name: Check code quality
-        run: uv run --locked --extra dev --extra data-versioning --extra google-drive --extra training ruff check src tests dags docker/airflow train.py
+        run: uv run --locked --extra dev --extra data-versioning --extra google-drive --extra training ruff check src tests dags docker/airflow docker/mlflow train.py
 
       - name: Check code formatting
-        run: uv run --locked --extra dev --extra data-versioning --extra google-drive --extra training ruff format --check src tests dags docker/airflow train.py
+        run: uv run --locked --extra dev --extra data-versioning --extra google-drive --extra training ruff format --check src tests dags docker/airflow docker/mlflow train.py
 
       - name: Run environment health check
         run: uv run --locked --extra dev --extra data-versioning --extra google-drive --extra training python -m kuping_negara.healthcheck
@@ -85,3 +85,21 @@ jobs:
       - name: Stop containers
         if: always()
         run: docker compose down
+
+  mlflow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Build training image
+        run: docker compose --profile training build mlflow
+      - name: Check image contains no local data or credentials
+        run: docker run --rm --entrypoint python kuping-negara-ml:latest docker/mlflow/verify_image.py
+      - name: Start MLflow server
+        run: docker compose --profile training up -d --no-deps --wait --wait-timeout 180 mlflow
+      - name: Exercise HTTP training and reload Registry model
+        run: docker compose --profile training run --no-deps --rm --entrypoint python trainer docker/mlflow/smoke.py
+      - name: Stop containers
+        if: always()
+        run: docker compose --profile training down

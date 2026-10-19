@@ -74,6 +74,52 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  mlflow:
+    profiles: [training]
+    build:
+      context: .
+      dockerfile: docker/mlflow/Dockerfile
+    image: kuping-negara-ml:latest
+    init: true
+    environment:
+      TZ: Asia/Jakarta
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=5).read()"]
+      interval: 10s
+      timeout: 8s
+      retries: 12
+      start_period: 40s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+  trainer:
+    profiles: [training]
+    image: kuping-negara-ml:latest
+    init: true
+    entrypoint: [python, /opt/kuping-negara/docker/mlflow/train.py]
+    command: [run, --dataset, data/training/sentiment_expanded_20261019.csv, --config, configs/training/expanded.json, --output, reports/training/expanded_20261019_docker, --allow-provisional, --tracking-uri, "http://mlflow:5000"]
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      GIT_OPTIONAL_LOCKS: "0"
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: /opt/kuping-negara
+      TZ: Asia/Jakarta
+    volumes:
+      - ./data:/opt/kuping-negara/data:ro
+      - ./reports:/opt/kuping-negara/reports
+      - ./.git:/opt/kuping-negara/.git:ro
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+
 secrets:
   postgres_password:
     file: ./docker/airflow/secrets/postgres_password
@@ -90,3 +136,4 @@ volumes:
   postgres-data:
   airflow-logs:
   airflow-auth:
+  mlflow-data:

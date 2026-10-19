@@ -1,0 +1,19 @@
+{
+  "remote": "gdrive",
+  "folder": "kuping-negara-dvc",
+  "fresh_cache": true,
+  "recovered": [
+    {
+      "path": "data/raw/expanded_20261019.csv",
+      "sha256": "aa2962d7f07d8ed6f132f1f2fa7baba6640b310a1973af7a36578a1ab965b8ca",
+      "bytes": 245989,
+      "sha256_match": true
+    },
+    {
+      "path": "data/training/sentiment_expanded_20261019.csv",
+      "sha256": "29d088b126a6462a3ac48af22f08b5608a0ef0bd9626b065bddfc1525a8f369f",
+      "bytes": 297227,
+      "sha256_match": true
+    }
+  ]
+}

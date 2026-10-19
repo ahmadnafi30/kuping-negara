@@ -1,0 +1,176 @@
+{
+  "created_at": "2026-10-19T05:31:34.176985+00:00",
+  "successful_jobs": 7,
+  "raw_rows_read": 493,
+  "new_unique_program_post_rows": 466,
+  "snapshot_rows": 666,
+  "snapshot_unique_post_ids": 651,
+  "planned_historical_windows": [
+    "2026-09-21/2026-09-27",
+    "2026-09-28/2026-10-04",
+    "2026-10-05/2026-10-11"
+  ],
+  "historical_attempts": [
+    {
+      "batch": "expansion-20261019",
+      "program": "ckg",
+      "window_end": "2026-10-11",
+      "status": "no_results",
+      "interpretation": "No valid published CSV; not proof that no matching public posts exist"
+    },
+    {
+      "batch": "expansion-20261019",
+      "program": "mbg",
+      "window_end": "2026-10-11",
+      "status": "stopped_no_valid_output",
+      "interpretation": "No valid published CSV; not proof that no matching public posts exist"
+    },
+    {
+      "batch": "expansion-20261019",
+      "program": "kopdes_merah_putih",
+      "window_end": "2026-10-11",
+      "status": "failed",
+      "interpretation": "No valid published CSV; not proof that no matching public posts exist"
+    }
+  ],
+  "historical_search_completed": false,
+  "published_new_collection_period": "2026-10-12 through 2026-10-18 Asia/Jakarta",
+  "sampling_notes": [
+    "Serial capped latest searches using acronym/context queries, supplemented by full names.",
+    "Historical search attempts without valid output were not published; remaining historical windows were not forced.",
+    "Full-name searches overrepresent news and promotional posts; sample is not representative of public opinion."
+  ],
+  "jobs": [
+    {
+      "batch": "expansion-20261019",
+      "program": "ckg",
+      "rows": 20,
+      "eligible_for_labeling": 17,
+      "raw_path": "data/raw/x/execution=cba3798e68f6f7b1fe29ecdd/collected_date=2026-10-19/program=ckg/run_id=20261019T113530+0700/ckg_2026-10-12_2026-10-18.csv",
+      "query": "(ckg OR \"cek kesehatan gratis\" OR \"pemeriksaan kesehatan gratis\") (kesehatan OR puskesmas OR skrining OR kemenkes OR pemeriksaan) lang:id",
+      "window_from": "2026-10-12",
+      "window_to": "2026-10-18",
+      "raw_sha256": "5bfcfc8a40d5dc490c674e66eae63b245a9aeb7b8afa9c361351bd2b73d3ee86",
+      "config_sha256": "5d6addd845dadc74c32f957a8757e008a5c9e30469bcc3b147c25bda0cb2e464",
+      "collection_validation": "passed",
+      "quality_status_counts": {
+        "accepted": 17,
+        "duplicate_text": 2,
+        "review_relevance": 1
+      }
+    },
+    {
+      "batch": "expansion-20261019",
+      "program": "mbg",
+      "rows": 125,
+      "eligible_for_labeling": 110,
+      "raw_path": "data/raw/x/execution=a93ab31fba107af2505cd7fc/collected_date=2026-10-19/program=mbg/run_id=20261019T114213+0700/mbg_2026-10-12_2026-10-18.csv",
+      "query": "(mbg OR \"makan bergizi gratis\") lang:id",
+      "window_from": "2026-10-12",
+      "window_to": "2026-10-18",
+      "raw_sha256": "1524ac6677f2822d673790cffa346d6791d958bbc66f98a28662f479c5ce2714",
+      "config_sha256": "5d6addd845dadc74c32f957a8757e008a5c9e30469bcc3b147c25bda0cb2e464",
+      "collection_validation": "passed",
+      "quality_status_counts": {
+        "accepted": 110,
+        "review_relevance": 12,
+        "review_similar_text": 2,
+        "duplicate_text": 1
+      }
+    },
+    {
+      "batch": "expansion-20261019",
+      "program": "kopdes_merah_putih",
+      "rows": 125,
+      "eligible_for_labeling": 122,
+      "raw_path": "data/raw/x/execution=cf232f6c58a815632117f0fc/collected_date=2026-10-19/program=kopdes_merah_putih/run_id=20261019T114330+0700/kopdes_merah_putih_2026-10-12_2026-10-18.csv",
+      "query": "(kopdes OR \"koperasi desa merah putih\" OR \"koperasi merah putih\" OR \"kopdes merah putih\") lang:id",
+      "window_from": "2026-10-12",
+      "window_to": "2026-10-18",
+      "raw_sha256": "3779cea8bec7f22e1c8c4bcedcaef61ca80f095f13363b4ac464dced5fc6a93f",
+      "config_sha256": "5d6addd845dadc74c32f957a8757e008a5c9e30469bcc3b147c25bda0cb2e464",
+      "collection_validation": "passed",
+      "quality_status_counts": {
+        "accepted": 122,
+        "duplicate_text": 2,
+        "review_similar_text": 1
+      }
+    },
+    {
+      "batch": "expansion-20261019",
+      "program": "sekolah_rakyat",
+      "rows": 79,
+      "eligible_for_labeling": 69,
+      "raw_path": "data/raw/x/execution=16d996d5203ec0e1a57b6851/collected_date=2026-10-19/program=sekolah_rakyat/run_id=20261019T114444+0700/sekolah_rakyat_2026-10-12_2026-10-18.csv",
+      "query": "(\"sekolah rakyat\") lang:id",
+      "window_from": "2026-10-12",
+      "window_to": "2026-10-18",
+      "raw_sha256": "dc4df7025b244b8df02aada7566e60c486cf7ef91a5990beb6670b20fbc659eb",
+      "config_sha256": "5d6addd845dadc74c32f957a8757e008a5c9e30469bcc3b147c25bda0cb2e464",
+      "collection_validation": "passed",
+      "quality_status_counts": {
+        "accepted": 69,
+        "review_relevance": 9,
+        "duplicate_text": 1
+      }
+    },
+    {
+      "batch": "expansion-full-names-20261019",
+      "program": "mbg",
+      "rows": 62,
+      "eligible_for_labeling": 46,
+      "raw_path": "data/raw/x/execution=a16e99ec99f5c5b5caf1e6eb/collected_date=2026-10-19/program=mbg/run_id=20261019T120545+0700/mbg_2026-10-12_2026-10-18.csv",
+      "query": "(\"makan bergizi gratis\") lang:id",
+      "window_from": "2026-10-12",
+      "window_to": "2026-10-18",
+      "raw_sha256": "9e310ace664bf9858e8d984ea64cc24350612ac0a91ea3463af85aec9a17b561",
+      "config_sha256": "2d6c458ae5e610a3da8d90eb0b01e81e70b7b029cc82e155cadd1541ca565ff9",
+      "collection_validation": "passed",
+      "quality_status_counts": {
+        "accepted": 46,
+        "duplicate_text": 6,
+        "review_relevance": 5,
+        "duplicate": 4,
+        "review_similar_text": 1
+      }
+    },
+    {
+      "batch": "expansion-full-names-20261019",
+      "program": "kopdes_merah_putih",
+      "rows": 56,
+      "eligible_for_labeling": 39,
+      "raw_path": "data/raw/x/execution=b58663e139bd95b91dc81d76/collected_date=2026-10-19/program=kopdes_merah_putih/run_id=20261019T120929+0700/kopdes_merah_putih_2026-10-12_2026-10-18.csv",
+      "query": "(\"koperasi desa merah putih\" OR \"koperasi merah putih\" OR \"kopdes merah putih\") lang:id",
+      "window_from": "2026-10-12",
+      "window_to": "2026-10-18",
+      "raw_sha256": "dbe0979537d9d12ce6e21edadca114de70916c7474bd457ac2322e11b472ed8e",
+      "config_sha256": "2d6c458ae5e610a3da8d90eb0b01e81e70b7b029cc82e155cadd1541ca565ff9",
+      "collection_validation": "passed",
+      "quality_status_counts": {
+        "accepted": 39,
+        "duplicate": 8,
+        "duplicate_text": 5,
+        "review_relevance": 4
+      }
+    },
+    {
+      "batch": "expansion-full-names-20261019",
+      "program": "ckg",
+      "rows": 26,
+      "eligible_for_labeling": 10,
+      "raw_path": "data/raw/x/execution=7717b35f418a289f3ec67acf/collected_date=2026-10-19/program=ckg/run_id=20261019T121309+0700/ckg_2026-10-12_2026-10-18.csv",
+      "query": "(\"cek kesehatan gratis\") lang:id",
+      "window_from": "2026-10-12",
+      "window_to": "2026-10-18",
+      "raw_sha256": "2c3a2d55375314bd6de3029104e5c9c212dc27c4bcd9589517191961909fb317",
+      "config_sha256": "2d6c458ae5e610a3da8d90eb0b01e81e70b7b029cc82e155cadd1541ca565ff9",
+      "collection_validation": "passed",
+      "quality_status_counts": {
+        "duplicate": 11,
+        "accepted": 10,
+        "review_relevance": 3,
+        "duplicate_text": 2
+      }
+    }
+  ]
+}

@@ -1,9 +1,18 @@
 # Eksperimen Sentimen dengan MLflow
 
+Untuk training dan dashboard menggunakan container, ikuti [panduan MLflow Docker](mlflow-docker.md).
+
 Pipeline ini menjalankan klasifikasi `negative`, `neutral`, dan `positive`
 menggunakan TF-IDF dan Logistic Regression. `train.py` menjadi entry point;
 validasi data, pembagian dataset, dan pencatatan eksperimen berada dalam
 `src/kuping_negara/training/`.
+
+## Pembaruan data 19 Oktober 2026
+
+Eksperimen lanjutan memakai 396 contoh, termasuk CKG. Baca
+[perluasan data dan pemeriksaan label](sentiment-data.md) untuk snapshot baru,
+parameter, hasil, dan batas perbandingannya. Bagian di bawah mendokumentasikan
+eksperimen awal 91 baris yang tetap disimpan sebagai riwayat.
 
 ## Data yang digunakan
 
@@ -64,7 +73,7 @@ tersedia di repositori; cache lokal saja tidak membuat objek tersedia pada mesin
 ## Menjalankan tiga variasi
 
 ```bash
-uv run --locked --no-sync python train.py run --allow-provisional
+uv run --locked --no-sync python train.py run --output reports/training/initial-rerun --allow-provisional
 ```
 
 `train-sentiment run --allow-provisional` menyediakan entry point yang sama.

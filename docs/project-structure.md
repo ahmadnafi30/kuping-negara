@@ -22,6 +22,8 @@ dibuat ketika pekerjaan dimulai, bukan sebagai placeholder.
 | `preprocessing/history.py` | Lock publikasi dan riwayat contoh/grup lintas run/program |
 | `preprocessing/x_pipeline.py` | Lineage file, checksum, persistensi, dan CLI `preprocess-x-data` |
 | `data_versioning/snapshots.py` | Snapshot raw tervalidasi, append ID per program dan metrik audit |
+| `labeling/proposals.py` | Usulan model lokal, gate provisional dan keputusan konteks AI |
+| `labeling/batches.py` | Gabungan review terverifikasi dan perlindungan test lama |
 | `training/data.py` | Join label ke snapshot DVC, validasi kualitas, dan grup leakage transitif |
 | `training/evaluation.py` | Split grouped holdout/CV, Pipeline TF-IDF dan evaluasi |
 | `training/experiments.py` | Logging tiga variasi, pemilihan CV, tes akhir, dan Registry MLflow |
