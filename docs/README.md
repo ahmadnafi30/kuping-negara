@@ -13,6 +13,7 @@ Panduan berikut menjelaskan implementasi yang tersedia pada `main`.
 | [Airflow di Docker](airflow-docker.md) | Stack dua container, jadwal 23.59 WIB, dan operasi |
 | [Alur penambahan versi data](dvc.md) | Collect, append, pelacakan DVC, upload, commit/tag, dan pemulihan |
 | [Konfigurasi DVC dan remote](dvc-data-versioning.md) | Cache, remote lokal, OAuth Drive, dan audit dataset |
+| [Eksperimen MLflow](mlflow.md) | Training baseline, tiga variasi, evaluasi, dan Model Registry |
 | [Pedoman anotasi](annotation-guidelines.md) | Relevansi, kelas sentimen, review, dan adjudication |
 
 ## Mengembangkan proyek

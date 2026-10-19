@@ -10,7 +10,7 @@ A Codespace is ready when all of the following are true:
 
 - the container starts without a Dev Container error;
 - Python reports version `3.12.x`;
-- `uv sync --locked --extra dev --extra data-versioning` succeeds without changing `uv.lock`;
+- `uv sync --locked --extra dev --extra data-versioning --extra training` succeeds without changing `uv.lock`;
 - `uv pip check` reports no incompatible or missing dependencies;
 - the environment health check reports pandas, scikit-learn, JupyterLab, and
   pytest as installed;
@@ -45,7 +45,7 @@ Run these commands from the repository root:
 ```bash
 python --version
 uv --version
-uv sync --locked --extra dev --extra data-versioning
+uv sync --locked --extra dev --extra data-versioning --extra training
 uv pip check
 uv run --locked --no-sync python -m kuping_negara.healthcheck
 uv run --locked --no-sync ruff check src tests
@@ -88,7 +88,7 @@ components and are not installed by the base project.
 Synchronize after pulling dependency changes:
 
 ```bash
-uv sync --locked --extra dev --extra data-versioning
+uv sync --locked --extra dev --extra data-versioning --extra training
 ```
 
 Run project commands inside the managed environment:
@@ -143,7 +143,7 @@ Resolution on the dependency-authoring branch:
 
 ```bash
 uv lock
-uv sync --locked --extra dev --extra data-versioning
+uv sync --locked --extra dev --extra data-versioning --extra training
 ```
 
 Commit the updated lockfile. Do not remove `--locked` from Codespaces or CI to
@@ -164,7 +164,7 @@ Then reload the VS Code window.
 Run:
 
 ```bash
-uv sync --locked --extra dev --extra data-versioning
+uv sync --locked --extra dev --extra data-versioning --extra training
 uv pip check
 uv run --locked --no-sync python -m kuping_negara.healthcheck
 ```
@@ -208,3 +208,10 @@ all declared dependencies install reproducibly.
 - [Setting up a Python project for GitHub Codespaces](https://docs.github.com/en/codespaces/setting-up-your-project-for-codespaces/adding-a-dev-container-configuration/setting-up-your-python-project-for-codespaces?apiVersion=2022-11-28)
 - [uv locking and syncing](https://docs.astral.sh/uv/concepts/projects/sync/)
 - [Using uv in GitHub Actions](https://docs.astral.sh/uv/guides/integration/github/)
+
+## Eksperimen MLflow
+
+Extra `training` dipasang saat pembuatan container. Port 5000 diteruskan sebagai
+MLflow experiments. Ikuti [panduan MLflow](mlflow.md) untuk memulihkan dataset,
+menjalankan tiga variasi parameter, serta membuka server dengan host Codespaces
+yang diizinkan. Port tetap Private.

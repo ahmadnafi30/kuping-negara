@@ -1,0 +1,22 @@
+{
+  "raw_revision": "lk05-data-v2",
+  "raw_path": "data/raw/lk05_dataset.csv",
+  "raw_md5": "4c49742a13ec88c81119bd00dfa26652",
+  "raw_sha256": "fb3b832aae197fead349a5d045d5ae2b05329b233c2bceaec9b67e1c04500bc6",
+  "dataset_sha256": "1c073b14fd28d7dd7302544f7f936e587726076743b3baf708e3ec6327a580a4",
+  "labels_sha256": "821b21dc04a193861e5a892f0cb1586fb6688b3d8119b8a29da2aa741d16c51f",
+  "rows": 91,
+  "class_counts": {
+    "neutral": 44,
+    "negative": 41,
+    "positive": 6
+  },
+  "program_counts": {
+    "sekolah_rakyat": 43,
+    "kopdes_merah_putih": 26,
+    "mbg": 22
+  },
+  "preprocessing_version": 3,
+  "label_status": "provisional_ai",
+  "deployment_approved": false
+}

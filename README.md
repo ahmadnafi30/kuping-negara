@@ -14,9 +14,11 @@ Sekolah Rakyat.
 | DVC | Snapshot raw, append tanpa pasangan ID duplikat, perbandingan dan pemulihan versi |
 | Google Drive | Remote DVC untuk dua versi dataset yang telah diuji pemulihannya |
 | Anotasi | Pedoman review dan laporan agregat; hasil review AI masih memerlukan validasi manusia |
+| Eksperimen model | TF-IDF/Logistic Regression, tiga trial MLflow, Registry kandidat eksperimen |
 | Pengembangan | Python 3.12, uv lockfile, Dev Container, pengujian, dan CI Windows/Linux |
 
-Training model, MLflow, API prediksi, dan dashboard tercantum dalam
+Panduan [eksperimen MLflow](docs/mlflow.md) menjelaskan baseline klasifikasi
+dan batas evaluasinya. API prediksi serta dashboard publik tercantum dalam
 [roadmap](docs/roadmap.md). Percakapan di X digunakan sebagai bahan riset dan
 tidak mewakili seluruh penduduk Indonesia.
 
@@ -90,7 +92,7 @@ dilewati. Ini pertumbuhan dataset dari koleksi nyata dalam periode
 4-10 Oktober 2026 WIB, belum training ulang model.
 
 ```bash
-uv sync --locked --extra dev --extra data-versioning --extra google-drive
+uv sync --locked --extra dev --extra data-versioning --extra google-drive --extra training
 uv run --locked --no-sync dvc status
 uv run --locked --no-sync dvc diff --show-hash lk05-data-v1 lk05-data-v2
 ```
@@ -104,26 +106,38 @@ dengan cache kosong; [bukti verifikasi](reports/lk05/google_drive_verification.j
 tersedia di repo. Konfigurasi remote dan token tidak ikut `git clone`.
 Pengunggahan DVC masih dilakukan secara eksplisit setelah penambahan versi.
 
+## Eksperimen Machine Learning
+
+```bash
+uv sync --locked --extra dev --extra data-versioning --extra google-drive --extra training
+uv run --locked --no-sync python train.py run --allow-provisional
+```
+
+Pulihkan snapshot training dengan DVC terlebih dahulu. Mode awal memakai label
+AI sementara atas persetujuan pemilik proyek; model Registry berstatus
+`experimental` dan belum disetujui untuk deployment. Lihat [panduan MLflow](docs/mlflow.md)
+untuk persiapan data, dashboard, dan hasil tiga eksperimen.
+
 ## Struktur repositori
 
 ```text
 kuping-negara/
-├── .devcontainer/          # Lingkungan Codespaces
-├── .github/                # CI dan template Pull Request
-├── .dvc/                   # Konfigurasi DVC; cache/token lokal diabaikan Git
-├── configs/                # Keyword program dan rancangan kontrak data
-├── dags/                   # Empat DAG collect → preprocess
-├── docker/                 # Image, lock Node, dan bootstrap secret
-├── compose.yaml            # Stack Airflow/PostgreSQL
-├── data/                   # Raw, processed, dan metadata dataset
-├── docs/                   # Panduan penggunaan, pengembangan, dan arsip
-├── reports/                # Metrik agregat dan audit tanpa isi post
-├── scripts/                # Adapter browser dan secret Tweet Harvest
-├── src/kuping_negara/       # Modul ingestion, preprocessing, orchestration, DVC
-├── tests/                  # Pengujian unit dan integrasi
-├── pyproject.toml          # Dependensi dan pengaturan proyek
-├── uv.lock                 # Resolusi dependensi
-└── requirements.txt        # Ekspor kompatibilitas untuk pip
+â”œâ”€â”€ .devcontainer/          # Lingkungan Codespaces
+â”œâ”€â”€ .github/                # CI dan template Pull Request
+â”œâ”€â”€ .dvc/                   # Konfigurasi DVC; cache/token lokal diabaikan Git
+â”œâ”€â”€ configs/                # Keyword program dan rancangan kontrak data
+â”œâ”€â”€ dags/                   # Empat DAG collect â†’ preprocess
+â”œâ”€â”€ docker/                 # Image, lock Node, dan bootstrap secret
+â”œâ”€â”€ compose.yaml            # Stack Airflow/PostgreSQL
+â”œâ”€â”€ data/                   # Raw, processed, dan metadata dataset
+â”œâ”€â”€ docs/                   # Panduan penggunaan, pengembangan, dan arsip
+â”œâ”€â”€ reports/                # Metrik agregat dan audit tanpa isi post
+â”œâ”€â”€ scripts/                # Adapter browser dan secret Tweet Harvest
+â”œâ”€â”€ src/kuping_negara/       # Modul ingestion, preprocessing, orchestration, DVC
+â”œâ”€â”€ tests/                  # Pengujian unit dan integrasi
+â”œâ”€â”€ pyproject.toml          # Dependensi dan pengaturan proyek
+â”œâ”€â”€ uv.lock                 # Resolusi dependensi
+â””â”€â”€ requirements.txt        # Ekspor kompatibilitas untuk pip
 ```
 
 [Kepemilikan modul](docs/project-structure.md) menjelaskan batas tanggung jawab
@@ -132,7 +146,7 @@ setiap komponen. Folder fitur baru dibuat bersama implementasinya.
 ## Pemeriksaan kualitas
 
 ```bash
-uv sync --locked --extra dev --extra data-versioning --extra google-drive
+uv sync --locked --extra dev --extra data-versioning --extra google-drive --extra training
 uv pip check
 uv run --locked --no-sync python -m kuping_negara.healthcheck
 uv run --locked --no-sync ruff check src tests dags docker/airflow

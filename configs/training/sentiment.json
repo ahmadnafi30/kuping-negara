@@ -1,0 +1,9 @@
+{
+  "experiment_name": "kuping-negara-sentiment-pilot",
+  "random_seed": 42,
+  "trials": [
+    {"name": "lr-c01-unigram", "C": 0.1, "ngram_max": 1},
+    {"name": "lr-c1-bigram", "C": 1.0, "ngram_max": 2},
+    {"name": "lr-c10-bigram", "C": 10.0, "ngram_max": 2}
+  ]
+}

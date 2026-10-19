@@ -43,25 +43,25 @@ jobs:
         run: uv python install 3.12
 
       - name: Sync locked environment
-        run: uv sync --locked --extra dev --extra data-versioning --extra google-drive
+        run: uv sync --locked --extra dev --extra data-versioning --extra google-drive --extra training
 
       - name: Check dependency consistency
         run: uv pip check
 
       - name: Verify Google Drive OAuth backend
-        run: uv run --locked --extra dev --extra data-versioning --extra google-drive python -c "from pydrive2.auth import GoogleAuth; from pydrive2.fs import GDriveFileSystem"
+        run: uv run --locked --extra dev --extra data-versioning --extra google-drive --extra training python -c "from pydrive2.auth import GoogleAuth; from pydrive2.fs import GDriveFileSystem"
 
       - name: Check code quality
-        run: uv run --locked --extra dev --extra data-versioning --extra google-drive ruff check src tests dags docker/airflow
+        run: uv run --locked --extra dev --extra data-versioning --extra google-drive --extra training ruff check src tests dags docker/airflow train.py
 
       - name: Check code formatting
-        run: uv run --locked --extra dev --extra data-versioning --extra google-drive ruff format --check src tests dags docker/airflow
+        run: uv run --locked --extra dev --extra data-versioning --extra google-drive --extra training ruff format --check src tests dags docker/airflow train.py
 
       - name: Run environment health check
-        run: uv run --locked --extra dev --extra data-versioning --extra google-drive python -m kuping_negara.healthcheck
+        run: uv run --locked --extra dev --extra data-versioning --extra google-drive --extra training python -m kuping_negara.healthcheck
 
       - name: Run tests
-        run: uv run --locked --extra dev --extra data-versioning --extra google-drive pytest
+        run: uv run --locked --extra dev --extra data-versioning --extra google-drive --extra training pytest
 
   airflow:
     runs-on: ubuntu-latest

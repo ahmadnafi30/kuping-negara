@@ -17,6 +17,15 @@
       }
     }
   },
-  "postCreateCommand": "python -m pip install --disable-pip-version-check uv==0.12.12 && uv sync --locked --extra dev --extra data-versioning && uv pip check && uv run --locked --no-sync python -m kuping_negara.healthcheck",
-  "remoteUser": "vscode"
+  "postCreateCommand": "python -m pip install --disable-pip-version-check uv==0.12.12 && uv sync --locked --extra dev --extra data-versioning --extra training && uv pip check && uv run --locked --no-sync python -m kuping_negara.healthcheck",
+  "remoteUser": "vscode",
+  "forwardPorts": [
+    5000
+  ],
+  "portsAttributes": {
+    "5000": {
+      "label": "MLflow experiments",
+      "onAutoForward": "notify"
+    }
+  }
 }

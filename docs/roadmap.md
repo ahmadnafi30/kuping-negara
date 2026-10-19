@@ -18,7 +18,7 @@ arsitektur lengkap ada dalam [proposal](project-proposal.md).
 - Pemulihan dua versi dataset dari Google Drive dengan verifikasi hash dan cache kosong.
 - Laporan agregat review AI; label belum disetujui sebagai target training.
 - Pengujian unit/integrasi, pemeriksaan format dan lint, serta CI.
-- Airflow Docker lokal: empat jadwal mingguan 23.59 WIB, collect → preprocess,
+- Airflow Docker lokal: empat jadwal mingguan 23.59 WIB, collect â†’ preprocess,
   token via secret, publikasi atomik, dan verifikasi checksum pada retry.
 
 ## Berikutnya
@@ -27,13 +27,15 @@ arsitektur lengkap ada dalam [proposal](project-proposal.md).
 | --- | --- | --- |
 | Kualitas data | Integrasikan JSON Schema dan perluas deteksi perubahan bahasa/relevansi | Tes kontrak, laporan kualitas, dan aturan review |
 | Dataset berlabel | Anotasi, adjudication, dan split berbasis waktu/conversation | Dataset version dan laporan agreement |
-| Baseline model | Training/evaluation scikit-learn | Macro-F1 dan recall per kelas dengan split terdokumentasi |
+| Baseline model | Validasi manusia dan perluasan dataset setelah pilot scikit-learn/MLflow | Macro-F1 dan recall per kelas pada data evaluasi independen |
 | Eksperimen model | Bandingkan kandidat model Bahasa Indonesia | Metrik, biaya inference, calibration, dan lineage |
-| Infrastruktur | Siapkan backup lintas perangkat, MLflow, dan deployment Airflow produksi | Backup, autentikasi, secret management, dan runbook produksi |
+| Infrastruktur | Siapkan backup MLflow lintas perangkat dan deployment Airflow produksi | Backup, autentikasi, secret management, dan runbook produksi |
 | Serving | API prediksi dan dashboard | Tes kontrak dan tampilan uncertainty |
 | Operasi | Monitoring, alerting, retraining, dan rollback | Metrik, prosedur recovery, dan review kesiapan |
 
 Jadwal operasional didefinisikan di `dags/x_collection.py`; `collection_day`
 dalam YAML tetap metadata dan harus konsisten dengan DAG. DAG dibuat pause;
-aktivasi membutuhkan secret akun X lokal. DVC tersedia untuk versioning raw; model registry belum tersedia.
+aktivasi membutuhkan secret akun X lokal. DVC tersedia untuk versioning raw dan snapshot training. MLflow serta Registry
+kandidat eksperimen tersedia; label awal masih provisional dan deployment
+belum disetujui.
 Panduan penggunaan serta batas stack lokal ada di [Airflow Docker](airflow-docker.md).
