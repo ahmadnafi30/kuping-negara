@@ -26,3 +26,19 @@ programs:
 
 Konfigurasi tidak berisi kredensial. Perubahan keyword dapat mengubah relevansi
 dan hasil quality report; commit perubahan bersama penjelasan di Pull Request.
+
+## Filter pencarian dan konfigurasi historis
+
+`search_language: id` bersifat opsional dan menambahkan `lang:id` pada query.
+`search_context_keywords` adalah daftar konteks tambahan yang wajib cocok pada
+pencarian, misalnya kesehatan/puskesmas untuk menghindari arti CKG di luar
+program kesehatan. Filter platform tetap perlu diperiksa pada preprocessing.
+
+`full_names.yaml` dipakai untuk sampel pelengkap berbasis nama lengkap program;
+sampel ini dapat lebih banyak berisi berita/promosi. Jangan menyebutnya sampel
+acak atau representasi semua opini masyarakat.
+
+Setiap koleksi baru menyimpan salinan konfigurasi di `collection_config.yaml`.
+Folder `history/` menyimpan konfigurasi lama dengan nama SHA-256 untuk memeriksa
+manifest historis yang belum menyimpan salinan. Simpan berkas historis secara
+utuh; jangan mengubah isinya untuk meloloskan validasi dataset lama.

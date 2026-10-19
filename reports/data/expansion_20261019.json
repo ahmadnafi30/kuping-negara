@@ -1,0 +1,69 @@
+{
+  "dataset": "data/raw/expanded_20261019.csv",
+  "rows": 666,
+  "previous_rows": 200,
+  "new_unique_rows": 466,
+  "program_counts": {
+    "ckg": 82,
+    "mbg": 233,
+    "kopdes_merah_putih": 222,
+    "sekolah_rakyat": 129
+  },
+  "previous_sha256": "fb3b832aae197fead349a5d045d5ae2b05329b233c2bceaec9b67e1c04500bc6",
+  "sha256": "aa2962d7f07d8ed6f132f1f2fa7baba6640b310a1973af7a36578a1ab965b8ca",
+  "append": true,
+  "sources": [
+    {
+      "path": "data/raw/x/execution=cba3798e68f6f7b1fe29ecdd/collected_date=2026-10-19/program=ckg/run_id=20261019T113530+0700/ckg_2026-10-12_2026-10-18.csv",
+      "sha256": "5bfcfc8a40d5dc490c674e66eae63b245a9aeb7b8afa9c361351bd2b73d3ee86",
+      "rows_read": 20,
+      "rows_added": 20,
+      "duplicate_keys_skipped": 0
+    },
+    {
+      "path": "data/raw/x/execution=a93ab31fba107af2505cd7fc/collected_date=2026-10-19/program=mbg/run_id=20261019T114213+0700/mbg_2026-10-12_2026-10-18.csv",
+      "sha256": "1524ac6677f2822d673790cffa346d6791d958bbc66f98a28662f479c5ce2714",
+      "rows_read": 125,
+      "rows_added": 125,
+      "duplicate_keys_skipped": 0
+    },
+    {
+      "path": "data/raw/x/execution=cf232f6c58a815632117f0fc/collected_date=2026-10-19/program=kopdes_merah_putih/run_id=20261019T114330+0700/kopdes_merah_putih_2026-10-12_2026-10-18.csv",
+      "sha256": "3779cea8bec7f22e1c8c4bcedcaef61ca80f095f13363b4ac464dced5fc6a93f",
+      "rows_read": 125,
+      "rows_added": 125,
+      "duplicate_keys_skipped": 0
+    },
+    {
+      "path": "data/raw/x/execution=16d996d5203ec0e1a57b6851/collected_date=2026-10-19/program=sekolah_rakyat/run_id=20261019T114444+0700/sekolah_rakyat_2026-10-12_2026-10-18.csv",
+      "sha256": "dc4df7025b244b8df02aada7566e60c486cf7ef91a5990beb6670b20fbc659eb",
+      "rows_read": 79,
+      "rows_added": 79,
+      "duplicate_keys_skipped": 0
+    },
+    {
+      "path": "data/raw/x/execution=a16e99ec99f5c5b5caf1e6eb/collected_date=2026-10-19/program=mbg/run_id=20261019T120545+0700/mbg_2026-10-12_2026-10-18.csv",
+      "sha256": "9e310ace664bf9858e8d984ea64cc24350612ac0a91ea3463af85aec9a17b561",
+      "rows_read": 62,
+      "rows_added": 58,
+      "duplicate_keys_skipped": 4
+    },
+    {
+      "path": "data/raw/x/execution=b58663e139bd95b91dc81d76/collected_date=2026-10-19/program=kopdes_merah_putih/run_id=20261019T120929+0700/kopdes_merah_putih_2026-10-12_2026-10-18.csv",
+      "sha256": "dbe0979537d9d12ce6e21edadca114de70916c7474bd457ac2322e11b472ed8e",
+      "rows_read": 56,
+      "rows_added": 47,
+      "duplicate_keys_skipped": 9
+    },
+    {
+      "path": "data/raw/x/execution=7717b35f418a289f3ec67acf/collected_date=2026-10-19/program=ckg/run_id=20261019T121309+0700/ckg_2026-10-12_2026-10-18.csv",
+      "sha256": "2c3a2d55375314bd6de3029104e5c9c212dc27c4bcd9589517191961909fb317",
+      "rows_read": 26,
+      "rows_added": 12,
+      "duplicate_keys_skipped": 14
+    }
+  ],
+  "created_at": "2026-10-19T05:17:36.015877+00:00",
+  "training_performed": false,
+  "note": "Data versioning simulation using real completed ingestions; no labels or model weights are changed."
+}

@@ -33,8 +33,46 @@ function searchTimelineTerminated(response) {
     instruction.type === "TimelineTerminateTimeline" && instruction.direction === "Bottom");
 }
 
+const searchQueues = new WeakMap();
+function installSearchResponseQueue(page, from, to) {
+  if (searchQueues.has(page)) throw new Error("Search response queue already installed");
+  const state = {responses: [], waiter: null};
+  searchQueues.set(page, state);
+  page.on("response", response => {
+    if (!matchesSearchResponse(response, from, to)) return;
+    if (state.waiter) {
+      const deliver = state.waiter;
+      state.waiter = null;
+      deliver(response);
+    } else {
+      if (state.responses.length >= 128) throw new Error("Search response queue overflow");
+      state.responses.push(response);
+    }
+  });
+}
+async function waitForCollectionResponse(page, searchMode, timeout = 1500) {
+  if (!searchMode) return await page.waitForResponse(response => response.url().includes("TweetDetail"), {timeout});
+  const state = searchQueues.get(page);
+  if (!state) throw new Error("Search response queue is missing");
+  const response = state.responses.length ? state.responses.shift() : await new Promise(resolve => {
+    const timer = setTimeout(() => { state.waiter = null; resolve(undefined); }, timeout);
+    state.waiter = result => { clearTimeout(timer); resolve(result); };
+  });
+  if (response && typeof response.status === "function" && response.status() >= 400) {
+    throw new Error(`Search HTTP ${response.status()}; collection stopped`);
+  }
+  return response;
+}
+
 function patchPaginationSource(source) {
   const helper = JSON.stringify(__filename);
+  source = once(source, `      await require(${helper}).inputKeywordsInWindow(inputKeywords, page, {`,
+    `      require(${helper}).installSearchResponseQueue(page, SEARCH_FROM_DATE, SEARCH_TO_DATE);\n      await require(${helper}).inputKeywordsInWindow(inputKeywords, page, {`);
+  const waitStart = source.indexOf("        const response = await Promise.race([");
+  const waitEnd = source.indexOf("        if (response) {", waitStart);
+  if (waitStart < 0 || waitEnd < 0) throw new Error("Unsupported response loop");
+  source = once(source, source.slice(waitStart, waitEnd),
+    `        const response = await require(${helper}).waitForCollectionResponse(page, IS_SEARCH_MODE);\n`);
   source = once(source, "            tweets = _optionalChain([responseJson, 'access', _7 => _7.data, 'optionalAccess', _8 => _8.search_by_raw_query, 'access', _9 => _9.search_timeline, 'access', _10 => _10.timeline, 'optionalAccess', _11 => _11.instructions, 'optionalAccess', _12 => _12[0], 'optionalAccess', _13 => _13.entries]);",
     `            tweets = require(${helper}).searchTimelineEntries(responseJson);
             if (require(${helper}).searchTimelineTerminated(responseJson) && !tweets.some(entry => entry.content?.itemContent?.tweet_results?.result)) break;`);
@@ -104,4 +142,4 @@ function install() {
     module._compile(patchPaginationSource(patchCollectorSource(fs.readFileSync(filename, "utf8"))), filename);
   };
 }
-module.exports = { install, patchCollectorSource, patchPaginationSource, searchTimelineEntries, searchTimelineTerminated, exactWindowQuery, inputKeywordsInWindow, matchesSearchResponse, selectTweets };
+module.exports = { install, patchCollectorSource, patchPaginationSource, searchTimelineEntries, searchTimelineTerminated, installSearchResponseQueue, waitForCollectionResponse, exactWindowQuery, inputKeywordsInWindow, matchesSearchResponse, selectTweets };

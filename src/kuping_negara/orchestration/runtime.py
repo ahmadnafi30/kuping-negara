@@ -101,11 +101,14 @@ def collect_scheduled(
     lookback_days: int = 7,
     limit: int = 50,
     window_end: date | None = None,
+    config_path: Path | None = None,
     runner: CollectorRunner = _run_collector,
 ) -> Path:
     """Publish only successful collection; retries reuse verified raw content."""
     root = repository_root.resolve()
-    config_path = root / DEFAULT_CONFIG_PATH
+    config_path = (config_path or root / DEFAULT_CONFIG_PATH).resolve()
+    if not config_path.is_relative_to(root / "configs"):
+        raise ValueError("Scheduled keyword configuration must stay inside configs")
     programs = load_programs(config_path)
     if program_id not in programs or limit < 1:
         raise ValueError("Unknown program or invalid collection limit")
@@ -258,6 +261,7 @@ def main() -> None:
     parser.add_argument("--lookback-days", type=int, default=7)
     parser.add_argument("--limit", type=int, default=50)
     parser.add_argument("--window-end", type=date.fromisoformat)
+    parser.add_argument("--config", type=Path)
     args = parser.parse_args()
     shared = {
         "repository_root": args.repository_root,
@@ -273,6 +277,7 @@ def main() -> None:
             lookback_days=args.lookback_days,
             limit=args.limit,
             window_end=args.window_end,
+            config_path=args.config,
         )
         result = {"raw_path": str(raw)}
     else:

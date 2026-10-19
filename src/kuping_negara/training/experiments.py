@@ -48,6 +48,10 @@ def run_experiments(
 ) -> dict:
     if not output.resolve().is_relative_to(root.resolve() / "reports/training"):
         raise ValueError("Experiment reports must stay inside reports/training")
+    if output.exists() and any(output.iterdir()):
+        raise ValueError(
+            "Experiment output already exists; choose a new report directory"
+        )
     frame, lineage = load_dataset(root, dataset, allow_provisional)
     settings = json.loads(config.read_text(encoding="utf-8"))
     trials = settings["trials"]
@@ -86,6 +90,10 @@ def run_experiments(
         "development_rows": len(development),
         "test_rows": len(test),
         "group_overlap": len(set(groups[development]) & set(groups[test])),
+        "independent_groups_by_class": frame.assign(group=groups)
+        .groupby("sentiment_label")
+        .group.nunique()
+        .to_dict(),
         "class_counts": {
             "development": y.iloc[development].value_counts().to_dict(),
             "test": y.iloc[test].value_counts().to_dict(),
@@ -143,6 +151,14 @@ def run_experiments(
                 "ngram_max": trial["ngram_max"],
                 "class_weight": "balanced",
                 "max_features": 10000,
+                "char_ngram_range": "3-5"
+                if "char" in trial.get("feature_mode", "")
+                else "none",
+                "char_max_features": 20000
+                if "char" in trial.get("feature_mode", "")
+                else 0,
+                "program_feature": trial.get("feature_mode", "word_program")
+                != "word_char",
                 "random_seed": settings["random_seed"],
                 "cv_folds": 3,
                 "dataset_sha256": lineage["dataset_sha256"],
@@ -296,7 +312,7 @@ def run_experiments(
             if provisional
             else "Human-approved labels still require independent deployment review.",
             "Grouped holdout is not a future-time benchmark; no temporal generalization claim.",
-            "Small, imbalanced sample and few positive examples; CV estimates are unstable.",
+            "Limited, imbalanced AI-labeled sample; retain grouped-fold uncertainty and class-level recall.",
             "Selection is affected by search coverage and teacher label bias; require independent human and program-slice evaluation.",
         ],
     }

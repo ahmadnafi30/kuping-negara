@@ -29,7 +29,13 @@ def test_three_runs_register_cv_winner_and_reload(training_dataset):
                 "experiment_name": "synthetic-integration",
                 "random_seed": 42,
                 "trials": [
-                    {"name": str(c), "C": c, "ngram_max": 1} for c in (0.1, 1, 10)
+                    {
+                        "name": str(c),
+                        "C": c,
+                        "ngram_max": 1,
+                        "feature_mode": "word_char",
+                    }
+                    for c in (0.1, 1, 10)
                 ],
             }
         )

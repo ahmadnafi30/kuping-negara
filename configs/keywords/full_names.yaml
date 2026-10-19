@@ -1,0 +1,28 @@
+schema_version: 1
+programs:
+  mbg:
+    display_name: Makan Bergizi Gratis
+    search_language: id
+    collection_day: monday
+    keywords:
+    - makan bergizi gratis
+  ckg:
+    display_name: Cek Kesehatan Gratis
+    search_language: id
+    collection_day: tuesday
+    keywords:
+    - cek kesehatan gratis
+  kopdes_merah_putih:
+    display_name: Koperasi Desa Merah Putih
+    search_language: id
+    collection_day: wednesday
+    keywords:
+    - koperasi desa merah putih
+    - koperasi merah putih
+    - kopdes merah putih
+  sekolah_rakyat:
+    display_name: Sekolah Rakyat
+    search_language: id
+    collection_day: thursday
+    keywords:
+    - sekolah rakyat

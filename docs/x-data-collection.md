@@ -229,7 +229,9 @@ collection must remain failed and must not be published as an empty dataset.
 The checked Tweet Harvest adapter reads entries across all SearchTimeline
 instructions, including pages that begin with a cursor replacement. It removes
 repeated post IDs before applying the hard limit and recognizes an explicit
-end-of-timeline response. Source changes outside the pinned version fail closed.
+end-of-timeline response. A bounded response queue is installed before submitting
+the search form, so a fast initial response is retained. A timed-out wait cannot
+consume the next page, and HTTP errors stop the collection. Source changes outside the pinned version fail closed.
 Upstream timeouts or network failures still fail the collection; partial staging
 CSVs are not silently accepted.
 
@@ -244,3 +246,11 @@ publication interval while retaining the real current `--scheduled-at` timestamp
 for provenance. The window must end before the collection day. Collect serially,
 retain successful checkpoints, and stop on an authentication or rate-limit
 response. Do not replay a completed week merely to increase row counts.
+
+`configs/keywords/full_names.yaml` is a supplementary sampling configuration
+using full program phrases. This can recover relevant posts beyond an acronym-
+dominated first page, but also increases the share of news and promotional
+content. It is not a sentiment-balanced or representative public sample. Pass
+it with the interactive collector's `--config` option or the Docker runtime's
+`--config /opt/kuping-negara/configs/keywords/full_names.yaml`. Each run retains
+its own immutable configuration; cross-run duplicate checks still apply.

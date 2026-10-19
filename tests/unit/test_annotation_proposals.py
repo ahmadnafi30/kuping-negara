@@ -21,7 +21,7 @@ def test_uncertain_truncated_or_unresolved_records_are_excluded():
     ]:
         result = select_proposal(probabilities, eligible=eligible, truncated=truncated)
         assert result["sentiment_label"] == "uncertain"
-        assert not result["ai_training_candidate"]
+        assert not result["teacher_confidence_candidate"]
     for values in [[float("nan"), 0, 1], [0.9, 0.9, 0], [-1, 1, 1]]:
         with pytest.raises(ValueError):
             select_proposal(values, eligible=True, truncated=False)

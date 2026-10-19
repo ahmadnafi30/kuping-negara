@@ -513,3 +513,31 @@ def test_backfill_uses_explicit_dates_but_real_collection_timestamp(repository):
             window_end=date(2026, 10, 12),
             runner=historical,
         )
+
+
+def test_alternate_sampling_config_is_frozen_and_verified(repository):
+    import json
+
+    path = repository / "configs/keywords/full_names.yaml"
+    shutil.copyfile(repository / "configs/keywords/programs.example.yaml", path)
+    raw = collect_scheduled(
+        repository_root=repository,
+        program_id="mbg",
+        scheduled_at=SCHEDULE,
+        execution_id="full-names",
+        config_path=path,
+        runner=write_collection,
+    )
+    assert raw.with_name("collection_config.yaml").read_bytes() == path.read_bytes()
+    assert (
+        json.loads(raw.with_name("collection.json").read_text())["config_snapshot"]
+        == "collection_config.yaml"
+    )
+    path.write_text(path.read_text() + "\n# Later edit\n")
+    # Preprocessing uses the frozen original, never the later sampling config.
+    assert preprocess_scheduled(
+        repository_root=repository,
+        raw_path=raw,
+        scheduled_at=SCHEDULE,
+        execution_id="full-names",
+    )["records_path"]

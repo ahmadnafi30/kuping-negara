@@ -42,7 +42,7 @@ def select_proposal(probabilities, *, eligible: bool, truncated: bool) -> dict:
         "teacher_proposed_label": MODEL_LABELS[order[0]],
         "teacher_score": confidence,
         "teacher_margin": margin,
-        "ai_training_candidate": not reasons,
+        "teacher_confidence_candidate": not reasons,
         "candidate_exclusion_reason": ";".join(reasons),
         **{
             f"teacher_probability_{MODEL_LABELS[i]}": p
@@ -96,6 +96,12 @@ def apply_ai_reviews(frame: pd.DataFrame, decisions: list[dict]) -> pd.DataFrame
         result.loc[index, "annotation_method"] = "local_teacher_with_ai_context_review"
         result.loc[index, "annotation_status"] = "ai_context_reviewed"
         result.loc[index, "review_reason"] = decision["reason"]
+        result.loc[index, "label_reason"] = decision["reason"]
+        result.loc[index, "context_reviewer"] = "codex_ai"
+        result.loc[index, "guideline_version"] = "0.1.0"
+        result.loc[index, "context_reviewed_at"] = datetime.now(UTC).isoformat()
+        if decision.get("campaign_group_id"):
+            result.loc[index, "campaign_group_id"] = decision["campaign_group_id"]
         result.loc[index, "candidate_exclusion_reason"] = (
             "" if candidate else "context_review_or_preprocessing_gate"
         )
@@ -170,6 +176,7 @@ def annotate_processed(root: Path, inputs: list[Path], model_path: Path, output:
                     {
                         **row,
                         **proposal,
+                        "ai_training_candidate": False,
                         "relevance_review": "relevant"
                         if row["is_relevant"].lower() == "true"
                         else "uncertain",

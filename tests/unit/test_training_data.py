@@ -99,3 +99,14 @@ def test_word_character_features_preserve_emoji_negation_and_slang():
     assert {"nggak", "nggak bagus", "😡"} <= set(features["text"].vocabulary_)
     assert "gak" in features["characters"].vocabulary_
     assert "program" not in features
+
+
+def test_campaign_paraphrases_share_a_group_and_unreviewed_teacher_is_rejected():
+    frame = sample_frame()
+    frame["campaign_group_id"] = ""
+    frame.loc[[0, 7], "campaign_group_id"] = "same-named-case"
+    groups = leakage_groups(frame)
+    assert groups[0] == groups[7]
+    frame["annotation_method"] = "local_transformer_pseudo_label"
+    with pytest.raises(ValueError, match="Unreviewed teacher"):
+        validate_rows(frame, True)

@@ -76,6 +76,13 @@ def validate_rows(frame: pd.DataFrame, allow_provisional: bool) -> None:
     provisional = frame.annotation_source.eq(
         "ai"
     ) & frame.ai_training_candidate.str.lower().eq("true")
+    if (
+        "annotation_method" in frame
+        and (
+            provisional & frame.annotation_method.eq("local_transformer_pseudo_label")
+        ).any()
+    ):
+        raise ValueError("Unreviewed teacher proposals cannot enter training")
     if not (approved | (provisional & allow_provisional)).all():
         raise ValueError("Unapproved labels require explicit --allow-provisional")
 
@@ -115,6 +122,11 @@ def prepare_dataset(
             "annotation_status",
             "teacher_revision",
             "teacher_score",
+            "campaign_group_id",
+            "review_reason",
+            "label_reason",
+            "guideline_version",
+            "context_reviewer",
         )
         if c in frame.columns
     ]
@@ -215,6 +227,7 @@ def leakage_groups(frame: pd.DataFrame) -> list[str]:
             ("post", row.tweet_id),
             ("conversation", row.conversation_id),
             ("similarity", row.split_group_id),
+            ("campaign", getattr(row, "campaign_group_id", "")),
             ("text", text_fingerprint(row.model_text)),
         ]
         for kind, value in values:

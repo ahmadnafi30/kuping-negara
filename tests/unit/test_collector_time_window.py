@@ -42,6 +42,16 @@ const adapter = require(process.argv[1]);
   const seen = new Set(["old"]);
   const tweets = ["old", "new", "new"].map(id_str => ({tweet:{id_str,created_at:"2026-10-05T00:00:00Z"}}));
   assert.equal(adapter.selectTweets(tweets, 100, seen).length, 1);
+  const page = new (require("node:events").EventEmitter)();
+  adapter.installSearchResponseQueue(page, "03-10-2026", "11-10-2026");
+  const queued = {url: () => "https://x.com/SearchTimeline?variables=" + encodeURIComponent(JSON.stringify({rawQuery:"mbg since:2026-10-03 until:2026-10-11"})), status: () => 200};
+  page.emit("response", queued); // Arrives while the search form is still awaiting Enter.
+  assert.equal(await adapter.waitForCollectionResponse(page, true, 10), queued);
+  assert.equal(await adapter.waitForCollectionResponse(page, true, 10), undefined);
+  page.emit("response", queued); // Timed-out waiter must not swallow the next page.
+  assert.equal(await adapter.waitForCollectionResponse(page, true, 10), queued);
+  page.emit("response", {...queued, status: () => 429});
+  await assert.rejects(adapter.waitForCollectionResponse(page, true, 10), /HTTP 429/);
   console.log(JSON.stringify({awaited:true, precise_midnight:true}));
 })().catch(() => process.exit(1));
 """
