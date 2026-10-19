@@ -16,7 +16,7 @@ Sekolah Rakyat.
 | DVC | Snapshot raw, append tanpa pasangan ID duplikat, perbandingan dan pemulihan versi |
 | Google Drive | Remote DVC untuk dua versi dataset yang telah diuji pemulihannya |
 | Anotasi | Pedoman review dan laporan agregat; hasil review AI masih memerlukan validasi manusia |
-| Eksperimen model | TF-IDF/Logistic Regression, tiga trial MLflow, Registry kandidat eksperimen |
+| Eksperimen model di Docker | Trainer sekali jalan, server MLflow, tiga trial dan Registry kandidat eksperimen |
 | Pengembangan | Python 3.12, uv lockfile, Dev Container, pengujian, dan CI Windows/Linux |
 
 Panduan [eksperimen MLflow](docs/mlflow.md) menjelaskan baseline klasifikasi
@@ -115,14 +115,16 @@ Pengunggahan DVC masih dilakukan secara eksplisit setelah penambahan versi.
 ## Eksperimen Machine Learning
 
 ```bash
-uv sync --locked --extra dev --extra data-versioning --extra google-drive --extra training
-uv run --locked --no-sync python train.py run --allow-provisional
+docker compose --profile training build mlflow
+docker compose --profile training up -d --wait postgres airflow mlflow
+docker compose --profile training run --rm trainer
 ```
 
 Pulihkan snapshot training dengan DVC terlebih dahulu. Mode awal memakai label
 AI sementara atas persetujuan pemilik proyek; model Registry berstatus
 `experimental` dan belum disetujui untuk deployment. Lihat [panduan MLflow](docs/mlflow.md)
-untuk persiapan data, dashboard, dan hasil tiga eksperimen.
+untuk riwayat eksperimen awal. [Panduan Docker](docs/mlflow-docker.md) menjelaskan
+training terbaru menggunakan 396 contoh dan dashboard di port 5000.
 
 ## Struktur repositori
 

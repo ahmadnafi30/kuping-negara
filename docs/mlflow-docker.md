@@ -77,3 +77,22 @@ mesin lain. Jangan menjalankan `down -v` pada stack yang masih diperlukan.
 CI membangun image dan menjalankan tiga eksperimen dengan data sintetis pada
 server MLflow sementara. Pengujian memastikan logging HTTP, penyimpanan
 artefak, Registry, dan pemuatan ulang model bekerja antar-container.
+
+## Hasil yang sudah dijalankan
+
+Pada 19 Oktober 2026, tiga eksperimen selesai dari container Linux menggunakan
+396 baris yang sama dengan percobaan host. Prediksi dan metriknya cocok: C=10
+memperoleh CV Macro-F1 0,7901, test Macro-F1 0,7476, dan accuracy 0,7375.
+Ini reproduksi konfigurasi tetap; hasil test tidak digunakan untuk tuning ulang.
+
+Model terbaik sudah dimuat ulang dari Registry melalui HTTP dan prediksinya
+diperiksa terhadap laporan. Verifikasi juga memastikan working tree bersih saat
+training, overlap development/test nol, dan 19 contoh test awal beserta kelompok
+terhubungnya tidak masuk dataset baru.
+
+- [Ringkasan tiga run Docker](../reports/training/expanded_20261019_docker/experiment_summary.json).
+- [Verifikasi runtime dan pemuatan model](../reports/training/expanded_20261019_docker/runtime_verification.json).
+- [Parameter model dan batas penggunaannya](../reports/training/expanded_20261019_docker/model_metadata.md).
+
+Label belum divalidasi manusia. CKG masih memiliki 22 contoh dan hanya dua di
+test; hasil ini belum cukup untuk menyimpulkan performa tiap program.

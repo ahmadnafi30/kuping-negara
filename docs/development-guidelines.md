@@ -139,8 +139,8 @@ Minimum local verification:
 uv sync --locked --extra dev --extra data-versioning --extra training
 uv pip check
 uv run --locked --no-sync python -m kuping_negara.healthcheck
-uv run --locked --no-sync ruff check src tests dags docker/airflow train.py
-uv run --locked --no-sync ruff format --check src tests dags docker/airflow train.py
+uv run --locked --no-sync ruff check src tests dags docker/airflow docker/mlflow train.py
+uv run --locked --no-sync ruff format --check src tests dags docker/airflow docker/mlflow train.py
 uv run --locked --no-sync pytest
 ```
 

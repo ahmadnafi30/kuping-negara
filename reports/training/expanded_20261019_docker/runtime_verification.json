@@ -1,0 +1,27 @@
+{
+  "platform": "Linux",
+  "python": "3.12.15",
+  "container_runtime": true,
+  "tracking_transport": "http",
+  "run_ids": [
+    "b3e1df8f7a0f451193b07f4ede41cbab",
+    "3be4c26cf6b74e1a95ec68dbbb9c3c47",
+    "b24847e7c86040acbeada6bc373861d2"
+  ],
+  "all_three_runs_finished": true,
+  "model_reloaded_from_registry": true,
+  "predictions_match_reported_test_accuracy": true,
+  "source_commit": "fb5b8cdfbdaa65c5e8082c604c9de8e60ea1f93a",
+  "source_dirty_at_training": false,
+  "original_test_rows_protected": 19,
+  "original_test_group_overlap": 0,
+  "new_development_test_group_overlap": 0,
+  "human_reviewed": false,
+  "deployment_approved": false,
+  "model_features": [
+    "text",
+    "characters"
+  ],
+  "program_one_hot": false,
+  "dataset_sha256": "29d088b126a6462a3ac48af22f08b5608a0ef0bd9626b065bddfc1525a8f369f"
+}

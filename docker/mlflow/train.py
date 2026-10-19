@@ -7,7 +7,14 @@ import sys
 from pathlib import Path
 
 root = Path("/opt/kuping-negara")
-source_paths = ["src", "configs", "train.py", "pyproject.toml", "uv.lock"]
+source_paths = [
+    "src",
+    "configs",
+    "train.py",
+    "pyproject.toml",
+    "uv.lock",
+    "docker/mlflow",
+]
 result = subprocess.run(
     ["git", "diff", "--quiet", "HEAD", "--", *source_paths], cwd=root, check=False
 )

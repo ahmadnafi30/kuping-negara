@@ -56,12 +56,12 @@ preprocessing pipeline ──> configuration / paths / x_posts ──> text
 | `configs/schemas/` | Rancangan kontrak JSON Schema; validator runtime belum terintegrasi |
 | `data/raw/` | Raw per run immutable, snapshot gabungan, dan penunjuk `.dvc` |
 | `data/training/` | Snapshot training DVC dan manifest lineage; CSV diabaikan Git |
-| `mlruns/` | Database SQLite dan model/artefak MLflow lokal; diabaikan Git |
+| `mlruns/` | Riwayat MLflow dari host; layanan Docker memakai volume `mlflow-data` |
 | `data/quarantine/` | Output processed lama/invalid; dikecualikan dari labeling/training |
 | `data/processed/` | CSV dan laporan kualitas lokal; run lama tidak ditimpa |
 | `scripts/` | Hook browser, perbaikan integritas collector, dan adapter secret Node.js |
 | `dags/` | Empat jadwal Airflow yang memanggil runtime dalam virtual environment terpisah |
-| `docker/` dan `compose.yaml` | Stack Airflow/PostgreSQL, image, lock Node, dan setup secrets lokal |
+| `docker/` dan `compose.yaml` | Airflow/PostgreSQL, profil MLflow/trainer, image, lock Node, dan secrets lokal |
 | `docs/archive/` | Desain historis dan catatan branch eksperimen yang diarsipkan |
 | `reports/` | Metrik agregat DVC/anotasi tanpa isi post |
 | `.dvc/` | Konfigurasi DVC; cache, token, dan config.local diabaikan Git |

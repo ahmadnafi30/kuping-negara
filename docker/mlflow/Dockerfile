@@ -16,5 +16,6 @@ ENV PATH="/opt/kuping-negara/.venv/bin:$PATH" \
     MLFLOW_DISABLE_TELEMETRY=true \
     MLFLOW_DISABLE_AGENT_HINT=1 \
     MPLCONFIGDIR=/tmp/matplotlib
-USER 1000:1000
-CMD ["mlflow", "server", "--backend-store-uri", "sqlite:////mlflow/tracking.db", "--serve-artifacts", "--artifacts-destination", "/mlflow/artifacts", "--host", "0.0.0.0", "--port", "5000", "--allowed-hosts", "localhost:*,127.0.0.1:*,mlflow:5000"]
+RUN groupadd --gid 1000 app && useradd --uid 1000 --gid 1000 --create-home app
+USER app:app
+CMD ["mlflow", "server", "--backend-store-uri", "sqlite:////mlflow/tracking.db", "--serve-artifacts", "--artifacts-destination", "/mlflow/artifacts", "--workers", "1", "--host", "0.0.0.0", "--port", "5000", "--allowed-hosts", "localhost:*,127.0.0.1:*,mlflow:5000"]

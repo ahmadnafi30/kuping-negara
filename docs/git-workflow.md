@@ -55,8 +55,8 @@ Gunakan Conventional Commits seperti `feat(ingestion): ...`,
 uv sync --locked --extra dev --extra data-versioning --extra google-drive --extra training
 uv pip check
 uv run --locked --no-sync python -m kuping_negara.healthcheck
-uv run --locked --no-sync ruff check src tests dags docker/airflow train.py
-uv run --locked --no-sync ruff format --check src tests dags docker/airflow train.py
+uv run --locked --no-sync ruff check src tests dags docker/airflow docker/mlflow train.py
+uv run --locked --no-sync ruff format --check src tests dags docker/airflow docker/mlflow train.py
 uv run --locked --no-sync pytest
 git diff --check
 git status --short
@@ -71,7 +71,7 @@ hasil yang dijelaskan. Jangan membuat pengujian yang hanya menyalin isi dokumen.
 1. Push branch pekerjaan dan ajukan Pull Request ke `develop`, atau ke `main`
    untuk pemeliharaan yang langsung ditujukan ke versi stabil.
 2. Jelaskan perubahan, pemeriksaan, dan dampak yang relevan.
-3. Tunggu CI Windows/Linux dan Airflow lulus sebelum merge.
+3. Tunggu CI Windows/Linux, Airflow, dan MLflow Docker lulus sebelum merge.
 4. Setelah rilis masuk `main`, sinkronkan `develop` dengan `main`.
 5. Hapus branch pekerjaan yang telah selesai, lalu prune referensi lokal.
 

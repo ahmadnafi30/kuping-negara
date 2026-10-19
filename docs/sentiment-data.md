@@ -161,3 +161,9 @@ Git hanya menyimpan penunjuk DVC, manifest, kode serta laporan agregat.
 - [Tiga run dan rincian split](../reports/training/expanded_20261019/experiment_summary.json).
 - [Parameter terbaik dan keterbatasan](../reports/training/expanded_20261019/model_metadata.md).
 - [Bukti pemulihan Drive](../reports/training/expanded_20261019/storage_verification.json).
+
+Eksperimen juga telah direproduksi di container Linux dengan hasil yang sama.
+[Bukti run Docker](../reports/training/expanded_20261019_docker/experiment_summary.json)
+dan [verifikasi model](../reports/training/expanded_20261019_docker/runtime_verification.json)
+mencatat tiga run selesai, model dapat dimuat ulang melalui server, serta batas
+pemisahan data. Riwayat host di atas tetap disimpan untuk audit.
