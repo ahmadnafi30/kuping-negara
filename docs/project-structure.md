@@ -22,6 +22,10 @@ dibuat ketika pekerjaan dimulai, bukan sebagai placeholder.
 | `preprocessing/history.py` | Lock publikasi dan riwayat contoh/grup lintas run/program |
 | `preprocessing/x_pipeline.py` | Lineage file, checksum, persistensi, dan CLI `preprocess-x-data` |
 | `data_versioning/snapshots.py` | Snapshot raw tervalidasi, append ID per program dan metrik audit |
+| `training/data.py` | Join label ke snapshot DVC, validasi kualitas, dan grup leakage transitif |
+| `training/evaluation.py` | Split grouped holdout/CV, Pipeline TF-IDF dan evaluasi |
+| `training/experiments.py` | Logging tiga variasi, pemilihan CV, tes akhir, dan Registry MLflow |
+| `training/cli.py` dan `train.py` | CLI persiapan snapshot dan eksperimen |
 | `orchestration/audit.py` | Mengarantina processed lama/invalid tanpa mengubah raw |
 | `orchestration/runtime.py` | Koleksi tanpa prompt, isolasi run, publish atomik, dan validasi retry |
 
@@ -49,6 +53,8 @@ preprocessing pipeline ──> configuration / paths / x_posts ──> text
 | `configs/keywords/` | YAML versi 1 dan dokumentasi keyword; tanpa token |
 | `configs/schemas/` | Rancangan kontrak JSON Schema; validator runtime belum terintegrasi |
 | `data/raw/` | Raw per run immutable, snapshot gabungan, dan penunjuk `.dvc` |
+| `data/training/` | Snapshot training DVC dan manifest lineage; CSV diabaikan Git |
+| `mlruns/` | Database SQLite dan model/artefak MLflow lokal; diabaikan Git |
 | `data/quarantine/` | Output processed lama/invalid; dikecualikan dari labeling/training |
 | `data/processed/` | CSV dan laporan kualitas lokal; run lama tidak ditimpa |
 | `scripts/` | Hook browser, perbaikan integritas collector, dan adapter secret Node.js |
@@ -66,7 +72,8 @@ dan `models/` tetap disiapkan walaupun foldernya belum ada.
 
 ## Penambahan fitur
 
-Buat paket `training`, `inference`, `api`, atau `monitoring` bersama kode,
+Training baseline sudah tersedia; lihat [panduan MLflow](mlflow.md).
+Buat paket `inference`, `api`, atau `monitoring` bersama kode,
 kontrak, dokumentasi, dan pengujiannya saat fitur tersebut dikerjakan. Tambahkan
 `notebooks/` saat ada eksplorasi yang memerlukan notebook. Workflow Airflow
 sudah ada di `dags/`; cara menjalankannya ada di [Airflow Docker](airflow-docker.md).

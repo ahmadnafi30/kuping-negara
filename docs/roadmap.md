@@ -17,8 +17,10 @@ arsitektur lengkap ada dalam [proposal](project-proposal.md).
 - DVC untuk snapshot raw tervalidasi, penambahan versi, remote lokal dan Google Drive.
 - Pemulihan dua versi dataset dari Google Drive dengan verifikasi hash dan cache kosong.
 - Laporan agregat review AI; label belum disetujui sebagai target training.
+- Baseline TF-IDF/Logistic Regression dengan tiga trial MLflow dan Registry experimental.
+- Snapshot training DVC dari raw LK-05; upload/pemulihan Google Drive diverifikasi.
 - Pengujian unit/integrasi, pemeriksaan format dan lint, serta CI.
-- Airflow Docker lokal: empat jadwal mingguan 23.59 WIB, collect â†’ preprocess,
+- Airflow Docker lokal: empat jadwal mingguan 23.59 WIB, collect → preprocess,
   token via secret, publikasi atomik, dan verifikasi checksum pada retry.
 
 ## Berikutnya
@@ -35,7 +37,8 @@ arsitektur lengkap ada dalam [proposal](project-proposal.md).
 
 Jadwal operasional didefinisikan di `dags/x_collection.py`; `collection_day`
 dalam YAML tetap metadata dan harus konsisten dengan DAG. DAG dibuat pause;
-aktivasi membutuhkan secret akun X lokal. DVC tersedia untuk versioning raw dan snapshot training. MLflow serta Registry
+aktivasi membutuhkan secret akun X lokal. DVC tersedia untuk versioning raw
+dan snapshot training. MLflow serta Registry
 kandidat eksperimen tersedia; label awal masih provisional dan deployment
 belum disetujui.
 Panduan penggunaan serta batas stack lokal ada di [Airflow Docker](airflow-docker.md).

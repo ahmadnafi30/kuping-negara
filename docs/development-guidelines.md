@@ -17,7 +17,7 @@ code, tests, configuration, and documentation.
 - Add development dependencies to the `dev` extra with
   `uv add --optional dev <package>`.
 - Regenerate the compatibility manifest with
-  `uv export --locked --extra dev --format requirements.txt --no-hashes
+  `uv export --locked --extra dev --extra training --format requirements.txt --no-hashes
   --no-emit-project --output-file requirements.txt`.
 - Never edit `uv.lock` or generated dependency pins manually. Explain every new
   runtime dependency in the Pull Request.
@@ -136,11 +136,11 @@ after at least two real consumers exist.
 Minimum local verification:
 
 ```bash
-uv sync --locked --extra dev --extra data-versioning
+uv sync --locked --extra dev --extra data-versioning --extra training
 uv pip check
 uv run --locked --no-sync python -m kuping_negara.healthcheck
-uv run --locked --no-sync ruff check src tests dags docker/airflow
-uv run --locked --no-sync ruff format --check src tests dags docker/airflow
+uv run --locked --no-sync ruff check src tests dags docker/airflow train.py
+uv run --locked --no-sync ruff format --check src tests dags docker/airflow train.py
 uv run --locked --no-sync pytest
 ```
 

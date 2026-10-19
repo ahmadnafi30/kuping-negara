@@ -57,8 +57,9 @@ uv run --locked --no-sync dvc pull --remote gdrive data/raw/lk05_dataset.csv.dvc
 ```
 
 Token dan file anotasi tidak ikut clone. Lihat [konfigurasi DVC](dvc-data-versioning.md)
-untuk setup remote. Ketersediaan objek training pada remote harus dicek setelah
-upload; cache lokal saja tidak membuatnya tersedia pada mesin lain.
+untuk setup remote. Snapshot training 91 baris sudah diunggah ke Google Drive dan berhasil
+dipulihkan dengan SHA-256 yang sama. [Bukti pemulihan](../reports/training/initial/storage_verification.json)
+tersedia di repositori; cache lokal saja tidak membuat objek tersedia pada mesin lain.
 
 ## Menjalankan tiga variasi
 
@@ -102,7 +103,8 @@ artefak sehingga pembagian dapat diaudit.
 ## Apa yang tercatat di MLflow
 
 `mlflow.log_param()` mencatat C, n-gram, class weight, seed, versi raw, dan hash
-dataset. Metrik mencakup accuracy, Macro-F1, weighted-F1, recall per kelas,
+dataset. `mlflow.log_metric()` mencatat rerata metrik CV dan `mlflow.log_metrics()`
+mencatat kelompok metrik per fold serta holdout. Metrik mencakup accuracy, Macro-F1, weighted-F1, recall per kelas,
 serta simpangan baku Macro-F1 antar-fold. Skor per fold dicatat dengan step
 sehingga dapat ditampilkan sebagai grafik.
 
@@ -165,6 +167,10 @@ Ambil screenshot asli dari UI berikut:
    ketiga run dibandingkan pada prosedur yang sama.
 3. Detail run terbaik: parameter, skor cross-validation, dan skor test akhir.
 4. Halaman model Registry: nama, versi, run sumber, alias, dan tag kualitas.
+
+PDF hasil eksekusi tersedia secara lokal pada
+`output/pdf/laporan_eksperimen_mlflow.pdf`. Screenshot asli UI tersedia pada
+`output/mlflow/evidence/`. Kedua folder keluaran tidak dimasukkan ke Git.
 
 Laporan menjelaskan dataset LK-05, status label AI, filter kualitas, split,
 variasi parameter, pencatatan MLflow, hasil perbandingan, alasan pemilihan,

@@ -52,11 +52,11 @@ Gunakan Conventional Commits seperti `feat(ingestion): ...`,
 `fix(preprocessing): ...`, atau `docs: ...`. Pilih file staging secara eksplisit.
 
 ```bash
-uv sync --locked --extra dev --extra data-versioning --extra google-drive
+uv sync --locked --extra dev --extra data-versioning --extra google-drive --extra training
 uv pip check
 uv run --locked --no-sync python -m kuping_negara.healthcheck
-uv run --locked --no-sync ruff check src tests dags docker/airflow
-uv run --locked --no-sync ruff format --check src tests dags docker/airflow
+uv run --locked --no-sync ruff check src tests dags docker/airflow train.py
+uv run --locked --no-sync ruff format --check src tests dags docker/airflow train.py
 uv run --locked --no-sync pytest
 git diff --check
 git status --short

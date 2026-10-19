@@ -297,7 +297,7 @@ calibration, operational cost, privacy, dan failure behavior harus ditinjau.
 | NLP candidate | IndoBERT / IndoBERTweet | Planned experiment |
 | Orchestration | Apache Airflow | Directory prepared |
 | Data versioning | DVC + object storage | Planned |
-| Experiment tracking | MLflow | Planned |
+| Experiment tracking | MLflow | Pilot baseline dan Registry experimental tersedia; validasi manusia dan deployment masih direncanakan |
 | API | FastAPI | Package boundary prepared |
 | Metadata store | PostgreSQL | Planned |
 | Dashboard | Streamlit | Package boundary prepared |

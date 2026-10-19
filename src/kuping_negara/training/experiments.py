@@ -147,7 +147,8 @@ def run_experiments(
             aggregate["cv_macro_f1_std"] = float(
                 np.std([s["cv_macro_f1"] for s in scores])
             )
-            mlflow.log_metrics(aggregate)
+            for key, value in aggregate.items():
+                mlflow.log_metric(key, value)
             pipeline.fit(x.iloc[development], y.iloc[development])
             # Synthetic input avoids storing examples of real posts in model metadata.
             example = pd.DataFrame(
