@@ -1,0 +1,52 @@
+{
+  "model_name": "kuping-negara-sentiment-lk07-simulation",
+  "versions": [
+    {
+      "version": "1",
+      "description": "Versi 1: C=10.0; development CV Macro-F1=0.790114. Source run: b24847e7c86040acbeada6bc373861d2. Artefak terbaik LK-6 digunakan kembali; dipilih karena skor CV tertinggi. None -> Staging -> Production; alias champion. Dataset SHA-256: 29d088b126a6462a3ac48af22f08b5608a0ef0bd9626b065bddfc1525a8f369f. Raw DVC revision: raw-expanded-20261019-v1. Representasi TF-IDF kata 1-2 dan karakter 3-5 gram; class_weight=balanced; max_iter=2000; random_seed=42. Label provisional_ai; simulation_only=true; deployment_approved=false. Kesiapan pemanggilan tidak menjamin ketepatan sentimen.",
+      "stage": "Production",
+      "tags": {
+        "simulation_only": "true",
+        "deployment_approved": "false",
+        "label_status": "provisional_ai",
+        "dataset_sha256": "29d088b126a6462a3ac48af22f08b5608a0ef0bd9626b065bddfc1525a8f369f",
+        "C": "10.0",
+        "cv_macro_f1": "0.7901136215979494",
+        "selection_metric": "development_cv_macro_f1",
+        "algorithm": "LogisticRegression",
+        "feature_mode": "word_char",
+        "class_weight": "balanced",
+        "max_iter": "2000",
+        "random_seed": "42",
+        "development_rows": "316",
+        "test_rows_not_reused": "80",
+        "raw_dvc_revision": "raw-expanded-20261019-v1",
+        "selected_for_simulation": "true"
+      }
+    },
+    {
+      "version": "2",
+      "description": "Versi 2: C=5.0; development CV Macro-F1=0.783011. Source run: 9803c3c7bdd640c5b45b106b4a22a582. Pembaruan parameter dari C=10 ke C=5; dilatih pada development yang sama. Skor CV lebih rendah, sehingga tidak dipromosikan. Dataset SHA-256: 29d088b126a6462a3ac48af22f08b5608a0ef0bd9626b065bddfc1525a8f369f. Raw DVC revision: raw-expanded-20261019-v1. Representasi TF-IDF kata 1-2 dan karakter 3-5 gram; class_weight=balanced; max_iter=2000; random_seed=42. Label provisional_ai; simulation_only=true; deployment_approved=false. Kesiapan pemanggilan tidak menjamin ketepatan sentimen.",
+      "stage": "None",
+      "tags": {
+        "simulation_only": "true",
+        "deployment_approved": "false",
+        "label_status": "provisional_ai",
+        "dataset_sha256": "29d088b126a6462a3ac48af22f08b5608a0ef0bd9626b065bddfc1525a8f369f",
+        "C": "5.0",
+        "cv_macro_f1": "0.7830114403417103",
+        "selection_metric": "development_cv_macro_f1",
+        "algorithm": "LogisticRegression",
+        "feature_mode": "word_char",
+        "class_weight": "balanced",
+        "max_iter": "2000",
+        "random_seed": "42",
+        "development_rows": "316",
+        "test_rows_not_reused": "80",
+        "raw_dvc_revision": "raw-expanded-20261019-v1",
+        "selected_for_simulation": "false"
+      }
+    }
+  ],
+  "description": "Klasifikasi sentimen teks Indonesia untuk MBG, CKG, Kopdes Merah Putih dan Sekolah Rakyat. Logistic Regression balanced, max_iter=2000, seed=42; TF-IDF kata 1-2 gram dan karakter 3-5 gram. Dataset DVC 396 contoh berlabel AI: 316 development, 80 test. Pemilihan versi memakai 3-fold grouped CV Macro-F1 pada development; test LK-6 tidak digunakan ulang untuk memilih versi. Versi 1 C=10 (CV Macro-F1=0.790114) dipilih dibanding versi 2 C=5 (0.783011). Alur simulasi None -> Staging -> Production; alias champion. Label belum divalidasi manusia, prediksi contoh masih dapat keliru. Production hanya simulasi LK-7, bukan persetujuan deployment. Referensi dan checksum: registry/active_model.yaml, dilacak DVC. Artefak disimpan pada volume MLflow, terpisah dari metadata DVC."
+}

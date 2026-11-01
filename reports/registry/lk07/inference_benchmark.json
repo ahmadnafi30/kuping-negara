@@ -1,0 +1,38 @@
+{
+  "model_uri": "models:/kuping-negara-sentiment-lk07-simulation/Production",
+  "resolved_version": "1",
+  "production_verified": true,
+  "model_load_ms": 5181.925272999706,
+  "first_batch_prediction_ms": 81.80759200013199,
+  "warm_batch_rows": 3,
+  "warm_repetitions": 30,
+  "warm_batch_median_ms": 5.597003000048062,
+  "warm_batch_p95_ms": 6.398678199911955,
+  "warm_batch_max_ms": 6.747527000243281,
+  "invalid_input_cases_rejected": 4,
+  "timing_scope": "local container; 3 synthetic rows; no concurrency or network SLA",
+  "benchmark_source_commit": "df0b0ff73aee63b5935bb84ab194585ea5f6131d",
+  "artifact_checksum_verified": true,
+  "container_runtime": true,
+  "synthetic_inputs": [
+    {
+      "model_text": "program membantu warga",
+      "target_program": "mbg"
+    },
+    {
+      "model_text": "layanan buruk dan mengecewakan",
+      "target_program": "ckg"
+    },
+    {
+      "model_text": "pendaftaran program dibuka hari ini",
+      "target_program": "sekolah_rakyat"
+    }
+  ],
+  "predictions": [
+    "positive",
+    "neutral",
+    "negative"
+  ],
+  "simulation_only": true,
+  "deployment_approved": false
+}
