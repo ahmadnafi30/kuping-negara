@@ -1,0 +1,63 @@
+{
+  "purpose": "Live dark-theme screenshot recapture; repeat educational stage transition",
+  "model_name": "kuping-negara-sentiment-lk07-simulation",
+  "version": "1",
+  "original_stage": "Production",
+  "events": [
+    {
+      "stage": "Production",
+      "observed_at_utc": "2026-11-01T07:17:28.317953+00:00"
+    },
+    {
+      "stage": "Staging",
+      "observed_at_utc": "2026-11-01T07:17:28.444565+00:00"
+    },
+    {
+      "stage": "Production",
+      "observed_at_utc": "2026-11-01T07:18:02.311201+00:00"
+    }
+  ],
+  "simulation_only": true,
+  "deployment_approved": false,
+  "restored": true,
+  "inference_after_restore": {
+    "model_uri": "models:/kuping-negara-sentiment-lk07-simulation/Production",
+    "resolved_version": "1",
+    "production_verified": true,
+    "model_load_ms": 5032.7153509997515,
+    "first_batch_prediction_ms": 85.45112800038623,
+    "warm_batch_rows": 3,
+    "warm_repetitions": 30,
+    "warm_batch_median_ms": 5.429447499864182,
+    "warm_batch_p95_ms": 6.31147159979264,
+    "warm_batch_max_ms": 6.671860999631463,
+    "invalid_input_cases_rejected": 4,
+    "timing_scope": "local container; 3 synthetic rows; no concurrency or network SLA",
+    "benchmark_source_commit": "60d85e190820bbb80a69db53141f7cad1e3073be",
+    "artifact_checksum_verified": true,
+    "container_runtime": true,
+    "synthetic_inputs": [
+      {
+        "model_text": "program membantu warga",
+        "target_program": "mbg"
+      },
+      {
+        "model_text": "layanan buruk dan mengecewakan",
+        "target_program": "ckg"
+      },
+      {
+        "model_text": "pendaftaran program dibuka hari ini",
+        "target_program": "sekolah_rakyat"
+      }
+    ],
+    "predictions": [
+      "positive",
+      "neutral",
+      "negative"
+    ],
+    "simulation_only": true,
+    "deployment_approved": false
+  },
+  "screenshot": "img/lk07/01-staging.jpg",
+  "capture_note": "Re-captured from actual Staging state in dark mode, then Production restored; original transition evidence retained in Git history."
+}
