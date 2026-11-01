@@ -8,6 +8,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
+from time import perf_counter
 
 import mlflow
 import mlflow.pyfunc
@@ -243,6 +244,109 @@ def promote():
     print(json.dumps(inference, indent=2))
 
 
+def annotate():
+    """Enrich the existing educational registry without creating new versions."""
+    record = json.loads((OUTPUT / "workflow.json").read_text(encoding="utf-8"))
+    if record["model_name"] != NAME or record["simulation_only"] is not True:
+        raise ValueError("Unexpected registry workflow")
+    client = mlflow.MlflowClient()
+    description = (
+        "Klasifikasi sentimen teks Indonesia untuk MBG, CKG, Kopdes Merah Putih "
+        "dan Sekolah Rakyat. Logistic Regression balanced, max_iter=2000, seed=42; "
+        "TF-IDF kata 1-2 gram dan karakter 3-5 gram. "
+        "Dataset DVC 396 contoh berlabel AI: 316 development, 80 test. "
+        "Pemilihan versi memakai 3-fold grouped CV Macro-F1 pada development; "
+        "test LK-6 tidak digunakan ulang untuk memilih versi. "
+        "Versi 1 C=10 (CV Macro-F1=0.790114) dipilih dibanding versi 2 C=5 "
+        "(0.783011). Alur simulasi None -> Staging -> Production; alias champion. "
+        "Label belum divalidasi manusia, prediksi contoh masih dapat keliru. "
+        "Production hanya simulasi LK-7, bukan persetujuan deployment. "
+        "Referensi dan checksum: registry/active_model.yaml, dilacak DVC. "
+        "Artefak disimpan pada volume MLflow, terpisah dari metadata DVC."
+    )
+    client.update_registered_model(NAME, description=description)
+    audit = {"model_name": NAME, "versions": []}
+    for version in record["versions"]:
+        number = version["version"]
+        current = client.get_model_version(NAME, number)
+        if current.run_id != version["run_id"]:
+            raise ValueError("Version source differs from workflow")
+        selected = number == record["selected_version"]
+        detail = (
+            f"Versi {number}: C={version['C']}; "
+            f"development CV Macro-F1={version['cv_macro_f1']:.6f}. "
+            f"Source run: {version['run_id']}. "
+            + (
+                "Artefak terbaik LK-6 digunakan kembali; dipilih karena skor CV "
+                "tertinggi. None -> Staging -> Production; alias champion. "
+                if selected
+                else "Pembaruan parameter dari C=10 ke C=5; dilatih pada development "
+                "yang sama. Skor CV lebih rendah, sehingga tidak dipromosikan. "
+            )
+            + f"Dataset SHA-256: {record['lineage']['dataset_sha256']}. "
+            f"Raw DVC revision: {record['lineage']['raw_revision']}. "
+            "Representasi TF-IDF kata 1-2 dan karakter 3-5 gram; class_weight=balanced; "
+            "max_iter=2000; random_seed=42. Label provisional_ai; "
+            "simulation_only=true; deployment_approved=false. "
+            "Kesiapan pemanggilan tidak menjamin ketepatan sentimen."
+        )
+        client.update_model_version(NAME, number, description=detail)
+        for key, value in {
+            "cv_macro_f1": str(version["cv_macro_f1"]),
+            "selection_metric": "development_cv_macro_f1",
+            "algorithm": "LogisticRegression",
+            "feature_mode": "word_char",
+            "class_weight": "balanced",
+            "max_iter": "2000",
+            "random_seed": "42",
+            "development_rows": "316",
+            "test_rows_not_reused": "80",
+            "raw_dvc_revision": record["lineage"]["raw_revision"],
+            "selected_for_simulation": str(selected).lower(),
+        }.items():
+            client.set_model_version_tag(NAME, number, key, value)
+        saved = client.get_model_version(NAME, number)
+        if saved.description != detail:
+            raise ValueError("Version description was not persisted")
+        audit["versions"].append(
+            {
+                "version": number,
+                "description": saved.description,
+                "stage": saved.current_stage,
+                "tags": saved.tags,
+            }
+        )
+    saved_model = client.get_registered_model(NAME)
+    if saved_model.description != description:
+        raise ValueError("Registry description was not persisted")
+    audit["description"] = saved_model.description
+    (OUTPUT / "metadata_audit.json").write_text(
+        json.dumps(audit, indent=2) + "\n", encoding="utf-8"
+    )
+    print(json.dumps(audit, indent=2))
+
+
+def predict_inputs(model, inputs):
+    """Validate the public model contract before requesting predictions."""
+    if not isinstance(inputs, pd.DataFrame) or inputs.empty:
+        raise ValueError("Provide at least one input row")
+    if not set(FEATURES).issubset(inputs.columns):
+        raise ValueError(f"Input requires columns {FEATURES}")
+    for column in FEATURES:
+        if (
+            not inputs[column]
+            .map(lambda value: isinstance(value, str) and bool(value.strip()))
+            .all()
+        ):
+            raise ValueError(f"Column {column} must contain non-empty strings")
+    predictions = model.predict(inputs[FEATURES]).tolist()
+    if len(predictions) != len(inputs) or not set(predictions).issubset(
+        {"negative", "neutral", "positive"}
+    ):
+        raise ValueError("Invalid inference output")
+    return predictions
+
+
 def validate_reference(reference):
     version = str(reference.get("model_version", ""))
     expected = {
@@ -272,16 +376,47 @@ def verify(reference, client):
     )
     if artifact_digest(directory) != reference["artifact_sha256"]:
         raise ValueError("Model artifact checksum differs from published metadata")
+    started = perf_counter()
     model = mlflow.pyfunc.load_model(reference["model_uri"])
-    predicted = model.predict(SAMPLES).tolist()
-    if len(predicted) != len(SAMPLES) or not set(predicted).issubset(
-        {"negative", "neutral", "positive"}
-    ):
-        raise ValueError("Invalid inference output")
+    load_ms = (perf_counter() - started) * 1000
+    started = perf_counter()
+    predicted = predict_inputs(model, SAMPLES)
+    first_prediction_ms = (perf_counter() - started) * 1000
+    durations = []
+    for _ in range(30):
+        started = perf_counter()
+        if predict_inputs(model, SAMPLES) != predicted:
+            raise ValueError("Repeated predictions are inconsistent")
+        durations.append((perf_counter() - started) * 1000)
+    rejected = 0
+    for invalid in [
+        pd.DataFrame(),
+        SAMPLES.drop(columns=["model_text"]),
+        SAMPLES.assign(model_text=""),
+        SAMPLES.assign(model_text=None),
+    ]:
+        try:
+            predict_inputs(model, invalid)
+        except ValueError:
+            rejected += 1
+    if rejected != 4:
+        raise ValueError("Invalid inputs were not rejected")
     return {
         "model_uri": reference["model_uri"],
         "resolved_version": reference["model_version"],
         "production_verified": True,
+        "model_load_ms": load_ms,
+        "first_batch_prediction_ms": first_prediction_ms,
+        "warm_batch_rows": len(SAMPLES),
+        "warm_repetitions": len(durations),
+        "warm_batch_median_ms": float(np.median(durations)),
+        "warm_batch_p95_ms": float(np.percentile(durations, 95)),
+        "warm_batch_max_ms": max(durations),
+        "invalid_input_cases_rejected": rejected,
+        "timing_scope": "local container; 3 synthetic rows; no concurrency or network SLA",
+        "benchmark_source_commit": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True
+        ).strip(),
         "artifact_checksum_verified": True,
         "container_runtime": Path("/.dockerenv").exists(),
         "synthetic_inputs": SAMPLES.to_dict(orient="records"),
@@ -293,7 +428,7 @@ def verify(reference, client):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["register", "promote", "infer"])
+    parser.add_argument("action", choices=["register", "promote", "infer", "annotate"])
     args = parser.parse_args()
     uri = os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5000")
     mlflow.set_tracking_uri(uri)
@@ -302,13 +437,19 @@ def main():
         register()
     elif args.action == "promote":
         promote()
+    elif args.action == "annotate":
+        annotate()
     else:
         reference = yaml.safe_load(
             Path("registry/active_model.yaml").read_text(encoding="utf-8")
         )
         if reference["model_name"] != NAME or reference["simulation_only"] is not True:
             raise ValueError("Unexpected model reference")
-        print(json.dumps(verify(reference, mlflow.MlflowClient()), indent=2))
+        result = verify(reference, mlflow.MlflowClient())
+        (OUTPUT / "inference_benchmark.json").write_text(
+            json.dumps(result, indent=2) + "\n", encoding="utf-8"
+        )
+        print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":
