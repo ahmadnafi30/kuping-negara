@@ -134,22 +134,22 @@ training terbaru menggunakan 396 contoh dan dashboard di port 5000.
 
 ```text
 kuping-negara/
-├── .devcontainer/          # Lingkungan Codespaces
-├── .github/                # CI dan template Pull Request
-├── .dvc/                   # Konfigurasi DVC; cache/token lokal diabaikan Git
-├── configs/                # Keyword program dan rancangan kontrak data
-├── dags/                   # Empat DAG collect → preprocess
-├── docker/                 # Image, lock Node, dan bootstrap secret
-├── compose.yaml            # Stack Airflow/PostgreSQL
-├── data/                   # Raw, processed, dan metadata dataset
-├── docs/                   # Panduan penggunaan, pengembangan, dan arsip
-├── reports/                # Metrik agregat dan audit tanpa isi post
-├── scripts/                # Adapter browser dan secret Tweet Harvest
-├── src/kuping_negara/       # Modul ingestion, preprocessing, orchestration, DVC
-├── tests/                  # Pengujian unit dan integrasi
-├── pyproject.toml          # Dependensi dan pengaturan proyek
-├── uv.lock                 # Resolusi dependensi
-└── requirements.txt        # Ekspor kompatibilitas untuk pip
+â”œâ”€â”€ .devcontainer/          # Lingkungan Codespaces
+â”œâ”€â”€ .github/                # CI dan template Pull Request
+â”œâ”€â”€ .dvc/                   # Konfigurasi DVC; cache/token lokal diabaikan Git
+â”œâ”€â”€ configs/                # Keyword program dan rancangan kontrak data
+â”œâ”€â”€ dags/                   # Empat DAG collect â†’ preprocess
+â”œâ”€â”€ docker/                 # Image, lock Node, dan bootstrap secret
+â”œâ”€â”€ compose.yaml            # Stack Airflow/PostgreSQL
+â”œâ”€â”€ data/                   # Raw, processed, dan metadata dataset
+â”œâ”€â”€ docs/                   # Panduan penggunaan, pengembangan, dan arsip
+â”œâ”€â”€ reports/                # Metrik agregat dan audit tanpa isi post
+â”œâ”€â”€ scripts/                # Adapter browser dan secret Tweet Harvest
+â”œâ”€â”€ src/kuping_negara/       # Modul ingestion, preprocessing, orchestration, DVC
+â”œâ”€â”€ tests/                  # Pengujian unit dan integrasi
+â”œâ”€â”€ pyproject.toml          # Dependensi dan pengaturan proyek
+â”œâ”€â”€ uv.lock                 # Resolusi dependensi
+â””â”€â”€ requirements.txt        # Ekspor kompatibilitas untuk pip
 ```
 
 [Kepemilikan modul](docs/project-structure.md) menjelaskan batas tanggung jawab
@@ -191,3 +191,8 @@ informasi personal; output belum dapat dianggap anonim.
 
 Kode menggunakan [MIT License](LICENSE). Lisensi kode tidak memberikan hak
 redistribusi atas data pihak ketiga.
+
+## Model Registry dan inferensi
+
+[Panduan lifecycle model](docs/model-registry.md) menjelaskan dua versi model,
+transisi stage simulasi, metadata DVC dan uji inferensi dalam Docker.

@@ -1,0 +1,28 @@
+{
+  "model_uri": "models:/kuping-negara-sentiment-lk07-simulation/Production",
+  "resolved_version": "1",
+  "production_verified": true,
+  "artifact_checksum_verified": true,
+  "container_runtime": true,
+  "synthetic_inputs": [
+    {
+      "model_text": "program membantu warga",
+      "target_program": "mbg"
+    },
+    {
+      "model_text": "layanan buruk dan mengecewakan",
+      "target_program": "ckg"
+    },
+    {
+      "model_text": "pendaftaran program dibuka hari ini",
+      "target_program": "sekolah_rakyat"
+    }
+  ],
+  "predictions": [
+    "positive",
+    "neutral",
+    "negative"
+  ],
+  "simulation_only": true,
+  "deployment_approved": false
+}
