@@ -113,6 +113,7 @@ services:
     volumes:
       - ./data:/opt/kuping-negara/data:ro
       - ./reports:/opt/kuping-negara/reports
+      - ./registry:/opt/kuping-negara/registry
       - ./.git:/opt/kuping-negara/.git:ro
     depends_on:
       mlflow:

@@ -47,3 +47,5 @@ docker/airflow/secrets
 docker/collector/node_modules
 build
 dist
+
+registry/active_model.yaml
