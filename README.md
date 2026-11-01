@@ -200,3 +200,5 @@ transisi stage simulasi, metadata DVC dan uji inferensi dalam Docker.
 Model aktif simulasi: **versi 1 (C=10)** dari `kuping-negara-sentiment-lk07-simulation`,
 stage **Production**, alias `champion`. CV Macro-F1 0,7901 lebih tinggi daripada
 versi 2 (C=5; 0,7830). Label belum divalidasi manusia dan deployment belum disetujui.
+
+Panduan khusus tugas tersedia pada [README LK-7](docs/lk07/README.md).

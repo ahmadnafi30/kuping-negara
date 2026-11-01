@@ -20,7 +20,8 @@ Panduan berikut menjelaskan implementasi yang tersedia pada `main`.
 | [Perluasan data sentimen](sentiment-data.md) | Data 396 baris, pemeriksaan konteks AI, fitur baru dan hasil eksperimen |
 | [Pedoman anotasi](annotation-guidelines.md) | Relevansi, kelas sentimen, review, dan adjudication |
 
-- [Model Registry dan inferensi](model-registry.md): versioning, stage dan metadata aktif.
+- [README khusus LK-7](lk07/README.md): versi aktif, langkah Docker, metadata DVC dan bukti praktikum.
+- [Model Registry dan inferensi](model-registry.md): panduan lifecycle model.
 
 ## Mengembangkan proyek
 
