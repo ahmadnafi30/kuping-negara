@@ -194,7 +194,7 @@ redistribusi atas data pihak ketiga.
 
 ## Model Registry dan inferensi
 
-[Panduan lifecycle model](docs/model-registry.md) menjelaskan dua versi model,
+[Panduan lifecycle model](docs/registry.md) menjelaskan dua versi model,
 transisi stage simulasi, metadata DVC dan uji inferensi dalam Docker.
 
 Model aktif simulasi: **versi 1 (C=10)** dari `kuping-negara-sentiment-lk07-simulation`,
