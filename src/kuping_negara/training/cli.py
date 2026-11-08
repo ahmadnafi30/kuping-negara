@@ -40,6 +40,11 @@ def main() -> None:
         "--tracking-uri", help="Defaults to the repository's local SQLite store"
     )
     train.add_argument("--allow-provisional", action="store_true")
+    train.add_argument(
+        "--no-register",
+        action="store_true",
+        help="Defer registration to an external quality gate",
+    )
     args = parser.parse_args()
     if args.command == "prepare":
         result = prepare_dataset(
@@ -60,6 +65,7 @@ def main() -> None:
             output=args.output,
             allow_provisional=args.allow_provisional,
             tracking_uri=args.tracking_uri,
+            register=not args.no_register,
         )
         result = {
             key: result[key]

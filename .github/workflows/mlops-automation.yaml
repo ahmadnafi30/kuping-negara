@@ -1,0 +1,162 @@
+name: MLOps automation
+
+on:
+  push:
+    branches: [main, feat/mlops-automation]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Automated testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        with:
+          version: "0.12.12"
+      - run: uv sync --locked --extra dev --extra training --extra google-drive
+      - run: uv run --locked --no-sync pytest
+
+  demo:
+    name: End-to-end demo (synthetic DVC data)
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        with:
+          version: "0.12.12"
+      - name: Restore a synthetic snapshot using DVC
+        run: |
+          uv sync --locked --extra data-versioning
+          uv run --locked --no-sync python -m tests.fixtures.automation "$RUNNER_TEMP/registry-demo"
+          echo "Synthetic demonstration for checkout $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+      - name: Start the isolated Docker registry
+        run: |
+          docker compose --profile training build mlflow
+          docker compose --profile training up -d --no-deps --wait --wait-timeout 180 mlflow
+      - name: Train with train.py
+        run: |
+ \
+            docker compose --profile training run --rm --no-deps -T \
+            --user "$(id -u):$(id -g)" -e HOME=/tmp \
+            -v "$RUNNER_TEMP/registry-demo:/work" -w /work --entrypoint python trainer \
+            /opt/kuping-negara/train.py run --dataset data/training/synthetic.csv \
+            --config /opt/kuping-negara/configs/training/automation.json \
+            --output reports/training/automation/demo --allow-provisional \
+            --no-register --tracking-uri http://mlflow:5000
+      - name: Evaluate against the holdout threshold
+        run: |
+ \
+            docker compose --profile training run --rm --no-deps -T \
+            --user "$(id -u):$(id -g)" -e HOME=/tmp \
+            -v "$RUNNER_TEMP/registry-demo:/work" -w /work --entrypoint python trainer \
+            -m kuping_negara.training.automation evaluate \
+            --summary reports/training/automation/demo/experiment_summary.json \
+            --evaluation reports/training/automation/demo/evaluation.json
+      - name: Register an eligible model in Staging
+        run: |
+ \
+            docker compose --profile training run --rm --no-deps -T \
+            --user "$(id -u):$(id -g)" -e HOME=/tmp \
+            -v "$RUNNER_TEMP/registry-demo:/work" -w /work --entrypoint python trainer \
+            -m kuping_negara.training.automation stage \
+            --registry kuping-negara-sentiment-synthetic-pilot \
+            --summary reports/training/automation/demo/experiment_summary.json \
+            --evaluation reports/training/automation/demo/evaluation.json
+      - name: Record evaluation and registry evidence
+        if: always()
+        run: |
+          for file in evaluation.json registry_receipt.json; do
+            path="$RUNNER_TEMP/registry-demo/reports/training/automation/demo/$file"
+            if test -f "$path"; then
+              printf '\n**%s**\n\n```json\n' "$file" >> "$GITHUB_STEP_SUMMARY"
+              cat "$path" >> "$GITHUB_STEP_SUMMARY"
+              printf '```\n' >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+      - name: Stop the demo containers
+        if: always()
+        run: docker compose --profile training down
+
+  project:
+    name: Retrain and stage project data
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.MLOPS_PROJECT_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: mlops-training
+    concurrency:
+      group: mlops-project-training
+      cancel-in-progress: false
+    timeout-minutes: 30
+    env:
+      REPORT_DIR: reports/training/automation/${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        with:
+          version: "0.12.12"
+      - name: Pull the tracked project snapshot from DVC
+        env:
+          DVC_REMOTE_URL: ${{ secrets.DVC_REMOTE_URL }}
+          GDRIVE_CREDENTIALS_DATA: ${{ secrets.GDRIVE_CREDENTIALS_DATA }}
+        run: |
+          [[ "$DVC_REMOTE_URL" == gdrive://* && -n "$GDRIVE_CREDENTIALS_DATA" ]] || {
+            echo "::error::Configure the private Google Drive DVC remote and service account"
+            exit 1
+          }
+          uv sync --locked --extra google-drive
+          uv run --locked --no-sync dvc remote add --local ci "$DVC_REMOTE_URL"
+          uv run --locked --no-sync dvc remote modify --local ci gdrive_use_service_account true
+ \
+            uv run --locked --no-sync dvc pull -r ci \
+            data/raw/expanded_20261019.csv.dvc data/training/sentiment_expanded_20261019.csv.dvc
+      - name: Build the trainer
+        run: docker compose --profile training build mlflow
+      - name: Train with train.py
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_TOKEN: ${{ secrets.MLFLOW_TRACKING_TOKEN }}
+        run: |
+          [[ "$MLFLOW_TRACKING_URI" == https://* && -n "$MLFLOW_TRACKING_TOKEN" ]] || {
+            echo "::error::Configure a persistent authenticated HTTPS MLflow endpoint"
+            exit 1
+          }
+ \
+            docker compose --profile training run --rm --no-deps -T \
+            --user "$(id -u):$(id -g)" -e HOME=/tmp \
+            -e MLFLOW_TRACKING_URI -e MLFLOW_TRACKING_TOKEN trainer \
+            run --dataset data/training/sentiment_expanded_20261019.csv \
+            --config configs/training/automation.json --output "$REPORT_DIR" \
+            --allow-provisional --no-register --tracking-uri "$MLFLOW_TRACKING_URI"
+      - name: Evaluate against the holdout threshold
+        run: |
+ \
+            docker compose --profile training run --rm --no-deps -T \
+            --user "$(id -u):$(id -g)" -e HOME=/tmp --entrypoint python trainer \
+            -m kuping_negara.training.automation evaluate \
+            --summary "$REPORT_DIR/experiment_summary.json" --evaluation "$REPORT_DIR/evaluation.json"
+      - name: Register an eligible model in Staging
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_TOKEN: ${{ secrets.MLFLOW_TRACKING_TOKEN }}
+        run: |
+ \
+            docker compose --profile training run --rm --no-deps -T \
+            --user "$(id -u):$(id -g)" -e HOME=/tmp \
+            -e MLFLOW_TRACKING_URI -e MLFLOW_TRACKING_TOKEN --entrypoint python trainer \
+            -m kuping_negara.training.automation stage \
+            --summary "$REPORT_DIR/experiment_summary.json" --evaluation "$REPORT_DIR/evaluation.json"

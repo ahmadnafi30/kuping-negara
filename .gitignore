@@ -57,3 +57,6 @@ tmp/
 
 # Project-local dependency download cache
 .cache/
+
+# Per-run automation output
+/reports/training/automation/

@@ -46,6 +46,7 @@ def run_experiments(
     output: Path,
     allow_provisional: bool,
     tracking_uri: str | None = None,
+    register: bool = True,
 ) -> dict:
     if not output.resolve().is_relative_to(root.resolve() / "reports/training"):
         raise ValueError("Experiment reports must stay inside reports/training")
@@ -272,16 +273,23 @@ def run_experiments(
         )
         mlflow.log_artifact(str(matrix_path))
         mlflow.log_artifact(str(comparison_path))
-    registered = mlflow.register_model(best["model_uri"], name)
-    client = MlflowClient()
-    for key, value in {
-        "label_status": lineage["label_status"],
-        "deployment_approved": "false",
-        "selection_metric": "cv_macro_f1",
-        "dataset_sha256": lineage["dataset_sha256"],
-    }.items():
-        client.set_model_version_tag(name, registered.version, key, value)
-    client.set_registered_model_alias(name, "experimental", registered.version)
+    registry = None
+    if register:
+        registered = mlflow.register_model(best["model_uri"], name)
+        client = MlflowClient()
+        for key, value in {
+            "label_status": lineage["label_status"],
+            "deployment_approved": "false",
+            "selection_metric": "cv_macro_f1",
+            "dataset_sha256": lineage["dataset_sha256"],
+        }.items():
+            client.set_model_version_tag(name, registered.version, key, value)
+        client.set_registered_model_alias(name, "experimental", registered.version)
+        registry = {
+            "name": name,
+            "version": registered.version,
+            "alias": "experimental",
+        }
     slice_metrics = {}
     for program in sorted(frame.target_program.unique()):
         positions = np.flatnonzero(
@@ -308,11 +316,7 @@ def run_experiments(
         "test_metrics": test_metrics,
         "test_program_slices": slice_metrics,
         "dummy_metrics": dummy_metrics,
-        "registry": {
-            "name": name,
-            "version": registered.version,
-            "alias": "experimental",
-        },
+        "registry": registry,
         "deployment_approved": False,
         "limitations": [
             "AI labels are provisional; metrics measure agreement with AI labels, not human ground truth."
