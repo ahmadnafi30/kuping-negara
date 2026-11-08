@@ -14,6 +14,7 @@ Panduan berikut menjelaskan implementasi yang tersedia pada `main`.
 | [Alur penambahan versi data](dvc.md) | Collect, append, pelacakan DVC, upload, commit/tag, dan pemulihan |
 | [Konfigurasi DVC dan remote](dvc-data-versioning.md) | Cache, remote lokal, OAuth Drive, dan audit dataset |
 | [Training dan MLflow di Docker](mlflow-docker.md) | Trainer sekali jalan, server, artefak, dan Registry |
+| [Otomatisasi pelatihan](mlops-automation.md) | Trigger GitHub Actions, retraining DVC dan quality gate Staging |
 | [Model Registry dan inferensi](registry.md) | Versi model aktif, transisi stage, metadata DVC dan pengujian inferensi |
 | [Peta kode MLflow](kode-mlflow.md) | Alur data ke model, fungsi file dan path GitHub |
 | [Berkas pengumpulan MLflow](pengumpulan-mlflow.md) | Source berkelanjutan, metadata dan bukti laporan |
