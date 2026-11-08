@@ -4,8 +4,8 @@
   "random_seed": 42,
   "trials": [
     {
-      "name": "word-char-c05",
-      "C": 0.5,
+      "name": "word-char-c075",
+      "C": 0.75,
       "ngram_max": 2,
       "feature_mode": "word_char"
     },
