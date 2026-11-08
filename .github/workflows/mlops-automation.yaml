@@ -47,8 +47,7 @@ jobs:
           docker compose --profile training up -d --no-deps --wait --wait-timeout 180 mlflow
       - name: Train with train.py
         run: |
- \
-            docker compose --profile training run --rm --no-deps -T \
+          docker compose --profile training run --rm --no-deps -T \
             --user "$(id -u):$(id -g)" -e HOME=/tmp \
             -v "$RUNNER_TEMP/registry-demo:/work" -w /work --entrypoint python trainer \
             /opt/kuping-negara/train.py run --dataset data/training/synthetic.csv \
@@ -57,8 +56,7 @@ jobs:
             --no-register --tracking-uri http://mlflow:5000
       - name: Evaluate against the holdout threshold
         run: |
- \
-            docker compose --profile training run --rm --no-deps -T \
+          docker compose --profile training run --rm --no-deps -T \
             --user "$(id -u):$(id -g)" -e HOME=/tmp \
             -v "$RUNNER_TEMP/registry-demo:/work" -w /work --entrypoint python trainer \
             -m kuping_negara.training.automation evaluate \
@@ -66,8 +64,7 @@ jobs:
             --evaluation reports/training/automation/demo/evaluation.json
       - name: Register an eligible model in Staging
         run: |
- \
-            docker compose --profile training run --rm --no-deps -T \
+          docker compose --profile training run --rm --no-deps -T \
             --user "$(id -u):$(id -g)" -e HOME=/tmp \
             -v "$RUNNER_TEMP/registry-demo:/work" -w /work --entrypoint python trainer \
             -m kuping_negara.training.automation stage \
@@ -121,8 +118,7 @@ jobs:
           uv sync --locked --extra google-drive
           uv run --locked --no-sync dvc remote add --local ci "$DVC_REMOTE_URL"
           uv run --locked --no-sync dvc remote modify --local ci gdrive_use_service_account true
- \
-            uv run --locked --no-sync dvc pull -r ci \
+          uv run --locked --no-sync dvc pull -r ci \
             data/raw/expanded_20261019.csv.dvc data/training/sentiment_expanded_20261019.csv.dvc
       - name: Build the trainer
         run: docker compose --profile training build mlflow
@@ -135,8 +131,7 @@ jobs:
             echo "::error::Configure a persistent authenticated HTTPS MLflow endpoint"
             exit 1
           }
- \
-            docker compose --profile training run --rm --no-deps -T \
+          docker compose --profile training run --rm --no-deps -T \
             --user "$(id -u):$(id -g)" -e HOME=/tmp \
             -e MLFLOW_TRACKING_URI -e MLFLOW_TRACKING_TOKEN trainer \
             run --dataset data/training/sentiment_expanded_20261019.csv \
@@ -144,8 +139,7 @@ jobs:
             --allow-provisional --no-register --tracking-uri "$MLFLOW_TRACKING_URI"
       - name: Evaluate against the holdout threshold
         run: |
- \
-            docker compose --profile training run --rm --no-deps -T \
+          docker compose --profile training run --rm --no-deps -T \
             --user "$(id -u):$(id -g)" -e HOME=/tmp --entrypoint python trainer \
             -m kuping_negara.training.automation evaluate \
             --summary "$REPORT_DIR/experiment_summary.json" --evaluation "$REPORT_DIR/evaluation.json"
@@ -154,8 +148,7 @@ jobs:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
           MLFLOW_TRACKING_TOKEN: ${{ secrets.MLFLOW_TRACKING_TOKEN }}
         run: |
- \
-            docker compose --profile training run --rm --no-deps -T \
+          docker compose --profile training run --rm --no-deps -T \
             --user "$(id -u):$(id -g)" -e HOME=/tmp \
             -e MLFLOW_TRACKING_URI -e MLFLOW_TRACKING_TOKEN --entrypoint python trainer \
             -m kuping_negara.training.automation stage \
