@@ -1,0 +1,64 @@
+name: kuping-negara-lk10
+
+services:
+  # Optional: reuse the registry volume from LK-07/LK-09 if no server is running.
+  mlflow-server:
+    profiles: [registry]
+    image: ${MLFLOW_SERVER_IMAGE:-kuping-negara-ml:latest}
+    command: ["mlflow", "server", "--backend-store-uri", "sqlite:////mlflow/tracking.db", "--serve-artifacts", "--artifacts-destination", "/mlflow/artifacts", "--host", "0.0.0.0", "--port", "5000", "--workers", "1", "--allowed-hosts", "localhost:*,127.0.0.1:*,mlflow-server:5000"]
+    ports: ["127.0.0.1:5000:5000"]
+    volumes: [mlflow-data:/mlflow]
+    networks: [ml-network]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health',timeout=5).read()"]
+      interval: 5s
+      timeout: 8s
+      retries: 24
+      start_period: 30s
+    restart: unless-stopped
+
+  api-service:
+    # Built by 'mlflow models build-docker', with the verified Production model.
+    image: kuping-negara-serving:lk10
+    deploy:
+      replicas: 3
+    expose: ["8080"]
+    environment:
+      MLFLOW_MODELS_WORKERS: "1"
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      MLFLOW_DISABLE_TELEMETRY: "true"
+    networks: [ml-network]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/ping',timeout=5).read()"]
+      interval: 5s
+      timeout: 8s
+      retries: 36
+      start_period: 60s
+    restart: unless-stopped
+
+  gateway:
+    image: nginx:1.28-alpine
+    ports: ["127.0.0.1:${API_PORT:-8002}:8080"]
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks: [ml-network]
+    depends_on:
+      api-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/ping"]
+      interval: 5s
+      timeout: 8s
+      retries: 24
+      start_period: 10s
+    restart: unless-stopped
+
+networks:
+  ml-network:
+    driver: bridge
+
+volumes:
+  mlflow-data:
+    name: kuping-negara-scheduler_mlflow-data

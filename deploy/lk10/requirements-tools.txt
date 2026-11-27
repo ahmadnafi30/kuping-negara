@@ -1,0 +1,6 @@
+# Match the repository's verified MLflow training lockfile.
+mlflow==3.17.1
+scikit-learn==1.9.1
+pandas==3.0.5
+numpy==2.5.3
+cloudpickle==3.1.2

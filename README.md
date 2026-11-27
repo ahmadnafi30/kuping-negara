@@ -1,5 +1,24 @@
 # Kuping Negara
 
+## Model serving dan scaling (LK-10)
+
+Implementasi MLflow Models tersedia di [deploy/lk10](deploy/lk10/README.md).
+Di Codespaces, pilih konfigurasi **Kuping Negara — LK-10 serving**, siapkan
+model Production sesuai panduan, lalu jalankan dari folder `deploy/lk10`:
+
+```bash
+python manage.py local-check
+python manage.py build
+python manage.py up --replicas 3
+python manage.py verify --replicas 3
+```
+
+API prediksi: `POST http://localhost:8002/invocations` dengan payload
+[`request.json`](deploy/lk10/request.json). Untuk akses dari browser Codespaces,
+gunakan URL privat port 8002 pada tab **Ports**. Windows dapat menjalankan
+`deploy/lk10/Start-LK10.ps1`. Petunjuk menambah dan mengurangi replika ada di
+[README LK-10](deploy/lk10/README.md#mengubah-jumlah-replika-secara-dinamis).
+
 Untuk training dan dashboard menggunakan container, ikuti [panduan MLflow Docker](docs/mlflow-docker.md).
 
 Pipeline data untuk riset analisis sentimen percakapan publik di X mengenai
