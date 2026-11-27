@@ -1,0 +1,6 @@
+.venv/
+.artifacts/
+.evidence/
+__pycache__/
+*.pyc
+production-model-lk10.zip

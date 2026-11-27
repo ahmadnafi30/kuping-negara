@@ -63,6 +63,9 @@ jobs:
       - name: Run tests
         run: uv run --locked --extra dev --extra data-versioning --extra google-drive --extra training pytest
 
+      - name: Run LK-10 serving checks
+        run: uv run --locked --extra dev --extra data-versioning --extra google-drive --extra training pytest deploy/lk10/tests -q
+
   airflow:
     runs-on: ubuntu-latest
     timeout-minutes: 25

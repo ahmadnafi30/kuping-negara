@@ -1,0 +1,22 @@
+{
+  "dataframe_split": {
+    "columns": [
+      "model_text",
+      "target_program"
+    ],
+    "data": [
+      [
+        "program ini sangat membantu warga",
+        "mbg"
+      ],
+      [
+        "pelayanan buruk dan mengecewakan",
+        "ckg"
+      ],
+      [
+        "pendaftaran program dibuka hari ini",
+        "sekolah_rakyat"
+      ]
+    ]
+  }
+}
